@@ -1,0 +1,4 @@
+poo a << 5 * 1 -  1 * 3;
+poo b << 2 / 2;
+
+return b;

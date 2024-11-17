@@ -1,0 +1,8 @@
+[package]
+name = "poolang"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+regex = "1"
+nom = "7"
