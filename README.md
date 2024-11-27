@@ -1,6 +1,6 @@
 # PooLang
 
-This is my tiny interpreted language written in Rust, featuring variable declarations, arithmetic operations, conditional statements, and control flow. This project includes a lexer, parser, and interpreter. The name `Poo` originates from Guinea Pig translated from `Burmese`.
+A Tiny Interpreted language written in Rust, featuring variable declarations, arithmetic operations, conditional statements, and control flow. This project includes a lexer, parser, and interpreter. The name `Poo` originates from Guinea Pig translated from `Burmese`.
 
 ## Crafted by **Shayy**
 
@@ -20,10 +20,10 @@ This is my tiny interpreted language written in Rust, featuring variable declara
 - **Variable Declarations**: Uses `poo` keyword for variable declarations.
 - **Mutable Variables**: Like in Rust, all variables are immutable by default. Uses `mut` for mutable variables.
 - **Conditional Statements**: Includes `if`, `else`, and `elif` for branching.
-- **Control Flow**: Supports `while` loops and `return` statements.
+- **Control Flow**: Supports `while` and `for in` loops and `return` statements.
 - **Custom Operators**:
   - Assignment operator: `<<`
-  - Open scope operator: `>>`
+  - Arrow operator: `>>`
 - **Lexer, Parser, and Interpreter**: A full pipeline from tokenizing source code to executing it.
 
 ## 🚀 Installation
@@ -67,7 +67,7 @@ cargo run <path_to_your_source_file>
 Example:
 
 ```bash
-cargo run examples/test.poo
+cargo run app.poo
 ```
 
 ## 📝 Syntax Overview
@@ -78,7 +78,7 @@ The language features basic syntax for arithmetic, variable declarations, and co
 
 ```poo
 poo x << 10;
-poo y << 5 + 2 * 3;
+poo mut y << 5 + 2 * 3;
 ```
 
 ### **Arithmetic Operations**
@@ -90,53 +90,71 @@ poo result << x + y * 2 - 10 / 2;
 ### **Conditional Statements**
 
 ```poo
-if x > y >>
+if x > y {
     return x;
-else >>
+} else {
     return y;
+}
 ```
 
 ### **Loops**
 
 ```poo
+use std::pout;
+
 poo mut count << 0;
-while count < 10 >>
+
+while count < 10 {
     count << count + 1;
+}
+
+for i in 0..3 {
+    pout("Hello, World ", i);
+}
 ```
 
-### **Return Statement**
+### **Functions**
 
 ```poo
-poo value << 42;
-return value;
+use std::pout;
+
+poof getName () >> string {
+    poo name << "Shayy";
+    return name;
+}
+
+pout(getName());
 ```
 
 ## 📚 Example Code
 
-Here is a sample program in this language:
+Here is a sample program in my PooLang:
 
 ```poo
-poo x << 10;
-poo y << 5 + 2 * 3;
-poo mut result << 0;
+use std::pout;
 
-if x > y >>
-    result << x - y;
-elif x < y >>
-    result << y - x;
-else >>
-    result << 0;
+poo a << 5.0 * 1.0 - 1.0 * 3.0;
+poo b << 2 / 2;
+poo mut d << true;
+d << false;
 
-while result < 50 >>
-    result << result + 5;
+poof getHelloWorld () >> string {
+    return "Hello, World!";
+}
 
-return result;
+for i in 0..2 {
+    pout("Hello, Poo!", i);
+}
+
+pout(getHelloWorld());
 ```
 
-### Expected Output
+Expected Output:
 
-```
-Result: 50
+```poo
+Hello, Poo!0
+Hello, Poo!1
+Hello, World!
 ```
 
 ## 🛠️ Development
@@ -151,25 +169,8 @@ Result: 50
 │   ├── interpreter.rs   # Interpreter for executing code
 │   ├── ast.rs           # Abstract Syntax Tree (AST) definitions
 │   └── main.rs          # Entry point
-├── examples
-│   └── test.poo         # Sample code
+├── app.poo              # Sample code
 └── Cargo.toml           # Project configuration
-```
-
-### Running in Debug Mode
-
-To run the interpreter with detailed output for debugging:
-
-```bash
-RUST_LOG=debug cargo run examples/test.poo
-```
-
-### Testing
-
-To run all tests:
-
-```bash
-cargo test
 ```
 
 ## 🤝 Contributing

@@ -45,8 +45,9 @@ fn main() {
     let result = interpreter.interpret(&ast);
 
     match result {
-        Some(value) => println!("Result: {}", value),
+        Some(value) => println!("Result: {:?}", value),
         None => println!("No return value"),
     }
 
 }
+
