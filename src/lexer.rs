@@ -1,4 +1,3 @@
-// src/lexer.rs
 // use regex::Regex;
 
 #[derive(Debug, PartialEq, Clone)]
@@ -18,7 +17,8 @@ pub enum Token {
     DoubleDot,
     Comma,
     RightArrow,
-    
+    DoubleSlash,
+
     // keywords
     Use,
     If,
@@ -28,16 +28,17 @@ pub enum Token {
     While,
     For,
     In,
+    Step,
     Poo,
     Poof,
     Mut,
-    
+
     // values
-    
     True,
     False,
     Int(i64),
     Float(f64),
+    Char(char),
     String(String),
 
     // Types
@@ -45,14 +46,16 @@ pub enum Token {
     TBool,
     TInt,
     TFloat,
+    TChar,
     TString,
+    TVec,
 
     // maths
     Plus,
     Minus,
     Multiply,
     Divide,
-    
+
     // comparison
     And,
     Or,
@@ -99,6 +102,7 @@ impl Lexer {
     pub fn peek_next_char(&mut self) -> char {
         let current_pos = self.pos;
         self.advance();
+
         let next_char = self.at();
         self.pos = current_pos;
 
@@ -111,35 +115,80 @@ impl Lexer {
         }
 
         let current_char = self.at();
-        
+
         match current_char {
             '0'..='9' => {
-                let mut num_str1: String = self.input[self.pos..]
+                let mut num_str: String = self.input[self.pos..]
                     .chars()
                     .take_while(|c| c.is_digit(10))
                     .collect();
-                self.pos += num_str1.len();
+                self.pos += num_str.len();
+
                 if self.at() == '.' {
                     if self.peek_next_char() == '.' {
-                        Token::Int(num_str1.parse().unwrap())
+                        // It's a range
+                        Token::Int(num_str.parse().unwrap())
                     } else {
                         self.advance();
-                        let num_str2: String = self.input[self.pos..].chars().take_while(|c| c.is_digit(10)).collect();
+                        // It's a float
+                        let num_str2: String = self.input[self.pos..]
+                            .chars()
+                            .take_while(|c| c.is_digit(10))
+                            .collect();
                         self.pos += num_str2.len();
-                        num_str1.push('.');
-                        num_str1.push_str(&num_str2);
-                        Token::Float(num_str1.parse::<f64>().unwrap())
+                        num_str.push('.');
+                        num_str.push_str(&num_str2);
+                        Token::Float(num_str.parse::<f64>().unwrap())
                     }
                 } else {
-                    Token::Int(num_str1.parse().unwrap())
+                    Token::Int(num_str.parse().unwrap())
                 }
             }
+
             '\"' => {
                 self.advance();
-                let str:String = self.input[self.pos..].chars().take_while(|c| *c != '\"').collect();
-                self.pos += str.len() + 1;
-                Token::String(str)
+                let mut str_val = String::new();
+                while self.at() != '\"' && self.at() != '\0' {
+                    if self.at() == '\\' {
+                        self.advance();
+                        match self.at() {
+                            'n' => str_val.push('\n'),
+                            't' => str_val.push('\t'),
+                            '\\' => str_val.push('\\'),
+                            '\"' => str_val.push('\"'),
+                            _ => panic!("Unknown escape sequence"),
+                        }
+                    } else {
+                        str_val.push(self.at());
+                    }
+                    self.advance();
+                }
+                self.advance(); // Consume closing quote
+                Token::String(str_val)
             }
+            '\'' => {
+                self.advance();
+                let mut char_val: char = ' ';
+                while self.at() != '\'' && self.at() != '\0' {
+                    if self.at() == '\\' {
+                        self.advance();
+                        match self.at() {
+                            'n' => char_val = '\n',
+                            't' => char_val = '\t',
+                            '\\' => char_val = '\\',
+                            '\"' => char_val = '\"',
+                            '\'' => char_val = '\'',
+                            _ => panic!("Unknown escape sequence"),
+                        }
+                    } else {
+                        char_val = self.at();
+                    }
+                    self.advance();
+                }
+                self.advance(); // Consume closing quote
+                Token::Char(char_val)
+            }
+
             ';' => {
                 self.advance();
                 Token::SemiColon
@@ -158,7 +207,12 @@ impl Lexer {
             }
             '/' => {
                 self.advance();
-                Token::Divide
+                if self.at() == '/' {
+                    self.advance();
+                    Token::DoubleSlash
+                } else {
+                    Token::Divide
+                }
             }
             '{' => {
                 self.advance();
@@ -242,13 +296,13 @@ impl Lexer {
                     Token::Not
                 }
             }
-            'a'..='z' | 'A'..='Z' => {
+            'a'..='z' | 'A'..='Z' | '_' => {
                 let id_str: String = self.input[self.pos..]
                     .chars()
-                    .take_while(|c| c.is_alphanumeric())
+                    .take_while(|c| c.is_alphanumeric() || *c == '_')
                     .collect();
                 self.pos += id_str.len();
-                
+
                 match id_str.as_str() {
                     "use" => Token::Use,
                     "poo" => Token::Poo,
@@ -263,6 +317,7 @@ impl Lexer {
                     "while" => Token::While,
                     "for" => Token::For,
                     "in" => Token::In,
+                    "step" => Token::Step,
                     "return" => Token::Return,
 
                     // values
@@ -274,11 +329,14 @@ impl Lexer {
                     "bool" => Token::TBool,
                     "int" => Token::TInt,
                     "float" => Token::TFloat,
-                    "string" => Token::TString,
+                    "char" => Token::TChar,
+                    "str" => Token::TString,
+                    "vec" => Token::TVec,
+
                     _ => Token::Identifier(id_str),
                 }
             }
-            
+
             _ if current_char.is_whitespace() => {
                 self.advance();
                 self.next_token() // Skip whitespace and get the next token

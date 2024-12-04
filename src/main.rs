@@ -1,16 +1,21 @@
 // main.rs
+mod ast;
+// mod compiler;
+mod interpreter;
 mod lexer;
 mod parser;
-mod ast;
-mod interpreter;
+mod type_inference;
+mod visitor;
 
+// use compiler::Codegen;
+use interpreter::Interpreter;
 use lexer::Lexer;
 use parser::Parser;
-use interpreter::Interpreter;
 use std::env;
 use std::fs;
 use std::process;
-// use interpreter::Interpreter;
+
+// use inkwell::context::Context;
 
 fn main() {
     // Get the file path from command line arguments
@@ -38,8 +43,19 @@ fn main() {
     let ast = parser.parse();
 
     for stmt in &ast {
-        println!("{:?}\n",stmt)
+        println!("{:?}\n", stmt)
     }
+
+    // let context = Context::create();
+    // let mut codegen = Codegen::new(&context, "my_module");
+
+    // for stmt in &ast {
+    //     codegen.compile_stmt(&stmt);
+    // }
+
+    // codegen.print_ir();
+    // let mut analyzer = visitor::SemanticAnalyzer::new();
+    // analyzer.analyze(&ast);
 
     let mut interpreter = Interpreter::new();
     let result = interpreter.interpret(&ast);
@@ -48,6 +64,4 @@ fn main() {
         Some(value) => println!("Result: {:?}", value),
         None => println!("No return value"),
     }
-
 }
-

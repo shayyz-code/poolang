@@ -169,7 +169,8 @@ Hello, World!
 │   ├── interpreter.rs   # Interpreter for executing code
 │   ├── ast.rs           # Abstract Syntax Tree (AST) definitions
 │   └── main.rs          # Entry point
-├── app.poo              # Sample code
+├── examples             # Sample code
+│   └── app.poo
 └── Cargo.toml           # Project configuration
 ```
 

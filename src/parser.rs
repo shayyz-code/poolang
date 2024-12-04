@@ -1,8 +1,10 @@
 use std::collections::HashMap;
 
 // src/parser.rs
+use crate::ast::{Expr, Stmt, Type};
 use crate::lexer::{Lexer, Token};
-use crate::ast::{Type, Expr, Stmt};
+use crate::type_inference::infer_expr_type;
+use crate::visitor::ScopedSymbolTable;
 
 pub struct Parser {
     lexer: Lexer,
@@ -15,7 +17,7 @@ impl Parser {
             lexer,
             current_token: Token::EOF,
         };
-        parser.advance();  // Load the first token
+        parser.advance(); // Load the first token
         parser
     }
 
@@ -42,11 +44,11 @@ impl Parser {
 
     // fn error(&self, message: &str) {
     //     eprintln!("Parse error: {} at {:?}", message, self.current_token);
-    // }    
+    // }
 
     // Parse primary expressions (numbers, identifiers, or parenthesized expressions)
     fn parse_primary(&mut self) -> Expr {
-        match &self.current_token {
+        let mut expr = match &self.current_token {
             Token::Int(value) => {
                 let expr = Expr::Int(*value);
                 self.advance();
@@ -62,9 +64,16 @@ impl Parser {
                 self.advance();
                 if self.current_token == Token::LeftParen {
                     self.parse_function_call(identifier) // Function call
+                } else if self.current_token == Token::LeftBracket {
+                    self.parse_vector_index(identifier)
                 } else {
                     Expr::Identifier(identifier) // Variable or other identifier
                 }
+            }
+            Token::Char(value) => {
+                let expr = Expr::Char(value.clone());
+                self.advance();
+                expr
             }
             Token::String(value) => {
                 let expr = Expr::String(value.clone());
@@ -85,10 +94,22 @@ impl Parser {
                 Expr::UnaryOp(Token::Not, Box::new(expr))
             }
             Token::LeftParen => {
-                self.advance();  // Consume '('
+                self.advance(); // Consume '('
                 let expr = self.parse_expr();
-                self.eat(Token::RightParen);  // Consume ')'
+                self.eat(Token::RightParen); // Consume ')'
                 expr
+            }
+            Token::LeftBracket => {
+                self.advance(); // Consume '['
+                let mut elements = Vec::new();
+                while self.current_token != Token::RightBracket {
+                    elements.push(self.parse_expr());
+                    if self.current_token == Token::Comma {
+                        self.advance();
+                    }
+                }
+                self.eat(Token::RightBracket);
+                Expr::Vector(elements)
             }
             Token::Minus => {
                 self.advance();
@@ -96,50 +117,123 @@ impl Parser {
                 Expr::UnaryOp(Token::Minus, Box::new(expr))
             }
 
-            _ => panic!("Unexpected token in primary expression: {:?}", self.current_token),
+            _ => panic!(
+                "Unexpected token in primary expression: {:?}",
+                self.current_token
+            ),
+        };
+
+        while self.current_token == Token::Dot {
+            self.advance(); // Consume '.'
+            if let Token::Identifier(method_name) = &self.current_token {
+                let method = method_name.clone();
+                self.advance(); // Consume method name
+                let mut args = Vec::new();
+                if self.current_token == Token::LeftParen {
+                    self.advance(); // Consume '('
+                    while self.current_token != Token::RightParen {
+                        args.push(self.parse_expr());
+                        if self.current_token == Token::Comma {
+                            self.advance();
+                        }
+                    }
+                    self.eat(Token::RightParen); // Consume ')'
+                }
+                expr = Expr::MethodCall(Box::new(expr), method, args);
+            } else {
+                panic!("Expected method name after '.'");
+            }
         }
+
+        expr
+    }
+
+    fn parse_vector_index(&mut self, vector_name: String) -> Expr {
+        self.advance();
+        let index = self.parse_primary();
+        self.eat(Token::RightBracket);
+        Expr::VectorIndex(Box::new(Expr::Identifier(vector_name)), Box::new(index))
     }
 
     // Parse binary operations with precedence
     fn parse_binary_op(&mut self, precedence: u8) -> Expr {
         let mut left = self.parse_primary();
         println!("Initial Left Expr: {:?}", left);
-    
+
         while let Some(op_prec) = self.get_precedence(&self.current_token) {
-            println!("Current Precedence (Left, Current): {:?}, Token: {:?}", (precedence, op_prec), self.current_token);
-    
+            println!(
+                "Current Precedence (Left, Current): {:?}, Token: {:?}",
+                (precedence, op_prec),
+                self.current_token
+            );
+
             // Break if current token's precedence is less than or equal to the current precedence
             if precedence >= op_prec {
                 break;
             }
-    
+
             // Capture the operator and advance
             let op = self.current_token.clone();
             self.advance();
-    
+
             // Recursively parse the right-hand side expression with higher precedence
             let right = self.parse_binary_op(op_prec);
-    
+
             // Construct a binary operation node with left and right expressions
             left = Expr::BinaryOp(Box::new(left), op, Box::new(right));
         }
         left
     }
-    
 
     // Get operator precedence
     fn get_precedence(&self, token: &Token) -> Option<u8> {
-        match token {
-            Token::Or => Some(1),
-            Token::And => Some(2),
-            Token::Equal | Token::NotEqual => Some(3),
-            Token::LessThan | Token::GreaterThan => Some(4),
-            Token::Plus | Token::Minus => Some(5),
-            Token::Multiply | Token::Divide => Some(6),
-            _ => None,
-        }
+        let precedence_table = [
+            (Token::Or, 1),
+            (Token::And, 2),
+            (Token::Equal, 3),
+            (Token::NotEqual, 3),
+            (Token::LessThan, 4),
+            (Token::GreaterThan, 4),
+            (Token::Plus, 5),
+            (Token::Minus, 5),
+            (Token::Multiply, 6),
+            (Token::Divide, 6),
+        ];
+        precedence_table
+            .iter()
+            .find_map(|(t, p)| if t == token { Some(*p) } else { None })
     }
 
+    fn infer_token_to_type(&mut self) -> Type {
+        match self.current_token {
+            Token::TBool => Type::Bool,
+            Token::TInt => Type::Int,
+            Token::TFloat => Type::Float,
+            Token::TVoid => Type::Void,
+            Token::TChar => Type::Char,
+            Token::TString => Type::String,
+            Token::TVec => {
+                self.advance();
+                self.eat(Token::LeftBracket);
+                let vec_type = self.infer_token_to_type();
+                if !matches!(vec_type, Type::Vector(_)) {
+                    self.advance();
+                }
+                self.eat(Token::RightBracket);
+                Type::Vector(Box::new(vec_type))
+            }
+            _ => panic!("Expected a datatype"),
+        }
+    }
+    fn infer_expr_to_type(&mut self, expr: &Expr) -> Type {
+        match expr {
+            Expr::Boolean(_) => Type::Bool,
+            Expr::Int(_) => Type::Int,
+            Expr::Float(_) => Type::Float,
+            Expr::String(_) => Type::String,
+            _ => panic!("Unexpected expression type: {:?}", expr),
+        }
+    }
     // Parse general expressions
     fn parse_expr(&mut self) -> Expr {
         self.parse_binary_op(0)
@@ -148,6 +242,7 @@ impl Parser {
     // Parse assignment statements
     fn parse_assignment(&mut self) -> Stmt {
         let mut is_mutable: bool = false;
+        let mut var_type: Type = Type::Void;
         self.eat(Token::Poo);
         if let Token::Mut = &self.current_token {
             is_mutable = true;
@@ -155,11 +250,23 @@ impl Parser {
         }
         if let Token::Identifier(var_name) = &self.current_token {
             let identifier = var_name.clone();
+            let mut explicit_var_type: bool = false;
             self.advance();
+            if let Token::Colon = &self.current_token {
+                self.advance();
+                var_type = self.infer_token_to_type();
+                if !matches!(var_type, Type::Vector(_)) {
+                    self.advance(); // Move past the type if not vector because vector type has already advanced
+                }
+                explicit_var_type = true;
+            }
             self.eat(Token::Assignment);
             let expr = self.parse_expr();
+            if !explicit_var_type {
+                var_type = self.infer_expr_to_type(&expr);
+            }
             self.eat(Token::SemiColon);
-            Stmt::Assignment(identifier, expr, is_mutable)
+            Stmt::Assignment(identifier, expr, is_mutable, var_type)
         } else {
             panic!("Expected an identifier after 'poo'");
         }
@@ -180,8 +287,8 @@ impl Parser {
     }
 
     fn parse_function_declaration(&mut self) -> Stmt {
-        self.eat(Token::Poof); // Consume 'fun'
-    
+        self.eat(Token::Poof); // Consume 'poof'
+
         // Parse function name
         let function_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
@@ -189,37 +296,58 @@ impl Parser {
             panic!("Expected function name after 'fun'");
         };
         self.advance();
-    
+
+        if self.current_token == Token::LessThan {
+            self.advance(); // Consume '<'
+            let mut generics = Vec::new();
+            while self.current_token != Token::GreaterThan {
+                if let Token::Identifier(name) = &self.current_token {
+                    generics.push(name.clone());
+                }
+                self.advance();
+                if self.current_token == Token::Comma {
+                    self.advance();
+                }
+            }
+            self.eat(Token::GreaterThan); // Consume '>'
+        }
+
         // Parse parameters
         self.eat(Token::LeftParen); // Consume '('
         let mut parameters = Vec::new();
         while self.current_token != Token::RightParen {
-            if let Token::Identifier(param) = &self.current_token {
-                parameters.push(param.clone());
-                self.advance();
-                if self.current_token == Token::Comma {
-                    self.advance(); // Consume ','
-                }
+            // Parse parameter name
+            let param_name = if let Token::Identifier(name) = &self.current_token {
+                name.clone()
             } else {
                 panic!("Expected parameter name in function declaration");
+            };
+            self.advance(); // Move past the parameter name
+
+            // Parse the colon and type annotation
+            self.eat(Token::Colon); // Consume ':'
+            let param_type = self.infer_token_to_type();
+            if !matches!(param_type, Type::Vector(_)) {
+                self.advance(); // Move past the type if not vector because vector type has already advanced
+            }
+
+            parameters.push((param_name, param_type)); // Store the parameter and its type
+
+            if self.current_token == Token::Comma {
+                self.advance(); // Consume ',' if more parameters
             }
         }
         self.eat(Token::RightParen); // Consume ')'
-    
+
         self.eat(Token::RightArrow); // Consume '>>'
 
-        let return_type = match &self.current_token {
-            Token::TVoid => Type::Void,
-            Token::TBool => Type::Bool,
-            Token::TInt => Type::Int,
-            Token::TFloat => Type::Float,
-            Token::TString => Type::String,
-            _ => panic!("Expected return type after '->'"),
-        };
-        
-        self.advance();
+        let return_type = self.infer_token_to_type();
+        if !matches!(return_type, Type::Vector(_)) {
+            self.advance(); // Move past the type if not vector because vector type has already advanced
+        }
+
         self.eat(Token::LeftCurly); // Consume '{'
-    
+
         // Parse the function body
         let mut body = Vec::new();
         while self.current_token != Token::RightCurly {
@@ -227,24 +355,28 @@ impl Parser {
         }
         let is_returning = &body.iter().any(|s| match s {
             Stmt::Return(_) => true,
-            _ => false
+            _ => false,
         });
         if !is_returning {
             body.push(Stmt::Return(None))
         }
-        
+
         self.eat(Token::RightCurly); // Consume '}'
 
-        fn validate_function_return_type(body: &[Stmt], expected_type: &Type, symbol_table: &mut HashMap<String, Type>) {
+        fn validate_function_return_type(
+            body: &[Stmt],
+            expected_type: &Type,
+            symbol_table: &mut ScopedSymbolTable,
+        ) {
+            symbol_table.enter_scope(); // New scope for the function body
+
             for stmt in body {
                 match stmt {
-                    Stmt::Assignment(var_name, expr, _) => {
-                        // Infer the type of the expression being assigned
+                    Stmt::Assignment(var_name, expr, _, _) => {
                         let expr_type = infer_expr_type(expr, symbol_table);
                         symbol_table.insert(var_name.clone(), expr_type);
                     }
                     Stmt::Reassignment(var_name, expr) => {
-                        // Ensure reassignment matches the declared type
                         if let Some(var_type) = symbol_table.get(var_name) {
                             let expr_type = infer_expr_type(expr, symbol_table);
                             if var_type != &expr_type {
@@ -277,36 +409,32 @@ impl Parser {
                     _ => {}
                 }
             }
+
+            symbol_table.exit_scope(); // Exit the function body scope
         }
-        
-        
-        // Helper to infer the type of an expression
-        fn infer_expr_type(expr: &Expr, symbol_table: &HashMap<String, Type>) -> Type {
-            match expr {
-                Expr::Int(_) => Type::Int,
-                Expr::Float(_) => Type::Float,
-                Expr::String(_) => Type::String,
-                Expr::Boolean(_) => Type::Bool,
-                Expr::Identifier(name) => {
-                    symbol_table.get(name).cloned().expect(&format!(
-                        "Undefined variable or identifier: {}",
-                        name
-                    ))
-                }
-                Expr::FunctionCall(_, _) => todo!("Handle function call return type"),
-                _ => panic!("Unexpected expression type: {:?}", expr),
-            }
+
+        let mut symbol_table = ScopedSymbolTable::new();
+        let mut string_methods = HashMap::new();
+        string_methods.insert("len".to_string(), Type::Int);
+        string_methods.insert("chars".to_string(), Type::Vector(Box::new(Type::Char)));
+        let mut int_methods = HashMap::new();
+        int_methods.insert("_f".to_string(), Type::Float);
+        let string_type = Type::Object(string_methods);
+        let int_type = Type::Object(int_methods);
+        symbol_table.insert("string".to_string(), string_type);
+        symbol_table.insert("int".to_string(), int_type);
+
+        // Add parameters to the symbol table
+        for (param_name, param_type) in &parameters {
+            symbol_table.insert(param_name.clone(), param_type.clone());
         }
-        
-    
-        let mut symbol_table = HashMap::new();
         validate_function_return_type(&body, &return_type, &mut symbol_table);
         Stmt::FunctionDeclaration(function_name, parameters, body, return_type)
     }
 
     fn parse_function_call(&mut self, function_name: String) -> Expr {
         self.eat(Token::LeftParen); // Consume '('
-    
+
         let mut arguments = Vec::new();
         while self.current_token != Token::RightParen {
             arguments.push(self.parse_expr());
@@ -315,14 +443,13 @@ impl Parser {
             }
         }
         self.eat(Token::RightParen); // Consume ')'
-    
+
         Expr::FunctionCall(function_name, arguments)
     }
-    
 
     // Parse if statements
     fn parse_if(&mut self) -> Stmt {
-        self.eat(Token::If);
+        self.advance(); // cannot use self.eat (if && selif)
         let condition = self.parse_expr();
         self.eat(Token::LeftCurly);
 
@@ -330,17 +457,21 @@ impl Parser {
         while self.current_token != Token::EOF && self.current_token != Token::RightCurly {
             if_body.push(self.parse_statement());
         }
-
         self.eat(Token::RightCurly);
 
         let mut else_body = Vec::new();
-        if self.current_token == Token::Else {
-            self.eat(Token::Else);
-            self.eat(Token::LeftCurly);
-            while self.current_token != Token::EOF && self.current_token != Token::RightCurly {
-                else_body.push(self.parse_statement());
+        if self.current_token == Token::Else || self.current_token == Token::Elif {
+            if self.current_token == Token::Elif {
+                // Parse `else if` as a nested `If` statement
+                else_body.push(self.parse_if());
+            } else {
+                self.eat(Token::Else);
+                self.eat(Token::LeftCurly);
+                while self.current_token != Token::EOF && self.current_token != Token::RightCurly {
+                    else_body.push(self.parse_statement());
+                }
+                self.eat(Token::RightCurly);
             }
-            self.eat(Token::RightCurly);
         }
 
         Stmt::If(condition, if_body, else_body)
@@ -363,7 +494,7 @@ impl Parser {
 
     fn parse_for_in_range(&mut self) -> Stmt {
         self.eat(Token::For); // Consume 'for'
-        
+
         // Ensure we have an identifier for the loop variable
         let iter_identifier = if let Token::Identifier(var_name) = &self.current_token {
             var_name.clone()
@@ -371,35 +502,55 @@ impl Parser {
             panic!("Expected an identifier as the loop variable in 'for' statement");
         };
         self.advance(); // Move past the loop variable
-        
+
         self.eat(Token::In); // Consume 'in'
-        
+
         // Parse the range expressions
-        let from = self.parse_expr(); // Parse start of the range
-        self.eat(Token::DoubleDot); // Consume '..'
-        let to = self.parse_expr(); // Parse end of the range
-        
+        // Parse the iterable (can be a range or vector)
+        let iterable = self.parse_expr();
+
+        // Check if it's a range (by looking for a DoubleDot) or a vector
+        let (from, to, is_range) = if self.current_token == Token::DoubleDot {
+            self.eat(Token::DoubleDot);
+            let to = self.parse_expr();
+            (Some(iterable), Some(to), true) // It's a range
+        } else {
+            (Some(iterable), None, false) // It's a vector or other iterable
+        };
+
+        let step = if self.current_token == Token::Step {
+            self.advance();
+            let step_size = self.parse_expr();
+            step_size
+        } else {
+            Expr::Int(1)
+        };
+
         self.eat(Token::LeftCurly); // Consume '{'
-        
+
         // Parse the body of the loop
         let mut body = Vec::new();
         while self.current_token != Token::EOF && self.current_token != Token::RightCurly {
             body.push(self.parse_statement());
         }
         self.eat(Token::RightCurly); // Consume '}'
-        
-        Stmt::For(iter_identifier, from, to, body)
+
+        if is_range {
+            Stmt::ForRange(iter_identifier, from.unwrap(), to.unwrap(), step, body)
+        } else {
+            Stmt::ForVector(iter_identifier, from.unwrap(), body)
+        }
     }
-    
+
     fn parse_use(&mut self) -> Stmt {
         self.eat(Token::Use); // Consume 'use'
         let mut module_path = String::new();
-    
+
         // Parse module paths (e.g., std::cout)
         while let Token::Identifier(part) = &self.current_token {
             module_path.push_str(part);
             self.advance();
-    
+
             if self.current_token == Token::DoubleColon {
                 module_path.push_str("::");
                 self.advance();
@@ -407,26 +558,24 @@ impl Parser {
                 break;
             }
         }
-    
+
         self.eat(Token::SemiColon); // Consume ';'
         Stmt::Use(module_path)
     }
-    
 
     // Parse a return statement
     fn parse_return(&mut self) -> Stmt {
         self.eat(Token::Return);
-    
+
         let expr = if self.current_token != Token::SemiColon {
             Some(self.parse_expr())
         } else {
             None
         };
-    
+
         self.eat(Token::SemiColon);
         Stmt::Return(expr)
-    }    
-    
+    }
 
     // Parse any statement
     fn parse_statement(&mut self) -> Stmt {
@@ -446,6 +595,14 @@ impl Parser {
                     self.eat(Token::SemiColon);
                     Stmt::Expression(expr)
                 }
+            }
+            Token::DoubleSlash => {
+                self.eat(Token::DoubleSlash);
+                while self.current_token != Token::DoubleSlash {
+                    self.advance();
+                }
+                self.eat(Token::DoubleSlash);
+                self.parse_statement()
             }
             _ => {
                 let expr = self.parse_expr();
