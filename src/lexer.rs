@@ -4,6 +4,7 @@
 pub enum Token {
     Identifier(String),
     Assignment,
+    ShortAssignment,
     SemiColon,
     LeftCurly,
     RightCurly,
@@ -262,9 +263,9 @@ impl Lexer {
             }
             '<' => {
                 self.advance();
-                if self.at() == '<' {
+                if self.at() == ':' {
                     self.advance();
-                    Token::Assignment
+                    Token::ShortAssignment
                 } else {
                     Token::LessThan
                 }
@@ -284,7 +285,7 @@ impl Lexer {
                     self.advance();
                     Token::Equal
                 } else {
-                    self.next_token()
+                    Token::Assignment
                 }
             }
             '!' => {

@@ -8,14 +8,14 @@ use std::collections::HashMap;
 use std::fmt;
 
 pub struct DebuggableIterator {
-    inner: Box<dyn Iterator<Item = Value>>,
+    // inner: Box<dyn Iterator<Item = Value>>,
 }
 
-impl DebuggableIterator {
-    pub fn new(inner: Box<dyn Iterator<Item = Value>>) -> Self {
-        DebuggableIterator { inner }
-    }
-}
+// impl DebuggableIterator {
+//     pub fn new(inner: Box<dyn Iterator<Item = Value>>) -> Self {
+//         DebuggableIterator { inner }
+//     }
+// }
 
 impl fmt::Debug for DebuggableIterator {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -33,11 +33,8 @@ pub enum Value {
     Char(char),
     String(String),
     Vector(Vec<Value>),
-    Function {
-        params: Vec<(String, Type)>,
-        body: Vec<Stmt>,
-        return_type: Type,
-    },
+    Map(HashMap<String, Type>),
+    Function(Vec<(String, Type)>, Vec<Stmt>, Type), // params, body, return_type
     BuiltinFunction(fn(Vec<Value>) -> Value),
 }
 
@@ -79,11 +76,8 @@ impl Value {
             Value::Char(_) => Type::Char,
             Value::String(_) => Type::String,
             Value::Vector(v) => Type::Vector(Box::new(v[0].get_type())),
-            Value::Function {
-                params,
-                body,
-                return_type,
-            } => Type::Function(
+            Value::Map(m) => Type::Map(m.clone()),
+            Value::Function(params, _, return_type) => Type::Function(
                 params.iter().map(|p| p.1.clone()).collect(),
                 Box::new(return_type.clone()),
             ),
@@ -202,17 +196,17 @@ impl Value {
     }
 
     // Vectors
-    fn get_index(self, index: Value) -> Value {
-        if let Value::Vector(v) = self {
-            if let Value::Int(i) = index {
-                return v.get(i as usize).cloned().unwrap_or_else(|| {
-                    panic!("Index {} out of bounds", i);
-                });
-            }
-            panic!("Index must be an integer");
-        }
-        panic!("Indexing is only supported on vectors");
-    }
+    // fn get_index(self, index: Value) -> Value {
+    //     if let Value::Vector(v) = self {
+    //         if let Value::Int(i) = index {
+    //             return v.get(i as usize).cloned().unwrap_or_else(|| {
+    //                 panic!("Index {} out of bounds", i);
+    //             });
+    //         }
+    //         panic!("Index must be an integer");
+    //     }
+    //     panic!("Indexing is only supported on vectors");
+    // }
 }
 
 // Implement `to_string` for Value to handle printing
@@ -232,11 +226,12 @@ impl ToString for Value {
                 }
                 format!("{:?}", vec)
             }
-            Value::Function {
-                params,
-                body,
-                return_type,
-            } => format!("{:?}", (params, body, return_type)),
+            Value::Map(m) => {
+                format!("{:?}", m)
+            }
+            Value::Function(params, body, return_type) => {
+                format!("{:?}", (params, body, return_type))
+            }
             Value::BuiltinFunction(_) => "BuiltinFunction".to_string(),
         }
     }
@@ -249,6 +244,7 @@ pub struct Variable {
     var_type: Type,
 }
 
+#[derive(Debug, Clone, PartialEq)]
 pub struct Scope {
     variables: HashMap<String, Variable>,
 }
@@ -335,7 +331,6 @@ impl Interpreter {
                         for arg in args {
                             print!("{}", arg.to_string());
                         }
-                        println!();
                         Value::Null // Returning a dummy value
                     }),
                 );
@@ -378,7 +373,7 @@ impl Interpreter {
         match target {
             Value::Int(i) => match method_name {
                 "_f" => Value::Float(i as f64),
-                "clamp_" => {
+                "clamp" => {
                     if args.len() != 2 {
                         panic!("Method 'clamp_' takes exactly 2 arguments")
                     }
@@ -393,10 +388,13 @@ impl Interpreter {
                 "_i" => Value::Int(f as i64),
                 "sin" => Value::Float(f.sin()),
                 "cos" => Value::Float(f.cos()),
-                _ => panic!("Unknown method '{}' for type Float", method_name),
+                _ => panic!(
+                    "Unknown method '{}' for '{:?}' of type Float",
+                    method_name, target
+                ),
             },
             Value::String(s) => match method_name {
-                "chars" => Value::Vector(s.chars().map(|c| Value::String(c.to_string())).collect()),
+                "chars" => Value::Vector(s.chars().map(|c| Value::Char(c)).collect()),
                 "len" => {
                     if !args.is_empty() {
                         panic!("Method 'len' does not take arguments");
@@ -435,6 +433,15 @@ impl Interpreter {
                     let mut new_vec = v.clone();
                     new_vec.pop();
                     Value::Vector(new_vec)
+                }
+                "nth_otherwise" => {
+                    if args.len() != 2 {
+                        panic!("Method 'nth_char' requires exactly 2 arguments");
+                    }
+                    match args[0] {
+                        Value::Int(i) => v.iter().nth(i as usize).unwrap_or(&args[1]).clone(),
+                        _ => panic!("Method 'get_otherwise' needs type Int for the first argument"),
+                    }
                 }
                 "extend_" => {
                     if args.len() != 1 {
@@ -482,20 +489,31 @@ impl Interpreter {
 
                 Value::Vector(evaluated_elements)
             }
-            Expr::VectorIndex(vector_expr, index_expr) => {
-                let vector_value = self.eval_expr(vector_expr);
-                let index_value = self.eval_expr(index_expr);
-
-                match (vector_value, index_value) {
-                    (Value::Vector(vec), Value::Int(idx)) => {
-                        if idx < 0 || idx as usize >= vec.len() {
-                            panic!("Index out of bounds: {}", idx);
-                        }
-                        vec[idx as usize].clone()
-                    }
-                    (Value::Vector(_), _) => panic!("Index must be an integer"),
-                    (_, _) => panic!("Cannot index a non-vector value"),
+            Expr::VectorIndex(vector_expr, vec_of_indices_expr) => {
+                let mut vector_value = self.eval_expr(vector_expr);
+                let mut vec_of_indices = Vec::new();
+                for expr in vec_of_indices_expr.iter() {
+                    vec_of_indices.push(self.eval_expr(expr));
                 }
+                let mut return_value = Value::Null;
+                for index in vec_of_indices {
+                    match (vector_value, index.clone()) {
+                        (Value::Vector(vec), Value::Int(idx)) => {
+                            if idx < 0 || idx as usize >= vec.len() {
+                                panic!(
+                                    "Index out of bounds: index {} in len of {}",
+                                    idx,
+                                    vec.len()
+                                );
+                            }
+                            vector_value = vec[idx as usize].clone();
+                            return_value = vector_value.clone()
+                        }
+                        (Value::Vector(_), _) => panic!("Index must be an integer"),
+                        (_, _) => panic!("Cannot index a non-vector value"),
+                    }
+                }
+                return_value
             }
             Expr::MethodCall(base, method_name, args) => {
                 // Evaluate the target of the method
@@ -544,11 +562,7 @@ impl Interpreter {
 
                 if let Some(var) = self.find_variable(name) {
                     match &var.value {
-                        Value::Function {
-                            params,
-                            body,
-                            return_type,
-                        } => {
+                        Value::Function(params, body, return_type) => {
                             if params.len() != evaluated_args.len() {
                                 panic!(
                                     "Function {} expects {} arguments, but {} were provided",
@@ -619,42 +633,38 @@ impl Interpreter {
         match stmt {
             Stmt::Use(module_path) => {
                 let parts: Vec<&str> = module_path.split("::").collect();
-                if parts.len() == 2 {
-                    let module_name = parts[0];
-                    let symbol_name = parts[1];
+                let module_name = parts[0];
+                let symbol_name = parts[1];
 
-                    // Load the module if not already loaded
-                    if !self.modules.contains_key(module_name) {
-                        if module_name == "std" || module_name == "math" {
-                            self.load_module(module_name); // Example standard library module
-                        } else {
-                            panic!("Unknown module '{}'", module_name);
-                        }
-                    }
-
-                    // Bind the symbol to the current scope
-                    if let Some(module) = self.modules.get(module_name) {
-                        if let Some(value) = module.get(symbol_name) {
-                            let value_clone = value.clone(); // Clone the value here
-                            self.current_scope().set_variable(
-                                symbol_name.to_string(),
-                                Variable {
-                                    value: value_clone,
-                                    is_mutable: false,
-                                    var_type: Type::Module,
-                                },
-                            );
-                        } else {
-                            panic!(
-                                "Symbol '{}' not found in module '{}'",
-                                symbol_name, module_name
-                            );
-                        }
+                // Load the module if not already loaded
+                if !self.modules.contains_key(module_name) {
+                    if module_name == "std" || module_name == "math" || module_name == "time" {
+                        self.load_module(module_name); // Example standard library module
                     } else {
-                        panic!("Module '{}' not found", module_name);
+                        panic!("Unknown module '{}'", module_name);
+                    }
+                }
+
+                // Bind the symbol to the current scope
+                if let Some(module) = self.modules.get(module_name) {
+                    if let Some(value) = module.get(symbol_name) {
+                        let value_clone = value.clone(); // Clone the value here
+                        self.current_scope().set_variable(
+                            symbol_name.to_string(),
+                            Variable {
+                                value: value_clone,
+                                is_mutable: false,
+                                var_type: Type::Module,
+                            },
+                        );
+                    } else {
+                        panic!(
+                            "Symbol '{}' not found in module '{}'",
+                            symbol_name, module_name
+                        );
                     }
                 } else {
-                    panic!("Invalid module path: {}", module_path);
+                    panic!("Module '{}' not found", module_name);
                 }
             }
             Stmt::Expression(expr) => {
@@ -663,47 +673,112 @@ impl Interpreter {
             Stmt::Assignment(name, expr, is_mutable, var_type) => {
                 let value = self.eval_expr(expr);
                 let is_mutable = *is_mutable;
+                let var_type = match var_type {
+                    Some(vt) => vt.clone(),
+                    None => value.get_type(),
+                };
                 self.current_scope().set_variable(
                     name.clone(),
                     Variable {
                         value,
                         is_mutable,
-                        var_type: var_type.clone(),
+                        var_type,
                     },
                 );
             }
-            Stmt::Reassignment(name, expr) => {
-                let value = self.eval_expr(expr);
-                let current_var = self.current_scope().get_variable(name);
+
+            Stmt::Reassignment(name, vec_idx, expr) => {
+                let value = self.eval_expr(expr); // Evaluate the new value
+                let current_var = self.current_scope().get_variable(&name);
+
                 if current_var.is_none() {
-                    panic!("Variable has not existed yet.")
-                } else if current_var.as_ref().unwrap().is_mutable {
-                    match (&current_var.as_ref().unwrap().value, &value) {
-                        (Value::Boolean(_), Value::Boolean(_))
-                        | (Value::Float(_), Value::Float(_))
-                        | (Value::Int(_), Value::Int(_))
-                        | (Value::String(_), Value::String(_)) => {
-                            self.current_scope().set_variable(
-                                name.clone(),
-                                Variable {
-                                    value,
-                                    is_mutable: current_var.clone().unwrap().is_mutable,
-                                    var_type: current_var.unwrap().var_type,
-                                },
-                            )
+                    panic!("Variable '{}' has not been declared.", name);
+                }
+
+                let current_var = current_var.unwrap();
+                if !current_var.is_mutable {
+                    panic!("Variable '{}' is not mutable.", name);
+                }
+
+                if let Some(Expr::VectorIndex(vector_expr, indices_expr)) = vec_idx {
+                    // Ensure the variable name matches
+                    if let Expr::Identifier(vector_name) = &**vector_expr {
+                        if name != vector_name {
+                            panic!("Variable name mismatch in reassignment.");
                         }
-                        (_, _) => panic!("Reassigning mismatched types."),
+                    } else {
+                        panic!("Expected a vector identifier in vector index.");
+                    }
+
+                    // Evaluate indices into integers
+                    let indices: Vec<usize> = indices_expr
+                        .iter()
+                        .map(|idx_expr| match self.eval_expr(idx_expr) {
+                            Value::Int(idx) if idx >= 0 => idx as usize,
+                            _ => {
+                                panic!("Index expressions must evaluate to non-negative integers.")
+                            }
+                        })
+                        .collect();
+
+                    // Ensure the variable holds a vector
+                    if let Value::Vector(mut vec) = current_var.value.clone() {
+                        let mut current_element = &mut vec; // Start traversal at the top-level vector
+                        for &idx in &indices[0..indices.len() - 1] {
+                            if let Some(Value::Vector(inner_vec)) = current_element.get_mut(idx) {
+                                current_element = inner_vec;
+                            } else {
+                                panic!("Index '{}' points to a non-vector type.", idx);
+                            }
+                        }
+
+                        // Perform reassignment at the final index
+                        let final_index = *indices.last().unwrap();
+                        if let Some(element) = current_element.get_mut(final_index) {
+                            match (&element, &value) {
+                                (Value::Boolean(_), Value::Boolean(_))
+                                | (Value::Float(_), Value::Float(_))
+                                | (Value::Int(_), Value::Int(_))
+                                | (Value::Char(_), Value::Char(_))
+                                | (Value::String(_), Value::String(_)) => {
+                                    *element = value;
+                                }
+                                _ => panic!(
+                                    "Type mismatch {:?} and {:?} during reassignment.",
+                                    element.get_type(),
+                                    value.get_type()
+                                ),
+                            }
+                        } else {
+                            panic!("Index '{}' out of bounds for vector.", final_index);
+                        }
+
+                        // Update the variable in the current scope
+                        self.current_scope().set_variable(
+                            name.clone(),
+                            Variable {
+                                value: Value::Vector(vec),
+                                is_mutable: current_var.is_mutable,
+                                var_type: current_var.var_type,
+                            },
+                        );
+                    } else {
+                        panic!("Variable '{}' is not a vector.", name);
                     }
                 } else {
-                    panic!("Variable is not set to be mutable.");
+                    self.current_scope().set_variable(
+                        name.clone(),
+                        Variable {
+                            value,
+                            is_mutable: current_var.is_mutable,
+                            var_type: current_var.var_type,
+                        },
+                    );
                 }
             }
+
             Stmt::FunctionDeclaration(name, params, body, return_type) => {
-                let function = Value::Function {
-                    params: params.clone(),
-                    body: body.clone(),
-                    return_type: return_type.clone(),
-                };
+                let function = Value::Function(params.clone(), body.clone(), return_type.clone());
                 self.current_scope().define_function(name.clone(), function);
             }
             Stmt::If(condition, if_body, else_body) => {
@@ -724,19 +799,17 @@ impl Interpreter {
                     else_body
                 };
 
-                self.scopes.push(Scope::new());
                 for stmt in body_to_execute {
                     self.exec_stmt(stmt);
                     if self.return_value.is_some() {
                         break;
                     }
                 }
-                self.scopes.pop();
             }
 
             Stmt::While(condition, body) => {
                 while !self.eval_expr(condition).is_zero() {
-                    self.scopes.push(Scope::new());
+                    // self.scopes.push(Scope::new());
                     for stmt in body {
                         self.exec_stmt(stmt);
                         if self.return_value.is_some() {
@@ -744,7 +817,7 @@ impl Interpreter {
                             return;
                         }
                     }
-                    self.scopes.pop();
+                    // self.scopes.pop();
                 }
             }
             Stmt::ForRange(iter, from, to, step_size, body) => {
@@ -765,7 +838,7 @@ impl Interpreter {
 
                 for i in (start..end).step_by(step as usize) {
                     // Push a new scope for the loop iteration
-                    self.scopes.push(Scope::new());
+                    // self.scopes.push(Scope::new());
                     // Assign the loop variable in the current scope
                     self.current_scope().set_variable(
                         iter.clone(),
@@ -786,7 +859,7 @@ impl Interpreter {
                     }
 
                     // Pop the scope after each iteration
-                    self.scopes.pop();
+                    // self.scopes.pop();
                 }
             }
             Stmt::ForVector(iter, vector, body) => {
@@ -797,7 +870,7 @@ impl Interpreter {
 
                 for item in evaluated_vector {
                     // Push a new scope for the loop iteration
-                    self.scopes.push(Scope::new());
+                    // self.scopes.push(Scope::new());
 
                     // Assign the loop variable in the current scope
                     self.current_scope().set_variable(
@@ -819,7 +892,7 @@ impl Interpreter {
                     }
 
                     // Pop the scope after each iteration
-                    self.scopes.pop();
+                    // self.scopes.pop();
                 }
             }
 
@@ -829,7 +902,7 @@ impl Interpreter {
                 // Check if we're inside a function
                 let current_function = self.find_variable("__current_function__");
                 if let Some(Variable {
-                    value: Value::Function { return_type, .. },
+                    value: Value::Function(.., return_type),
                     ..
                 }) = current_function
                 {

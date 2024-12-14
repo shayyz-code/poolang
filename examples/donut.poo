@@ -1,65 +1,75 @@
 use math::PI;
-use thread::sleep;
+use time::sleep;
 use std::pout;
 use std::cls;
 
-poof rotate_donut() >> void {
-    poo mut a: float << 0.0;
-    poo mut b: float << 0.0;
+poof rotate_donut() {
 
-    poo width: int << 80;
-    poo height: int << 40;
-    poo r1: float << 1.0;
-    poo r2: float << 2.0;
-    poo k2: float << 5.0;
-    poo k1: float << width._f() * k2 * 3.0 / (8.0 * (r1 + r2));
+    poo width <: 80;
+    poo height <: 24;
+    
+    mut a <: 0.0;
+    mut b <: 0.0;
 
-    poo luminance_str: str << ".,-~:;=!*#$@";
+    poo delay <: 0;
+
+    poo luminance_str str = ".,-~:;=!*#$@";
 
     while true {
-        poo mut buffer: vec[vec[char]] << [[' '].extend_(width)].extend_(height);
-        poo mut z_buffer: vec[vec[float]] << [[0.0].extend_(width)].extend_(height);
+        mut buffer vec:vec:char = [[' '].extend_(width)].extend_(height);
+        mut z_buffer vec:vec:float = [[0.0].extend_(width)].extend_(height);
+        
+        poo r1 <: 1.0;
+        poo r2 <: 2.0;
+        poo k1 <: 15.0;
+        poo k2 <: 5.0;
 
-        for theta in 0..628 step 7 {
-            poo theta: float << theta._f() / 100.0;
-            poo cos_theta: float << theta.cos();
-            poo sin_theta: float << theta.sin(); 
+        for theta in 0..360 step 10 {
+            poo theta float = theta._f() * PI / 180.0;
+            poo sin_theta float = theta.sin(); 
+            poo cos_theta float = theta.cos();
 
-            for phi in 0..628 step 2 {
-                poo phi: float << phi._f() / 100.0;
-                poo cos_phi: float << phi.cos();
-                poo sin_phi: float << phi.sin();
+            for phi in 0..360 step 5 {
+                poo phi float = phi._f() * PI / 180.0;
+                poo sin_phi float =  phi.sin();
+                poo cos_phi float = phi.cos();
 
-                poo circle_x: float << r2 + r1 * cos_theta;
-                poo circle_y: float << r1 * sin_theta;
+                poo sin_a float = a.sin();
+                poo cos_a float = a.cos();
+                poo sin_b float = a.sin();
+                poo cos_b float = a.cos();
+                
 
-                poo x: float << circle_x * (a.cos() * cos_phi + a.sin() * b.sin() * sin_phi)
-                                - circle_y * a.sin() * b.cos();
-                poo y: float << circle_x * (b.cos() * sin_phi - a.sin() * b.sin() * cos_phi)
-                                - circle_y * a.cos();
-                poo z: float << k2 + a.cos() * (circle_x * b.sin() + circle_y * b.cos());
-                poo ooz: float << 1.0 / z;
+                poo circle_x float = r2 + r1 * cos_theta;
+                poo circle_y float = r1 * sin_theta;
 
-                poo xp: float << width._f() / 2.0 + k1 * ooz * x;
-                poo yp: float << height._f() / 2.0 - k1 * ooz * y;
+                poo x float = circle_x * (cos_b * cos_phi + sin_a * sin_b * sin_phi)
+                                - circle_y * cos_a * sin_b;
+                poo y float = circle_x * (cos_phi * sin_b - cos_b * sin_a * sin_phi)
+                                + circle_y * cos_a * cos_b;
+                poo z float = k2 + cos_a * circle_x * sin_phi + circle_y * sin_a;
+                poo ooz float = 1.0 / z;
 
-                poo luminance: float << cos_phi * cos_theta * b.sin()
-                                    - a.cos() * cos_theta * b.cos()
-                                    - sin_phi * sin_theta * a.sin();
-                poo luminance_index: float << luminance * 8.0 + 8.0;
-                poo luminance_index: int << luminance_index._i();
-                poo luminance_index: int << luminance_index.clamp(0, 11);
+                poo xp float = width._f() / 2.0 + k1 * ooz * x;
+                poo xp int = xp._i();
+                poo yp float = height._f() / 2.0 - k1 * ooz * y;
+                poo yp int = yp._i();
 
-                poo z_buffer_yp: vec[float] << z_buffer[yp];
-                poo z_buffer_xp: float << z_buffer_yp[xp];
-                poo buffer_yp: vec[char] << buffer[yp];
-                poo buffer_xp: char << buffer_yp[xp];
+                poo luminance float = cos_phi * cos_theta * sin_b
+                                    - cos_a * cos_theta * sin_phi
+                                    - sin_a * sin_theta
+                                    + cos_b * (cos_a * sin_theta - cos_theta * sin_a * sin_phi);
 
-                if xp < width._f() and yp < height._f() and ooz > z_buffer_xp {
-                    z_buffer_xp << ooz;
-                    poo luminance_chars: vec[char] << luminance_str.chars();
-                    poo luminance_nth_char: vec[char] << luminance_chars.nth_char_otherwise(luminance_index, ' ');
-                    buffer_xp << luminance_nth_char;
+                poo luminance_index float = luminance * 8.0;
+                poo luminance_index int = luminance_index._i();
+
+                if xp > -1 and xp < width and yp > -1 and yp < height and luminance_index > -1  and luminance_index < 13 {
+                    if ooz > z_buffer[yp][xp] {
+                        z_buffer[yp][xp] = ooz;
+                        poo luminance_chars vec:char = luminance_str.chars();
+                        poo luminance_nth_char char = luminance_chars.nth_otherwise(luminance_index, ' ');
+                        buffer[yp][xp] = luminance_nth_char;
+                    }
                 }
             }
         }
@@ -70,11 +80,12 @@ poof rotate_donut() >> void {
             for col in row {
                 pout(col);
             }
+            pout('\n');
         }
 
-        a << a + 0.04;
-        b << b + 0.08;
-        sleep(30);
+        a = a + 0.04;
+        b = b + 0.08;
+        sleep(delay);
     }
 }
 

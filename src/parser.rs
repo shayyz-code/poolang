@@ -1,9 +1,7 @@
-use std::collections::HashMap;
-
 // src/parser.rs
 use crate::ast::{Expr, Stmt, Type};
 use crate::lexer::{Lexer, Token};
-use crate::type_inference::infer_expr_type;
+use crate::type_inference::*;
 use crate::visitor::ScopedSymbolTable;
 
 pub struct Parser {
@@ -45,6 +43,26 @@ impl Parser {
     // fn error(&self, message: &str) {
     //     eprintln!("Parse error: {} at {:?}", message, self.current_token);
     // }
+    pub fn infer_token_to_type(&mut self) -> Type {
+        match &self.current_token {
+            Token::TBool => Type::Bool,
+            Token::TInt => Type::Int,
+            Token::TFloat => Type::Float,
+            Token::TVoid => Type::Void,
+            Token::TChar => Type::Char,
+            Token::TString => Type::String,
+            Token::TVec => {
+                self.advance();
+                self.eat(Token::Colon);
+                let vec_type = self.infer_token_to_type();
+                if !matches!(vec_type, Type::Vector(_)) {
+                    self.advance();
+                }
+                Type::Vector(Box::new(vec_type))
+            }
+            _ => panic!("Expected a datatype"),
+        }
+    }
 
     // Parse primary expressions (numbers, identifiers, or parenthesized expressions)
     fn parse_primary(&mut self) -> Expr {
@@ -99,18 +117,7 @@ impl Parser {
                 self.eat(Token::RightParen); // Consume ')'
                 expr
             }
-            Token::LeftBracket => {
-                self.advance(); // Consume '['
-                let mut elements = Vec::new();
-                while self.current_token != Token::RightBracket {
-                    elements.push(self.parse_expr());
-                    if self.current_token == Token::Comma {
-                        self.advance();
-                    }
-                }
-                self.eat(Token::RightBracket);
-                Expr::Vector(elements)
-            }
+            Token::LeftBracket => self.parse_vector(),
             Token::Minus => {
                 self.advance();
                 let expr = self.parse_primary();
@@ -148,25 +155,36 @@ impl Parser {
         expr
     }
 
-    fn parse_vector_index(&mut self, vector_name: String) -> Expr {
-        self.advance();
-        let index = self.parse_primary();
+    fn parse_vector(&mut self) -> Expr {
+        self.advance(); // Consume '['
+        let mut elements = Vec::new();
+        while self.current_token != Token::RightBracket {
+            elements.push(self.parse_expr());
+            if self.current_token == Token::Comma {
+                self.advance();
+            }
+        }
         self.eat(Token::RightBracket);
-        Expr::VectorIndex(Box::new(Expr::Identifier(vector_name)), Box::new(index))
+        Expr::Vector(elements)
+    }
+
+    fn parse_vector_index(&mut self, vector_name: String) -> Expr {
+        let mut vec_of_indices = Vec::new();
+        while let Token::LeftBracket = self.current_token {
+            self.advance();
+            let index = self.parse_primary();
+            self.eat(Token::RightBracket);
+            vec_of_indices.push(index);
+        }
+
+        Expr::VectorIndex(Box::new(Expr::Identifier(vector_name)), vec_of_indices)
     }
 
     // Parse binary operations with precedence
     fn parse_binary_op(&mut self, precedence: u8) -> Expr {
         let mut left = self.parse_primary();
-        println!("Initial Left Expr: {:?}", left);
 
         while let Some(op_prec) = self.get_precedence(&self.current_token) {
-            println!(
-                "Current Precedence (Left, Current): {:?}, Token: {:?}",
-                (precedence, op_prec),
-                self.current_token
-            );
-
             // Break if current token's precedence is less than or equal to the current precedence
             if precedence >= op_prec {
                 break;
@@ -204,36 +222,6 @@ impl Parser {
             .find_map(|(t, p)| if t == token { Some(*p) } else { None })
     }
 
-    fn infer_token_to_type(&mut self) -> Type {
-        match self.current_token {
-            Token::TBool => Type::Bool,
-            Token::TInt => Type::Int,
-            Token::TFloat => Type::Float,
-            Token::TVoid => Type::Void,
-            Token::TChar => Type::Char,
-            Token::TString => Type::String,
-            Token::TVec => {
-                self.advance();
-                self.eat(Token::LeftBracket);
-                let vec_type = self.infer_token_to_type();
-                if !matches!(vec_type, Type::Vector(_)) {
-                    self.advance();
-                }
-                self.eat(Token::RightBracket);
-                Type::Vector(Box::new(vec_type))
-            }
-            _ => panic!("Expected a datatype"),
-        }
-    }
-    fn infer_expr_to_type(&mut self, expr: &Expr) -> Type {
-        match expr {
-            Expr::Boolean(_) => Type::Bool,
-            Expr::Int(_) => Type::Int,
-            Expr::Float(_) => Type::Float,
-            Expr::String(_) => Type::String,
-            _ => panic!("Unexpected expression type: {:?}", expr),
-        }
-    }
     // Parse general expressions
     fn parse_expr(&mut self) -> Expr {
         self.parse_binary_op(0)
@@ -242,33 +230,30 @@ impl Parser {
     // Parse assignment statements
     fn parse_assignment(&mut self) -> Stmt {
         let mut is_mutable: bool = false;
-        let mut var_type: Type = Type::Void;
-        self.eat(Token::Poo);
+        let mut explicit_var_type: Option<Type> = None;
         if let Token::Mut = &self.current_token {
             is_mutable = true;
-            self.advance();
+        } else if let Token::Poo = &self.current_token {
+            is_mutable = false;
         }
+        self.advance(); // consume poo | mut
         if let Token::Identifier(var_name) = &self.current_token {
             let identifier = var_name.clone();
-            let mut explicit_var_type: bool = false;
             self.advance();
-            if let Token::Colon = &self.current_token {
-                self.advance();
-                var_type = self.infer_token_to_type();
-                if !matches!(var_type, Type::Vector(_)) {
+            if self.current_token != Token::ShortAssignment {
+                explicit_var_type = Some(self.infer_token_to_type());
+                if !matches!(explicit_var_type, Some(Type::Vector(_))) {
                     self.advance(); // Move past the type if not vector because vector type has already advanced
                 }
-                explicit_var_type = true;
+                self.eat(Token::Assignment);
+            } else {
+                self.eat(Token::ShortAssignment);
             }
-            self.eat(Token::Assignment);
             let expr = self.parse_expr();
-            if !explicit_var_type {
-                var_type = self.infer_expr_to_type(&expr);
-            }
             self.eat(Token::SemiColon);
-            Stmt::Assignment(identifier, expr, is_mutable, var_type)
+            Stmt::Assignment(identifier, expr, is_mutable, explicit_var_type)
         } else {
-            panic!("Expected an identifier after 'poo'");
+            panic!("Expected an identifier after 'poo' or 'mut'");
         }
     }
 
@@ -276,11 +261,19 @@ impl Parser {
     fn parse_reassignment(&mut self) -> Stmt {
         if let Token::Identifier(var_name) = &self.current_token {
             let identifier = var_name.clone();
+            let mut vec_item_iden: Option<Expr> = None;
             self.advance();
+            if self.current_token == Token::LeftBracket {
+                vec_item_iden = Some(self.parse_vector_index(identifier.clone()));
+            }
             self.eat(Token::Assignment);
             let expr = self.parse_expr();
             self.eat(Token::SemiColon);
-            Stmt::Reassignment(identifier, expr)
+            if let Some(v) = vec_item_iden {
+                Stmt::Reassignment(identifier, Some(v), expr)
+            } else {
+                Stmt::Reassignment(identifier, None, expr)
+            }
         } else {
             panic!("Expected an identifier for reassignment");
         }
@@ -293,24 +286,24 @@ impl Parser {
         let function_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            panic!("Expected function name after 'fun'");
+            panic!("Expected function name after 'poof'");
         };
         self.advance();
 
-        if self.current_token == Token::LessThan {
-            self.advance(); // Consume '<'
-            let mut generics = Vec::new();
-            while self.current_token != Token::GreaterThan {
-                if let Token::Identifier(name) = &self.current_token {
-                    generics.push(name.clone());
-                }
-                self.advance();
-                if self.current_token == Token::Comma {
-                    self.advance();
-                }
-            }
-            self.eat(Token::GreaterThan); // Consume '>'
-        }
+        // if self.current_token == Token::LessThan {
+        //     self.advance(); // Consume '<'
+        //     let mut generics = Vec::new();
+        //     while self.current_token != Token::GreaterThan {
+        //         if let Token::Identifier(name) = &self.current_token {
+        //             generics.push(name.clone());
+        //         }
+        //         self.advance();
+        //         if self.current_token == Token::Comma {
+        //             self.advance();
+        //         }
+        //     }
+        //     self.eat(Token::GreaterThan); // Consume '>'
+        // }
 
         // Parse parameters
         self.eat(Token::LeftParen); // Consume '('
@@ -324,8 +317,7 @@ impl Parser {
             };
             self.advance(); // Move past the parameter name
 
-            // Parse the colon and type annotation
-            self.eat(Token::Colon); // Consume ':'
+            // Parse type annotation
             let param_type = self.infer_token_to_type();
             if !matches!(param_type, Type::Vector(_)) {
                 self.advance(); // Move past the type if not vector because vector type has already advanced
@@ -339,11 +331,17 @@ impl Parser {
         }
         self.eat(Token::RightParen); // Consume ')'
 
-        self.eat(Token::RightArrow); // Consume '>>'
+        let return_type: Type;
+        if self.current_token != Token::RightArrow {
+            return_type = Type::Void;
+        } else {
+            self.eat(Token::RightArrow);
+            // Consume '>>'
 
-        let return_type = self.infer_token_to_type();
-        if !matches!(return_type, Type::Vector(_)) {
-            self.advance(); // Move past the type if not vector because vector type has already advanced
+            return_type = self.infer_token_to_type();
+            if !matches!(return_type, Type::Vector(_)) {
+                self.advance(); // Move past the type if not vector because vector type has already advanced
+            }
         }
 
         self.eat(Token::LeftCurly); // Consume '{'
@@ -376,7 +374,7 @@ impl Parser {
                         let expr_type = infer_expr_type(expr, symbol_table);
                         symbol_table.insert(var_name.clone(), expr_type);
                     }
-                    Stmt::Reassignment(var_name, expr) => {
+                    Stmt::Reassignment(var_name, _, expr) => {
                         if let Some(var_type) = symbol_table.get(var_name) {
                             let expr_type = infer_expr_type(expr, symbol_table);
                             if var_type != &expr_type {
@@ -414,15 +412,6 @@ impl Parser {
         }
 
         let mut symbol_table = ScopedSymbolTable::new();
-        let mut string_methods = HashMap::new();
-        string_methods.insert("len".to_string(), Type::Int);
-        string_methods.insert("chars".to_string(), Type::Vector(Box::new(Type::Char)));
-        let mut int_methods = HashMap::new();
-        int_methods.insert("_f".to_string(), Type::Float);
-        let string_type = Type::Object(string_methods);
-        let int_type = Type::Object(int_methods);
-        symbol_table.insert("string".to_string(), string_type);
-        symbol_table.insert("int".to_string(), int_type);
 
         // Add parameters to the symbol table
         for (param_name, param_type) in &parameters {
@@ -586,9 +575,11 @@ impl Parser {
             Token::While => self.parse_while(),
             Token::For => self.parse_for_in_range(),
             Token::Return => self.parse_return(),
-            Token::Poo => self.parse_assignment(),
+            Token::Poo | Token::Mut => self.parse_assignment(),
             Token::Identifier(_) => {
-                if self.peek_token() == Token::Assignment {
+                if self.peek_token() == Token::Assignment || self.peek_token() == Token::LeftBracket
+                // vector index reassingment
+                {
                     self.parse_reassignment()
                 } else {
                     let expr = self.parse_expr();

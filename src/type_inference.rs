@@ -9,10 +9,18 @@ pub fn infer_expr_type(expr: &Expr, symbol_table: &ScopedSymbolTable) -> Type {
         Expr::Char(_) => Type::Char,
         Expr::String(_) => Type::String,
         Expr::Boolean(_) => Type::Bool,
+        Expr::Vector(v) => {
+            if let Some(a) = v.get(1) {
+                infer_expr_type(a, symbol_table)
+            } else {
+                Type::Vector(Box::new(Type::Void))
+            }
+        }
         Expr::Identifier(name) => symbol_table
             .get(name)
             .cloned()
             .expect(&format!("Undefined variable: {}", name)),
+        Expr::UnaryOp(_, _) => Type::Bool,
         Expr::BinaryOp(lhs, op, rhs) => {
             let lhs_type = infer_expr_type(lhs, symbol_table);
             let rhs_type = infer_expr_type(rhs, symbol_table);
@@ -20,18 +28,29 @@ pub fn infer_expr_type(expr: &Expr, symbol_table: &ScopedSymbolTable) -> Type {
             // Example: Add logic for binary operators
             match (lhs_type, rhs_type, op) {
                 (Type::Int, Type::Int, Token::Plus) => Type::Int,
+                (Type::Int, Type::Int, Token::Minus) => Type::Int,
+                (Type::Int, Type::Int, Token::Multiply) => Type::Int,
+                (Type::Int, Type::Int, Token::Divide) => Type::Int,
                 (Type::Float, Type::Float, Token::Plus) => Type::Float,
+                (Type::Float, Type::Float, Token::Minus) => Type::Float,
+                (Type::Float, Type::Float, Token::Multiply) => Type::Float,
+                (Type::Float, Type::Float, Token::Divide) => Type::Float,
+                (_, _, Token::Equal) => Type::Bool,
+                (_, _, Token::NotEqual) => Type::Bool,
+                (_, _, Token::And) => Type::Bool,
+                (_, _, Token::Or) => Type::Bool,
                 _ => panic!("Unsupported binary operation: {:?} {:?} {:?}", lhs, op, rhs),
             }
         }
-        Expr::MethodCall(object, method_name, args) => {
+        Expr::MethodCall(caller, method_name, args) => {
             // Infer the type of the object
-            let object_type = infer_expr_type(object, symbol_table);
+            let caller_type = infer_expr_type(caller, symbol_table);
 
             // Ensure the object has fields and methods (i.e., it's an Object type)
-            if let Type::Object(fields_and_methods) = &object_type {
+
+            if let Some(methods) = caller_type.clone().get_methods() {
                 // Check if the method exists in the object's fields and methods
-                if let Some(method_type) = fields_and_methods.get(method_name) {
+                if let Some(method_type) = methods.get(method_name) {
                     if let Type::Function(param_types, return_type) = method_type {
                         // Validate argument types
                         if param_types.len() != args.len() {
@@ -56,18 +75,21 @@ pub fn infer_expr_type(expr: &Expr, symbol_table: &ScopedSymbolTable) -> Type {
                         // Return the inferred return type of the method
                         *return_type.clone()
                     } else {
-                        panic!("'{}' is not a callable method", method_name);
+                        panic!(
+                            "'{}' of method type {:?} is not a callable method",
+                            method_name, method_type
+                        );
                     }
                 } else {
                     panic!(
                         "Undefined method '{}' for object of type {:?}",
-                        method_name, object_type
+                        method_name, caller_type
                     );
                 }
             } else {
                 panic!(
-                    "'{}' is not an object type that supports method calls",
-                    method_name
+                    "'{:?}' is not an object type that supports method calls",
+                    (caller, caller_type)
                 );
             }
         }
@@ -110,11 +132,11 @@ pub fn infer_expr_type(expr: &Expr, symbol_table: &ScopedSymbolTable) -> Type {
 
 pub fn infer_stmt_types(stmt: &Stmt, symbol_table: &mut ScopedSymbolTable) {
     match stmt {
-        Stmt::Assignment(name, expr, is_mutable, var_type) => {
+        Stmt::Assignment(name, expr, _, _) => {
             let expr_type = infer_expr_type(expr, symbol_table);
             symbol_table.insert(name.clone(), expr_type);
         }
-        Stmt::Reassignment(name, expr) => {
+        Stmt::Reassignment(name, None, expr) => {
             let expr_type = infer_expr_type(expr, symbol_table);
             let var_type = symbol_table
                 .get(name)

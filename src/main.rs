@@ -1,13 +1,10 @@
-// main.rs
 mod ast;
-// mod compiler;
 mod interpreter;
 mod lexer;
 mod parser;
 mod type_inference;
 mod visitor;
 
-// use compiler::Codegen;
 use interpreter::Interpreter;
 use lexer::Lexer;
 use parser::Parser;
@@ -15,9 +12,11 @@ use std::env;
 use std::fs;
 use std::process;
 
-// use inkwell::context::Context;
+// speed
+use std::time::Instant;
 
 fn main() {
+    let start = Instant::now();
     // Get the file path from command line arguments
     let args: Vec<String> = env::args().collect();
 
@@ -42,26 +41,17 @@ fn main() {
     let mut parser = Parser::new(lexer);
     let ast = parser.parse();
 
-    for stmt in &ast {
-        println!("{:?}\n", stmt)
-    }
-
-    // let context = Context::create();
-    // let mut codegen = Codegen::new(&context, "my_module");
-
-    // for stmt in &ast {
-    //     codegen.compile_stmt(&stmt);
-    // }
-
-    // codegen.print_ir();
-    // let mut analyzer = visitor::SemanticAnalyzer::new();
-    // analyzer.analyze(&ast);
-
     let mut interpreter = Interpreter::new();
     let result = interpreter.interpret(&ast);
 
     match result {
         Some(value) => println!("Result: {:?}", value),
-        None => println!("No return value"),
+        None => print!(""),
+    }
+
+    let duration = start.elapsed();
+
+    if args.contains(&"--speed".to_string()) {
+        println!("\nInterpreted within: {:?}", duration);
     }
 }

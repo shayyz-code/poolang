@@ -170,6 +170,7 @@ Hello, World!
 │   ├── ast.rs           # Abstract Syntax Tree (AST) definitions
 │   └── main.rs          # Entry point
 ├── examples             # Sample code
+│   ├── donut.poo
 │   └── app.poo
 └── Cargo.toml           # Project configuration
 ```

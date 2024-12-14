@@ -1,25 +1,25 @@
 use std::pout;
 use math::PI;
 
-poo my_vec: vec[str] << ["world", "hello"];
-poo a: float << 5.0 * 1.0 - 1.0 * 3.0;
-poo b: int << 2 / 2;
-poo mut d: bool << true;
-d << false;
+poo my_vec vec:str = ["world", "hello"];
+poo a float = 5.0 * 1.0 - 1.0 * 3.0;
+poo b int = 2 / 2;
+mut d bool = true;
+d = false;
 
 if not d {
     pout("d is not true");
 }
 
-poof getHelloWorld (e: vec[str]) >> vec[str] {
+poof getHelloWorld (e vec:str) >> vec:str {
     return e;
 }
 
-poof sayHello () >> void {
-    poo hello: str << "Hello,";
-    poo space: char << 'y';
-    poo world: str << "World!";
-    poo author: str << "Shayy";
+poof sayHello () {
+    poo hello str = "Hello,";
+    poo space char = 'y';
+    poo world str = "World!";
+    poo author str = "Shayy";
     if hello == "Hello," and space == 'h' or world == "World!" {
         pout(hello);
     } elif author != "Shayy" {
@@ -42,3 +42,5 @@ my_vec.push("Alan");
 sayHello();
 
 pout(a.sin(), a.cos());
+pout("a");
+pout("b");
