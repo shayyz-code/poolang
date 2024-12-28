@@ -1,7 +1,10 @@
 use math::PI;
 use time::sleep;
-use std::pout;
-use std::cls;
+use std::(
+    pout,
+    poutln,
+    cls
+);
 
 poof rotate_donut() {
 
@@ -16,8 +19,8 @@ poof rotate_donut() {
     poo luminance_str str = ".,-~:;=!*#$@";
 
     while true {
-        mut buffer vec:vec:char = [[' '].extend_(width)].extend_(height);
-        mut z_buffer vec:vec:float = [[0.0].extend_(width)].extend_(height);
+        mut buffer vec:vec:char = [[' ' >> width] >> height];
+        mut z_buffer vec:vec:float = [[0.0 >> width] >> height];
         
         poo r1 <: 1.0;
         poo r2 <: 2.0;
@@ -67,7 +70,7 @@ poof rotate_donut() {
                     if ooz > z_buffer[yp][xp] {
                         z_buffer[yp][xp] = ooz;
                         poo luminance_chars vec:char = luminance_str.chars();
-                        poo luminance_nth_char char = luminance_chars.nth_otherwise(luminance_index, ' ');
+                        poo luminance_nth_char char = luminance_chars.nth(luminance_index) otherwise ' ';
                         buffer[yp][xp] = luminance_nth_char;
                     }
                 }
@@ -80,7 +83,7 @@ poof rotate_donut() {
             for col in row {
                 pout(col);
             }
-            pout('\n');
+            poutln();
         }
 
         a = a + 0.04;

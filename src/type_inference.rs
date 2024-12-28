@@ -4,18 +4,21 @@ use crate::visitor::ScopedSymbolTable;
 
 pub fn infer_expr_type(expr: &Expr, symbol_table: &ScopedSymbolTable) -> Type {
     match expr {
+        Expr::Null => Type::Void,
         Expr::Int(_) => Type::Int,
         Expr::Float(_) => Type::Float,
         Expr::Char(_) => Type::Char,
         Expr::String(_) => Type::String,
         Expr::Boolean(_) => Type::Bool,
-        Expr::Vector(v) => {
-            if let Some(a) = v.get(1) {
+        Expr::Vector(v, _) => {
+            if let Some(a) = v.get(0) {
                 infer_expr_type(a, symbol_table)
             } else {
                 Type::Vector(Box::new(Type::Void))
             }
         }
+        Expr::Map(_) => Type::Map,
+        Expr::MapKey(_, _) => Type::String,
         Expr::Identifier(name) => symbol_table
             .get(name)
             .cloned()

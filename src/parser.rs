@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 // src/parser.rs
 use crate::ast::{Expr, Stmt, Type};
 use crate::lexer::{Lexer, Token};
@@ -60,6 +62,7 @@ impl Parser {
                 }
                 Type::Vector(Box::new(vec_type))
             }
+            Token::TMap => Type::Map,
             _ => panic!("Expected a datatype"),
         }
     }
@@ -118,6 +121,7 @@ impl Parser {
                 expr
             }
             Token::LeftBracket => self.parse_vector(),
+            Token::LeftCurly => self.parse_map(),
             Token::Minus => {
                 self.advance();
                 let expr = self.parse_primary();
@@ -145,8 +149,10 @@ impl Parser {
                         }
                     }
                     self.eat(Token::RightParen); // Consume ')'
+                    expr = Expr::MethodCall(Box::new(expr), method, args);
+                } else {
+                    expr = Expr::MapKey(Box::new(expr), method);
                 }
-                expr = Expr::MethodCall(Box::new(expr), method, args);
             } else {
                 panic!("Expected method name after '.'");
             }
@@ -158,14 +164,42 @@ impl Parser {
     fn parse_vector(&mut self) -> Expr {
         self.advance(); // Consume '['
         let mut elements = Vec::new();
+        let mut extensor: Option<Box<Expr>> = None;
         while self.current_token != Token::RightBracket {
             elements.push(self.parse_expr());
+            if self.current_token == Token::RightArrow {
+                self.advance();
+                extensor = Some(Box::new(self.parse_expr()));
+                break;
+            }
             if self.current_token == Token::Comma {
                 self.advance();
             }
         }
         self.eat(Token::RightBracket);
-        Expr::Vector(elements)
+        Expr::Vector(elements, extensor)
+    }
+
+    fn parse_map(&mut self) -> Expr {
+        self.advance(); // Consume '{'
+        let mut map = HashMap::new();
+        while self.current_token != Token::RightCurly {
+            let mut key = String::new();
+
+            if let Token::Identifier(name) = &self.current_token {
+                key = name.clone();
+                self.advance();
+            }
+
+            self.eat(Token::Colon);
+            let value = self.parse_expr();
+            if self.current_token == Token::Comma {
+                self.advance(); // Consume ','
+            }
+            map.insert(key, value);
+        }
+        self.eat(Token::RightCurly);
+        Expr::Map(map)
     }
 
     fn parse_vector_index(&mut self, vector_name: String) -> Expr {
@@ -206,6 +240,7 @@ impl Parser {
     // Get operator precedence
     fn get_precedence(&self, token: &Token) -> Option<u8> {
         let precedence_table = [
+            (Token::Otherwise, 1),
             (Token::Or, 1),
             (Token::And, 2),
             (Token::Equal, 3),
@@ -389,6 +424,7 @@ impl Parser {
                     }
                     Stmt::Return(Some(expr)) => {
                         let return_type = infer_expr_type(expr, symbol_table);
+
                         if &return_type != expected_type {
                             panic!(
                                 "Return type mismatch: expected {:?}, but found {:?}",
@@ -533,23 +569,42 @@ impl Parser {
 
     fn parse_use(&mut self) -> Stmt {
         self.eat(Token::Use); // Consume 'use'
-        let mut module_path = String::new();
+        let mut modules = Vec::new();
 
         // Parse module paths (e.g., std::cout)
-        while let Token::Identifier(part) = &self.current_token {
-            module_path.push_str(part);
-            self.advance();
-
-            if self.current_token == Token::DoubleColon {
-                module_path.push_str("::");
+        while self.current_token != Token::SemiColon {
+            if let Token::Identifier(part) = &self.current_token {
+                let mut module_path = String::new();
+                module_path.push_str(part);
                 self.advance();
+
+                if self.current_token == Token::DoubleColon {
+                    module_path.push_str("::");
+                    self.advance();
+                    if self.current_token == Token::LeftParen {
+                        self.advance();
+                        while let Token::Identifier(sub_part) = &self.current_token {
+                            modules.push(module_path.to_owned() + sub_part);
+                            self.advance();
+                            if self.current_token == Token::Comma {
+                                self.advance();
+                            } else {
+                                self.eat(Token::RightParen);
+                                break;
+                            }
+                        }
+                    } else if let Token::Identifier(sub_part) = &self.current_token {
+                        modules.push(module_path.to_owned() + sub_part);
+                    }
+                }
             } else {
                 break;
             }
         }
 
         self.eat(Token::SemiColon); // Consume ';'
-        Stmt::Use(module_path)
+                                    // println!("{:?}", modules);
+        Stmt::Use(modules)
     }
 
     // Parse a return statement
@@ -586,14 +641,6 @@ impl Parser {
                     self.eat(Token::SemiColon);
                     Stmt::Expression(expr)
                 }
-            }
-            Token::DoubleSlash => {
-                self.eat(Token::DoubleSlash);
-                while self.current_token != Token::DoubleSlash {
-                    self.advance();
-                }
-                self.eat(Token::DoubleSlash);
-                self.parse_statement()
             }
             _ => {
                 let expr = self.parse_expr();

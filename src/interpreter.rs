@@ -33,7 +33,7 @@ pub enum Value {
     Char(char),
     String(String),
     Vector(Vec<Value>),
-    Map(HashMap<String, Type>),
+    Map(HashMap<String, Value>),
     Function(Vec<(String, Type)>, Vec<Stmt>, Type), // params, body, return_type
     BuiltinFunction(fn(Vec<Value>) -> Value),
 }
@@ -63,6 +63,8 @@ impl Value {
             Value::Float(v) => *v == 0.0,
             Value::Boolean(v) => !*v,
             Value::String(v) => v.is_empty(),
+            Value::Vector(v) => v.is_empty(),
+            Value::Map(v) => v.is_empty(),
             _ => panic!("Unexpected Value in zero checking at boolean checks"),
         }
     }
@@ -76,7 +78,7 @@ impl Value {
             Value::Char(_) => Type::Char,
             Value::String(_) => Type::String,
             Value::Vector(v) => Type::Vector(Box::new(v[0].get_type())),
-            Value::Map(m) => Type::Map(m.clone()),
+            Value::Map(_) => Type::Map,
             Value::Function(params, _, return_type) => Type::Function(
                 params.iter().map(|p| p.1.clone()).collect(),
                 Box::new(return_type.clone()),
@@ -93,6 +95,7 @@ impl Value {
             (Value::Boolean(_), Type::Bool) => true,
             (Value::String(_), Type::String) => true,
             (Value::Vector(_), Type::Vector(_)) => true,
+            (Value::Map(_), Type::Map) => true,
             // (Value::Function { return_type, .. }, Type::Function(expected_return_type)) => {
             //     return_type == expected_return_type.as_ref()
             // }
@@ -277,16 +280,17 @@ impl Scope {
         self.variables.insert(name, value);
     }
 
-    // fn reassign_variable(&mut self, name: &str, new_value: Value) {
-    //     if let Some(variable) = self.variables.get_mut(name) {
-    //         if !variable.is_mutable {
-    //             panic!("Variable {} is immutable", name);
-    //         }
-    //         variable.value = new_value;
-    //     } else {
-    //         panic!("Variable {} not found", name);
-    //     }
-    // }
+    // Reassign a variable in the curent scope
+    fn reassign_variable(&mut self, name: &str, new_value: Value) {
+        if let Some(variable) = self.variables.get_mut(name) {
+            if !variable.is_mutable {
+                panic!("Variable {} is immutable", name);
+            }
+            variable.value = new_value;
+        } else {
+            panic!("Variable {} not found", name);
+        }
+    }
 }
 
 pub struct Interpreter {
@@ -332,6 +336,18 @@ impl Interpreter {
                             print!("{}", arg.to_string());
                         }
                         Value::Null // Returning a dummy value
+                    }),
+                );
+                std.insert(
+                    "poutln".to_string(),
+                    Value::BuiltinFunction(|args| {
+                        if args.len() > 0 {
+                            for arg in args {
+                                print!("{}", arg.to_string());
+                            }
+                        }
+                        println!();
+                        Value::Null
                     }),
                 );
                 std.insert(
@@ -434,28 +450,13 @@ impl Interpreter {
                     new_vec.pop();
                     Value::Vector(new_vec)
                 }
-                "nth_otherwise" => {
-                    if args.len() != 2 {
-                        panic!("Method 'nth_char' requires exactly 2 arguments");
-                    }
-                    match args[0] {
-                        Value::Int(i) => v.iter().nth(i as usize).unwrap_or(&args[1]).clone(),
-                        _ => panic!("Method 'get_otherwise' needs type Int for the first argument"),
-                    }
-                }
-                "extend_" => {
+                "nth" => {
                     if args.len() != 1 {
-                        panic!("Method 'extend_' requires exatly 1 argument");
-                    }
-                    if v.len() != 1 {
-                        panic!("Method 'extend_' only works on single element vectors")
+                        panic!("Method 'nth' requires exactly 1 arguments");
                     }
                     match args[0] {
-                        Value::Int(i) => {
-                            let new_vec = vec![v[0].clone(); i as usize];
-                            Value::Vector(new_vec)
-                        }
-                        _ => panic!("Method 'extend_' needs argument of type Int"),
+                        Value::Int(i) => v.iter().nth(i as usize).unwrap_or(&Value::Null).clone(),
+                        _ => panic!("Method 'nth' needs type Int"),
                     }
                 }
 
@@ -483,11 +484,44 @@ impl Interpreter {
                     .expect(&format!("Undefined variable: {}", name));
                 var.value
             }
-            Expr::Vector(elements) => {
+            Expr::Vector(elements, extensor) => {
                 let evaluated_elements: Vec<Value> =
                     elements.iter().map(|e| self.eval_expr(e)).collect();
+                if let Some(extensor_expr) = extensor {
+                    let evaluated_extensor = self.eval_expr(&extensor_expr);
+                    match evaluated_extensor {
+                        Value::Int(i) => {
+                            let vector = vec![evaluated_elements[0].clone(); i as usize];
+                            Value::Vector(vector)
+                        }
+                        _ => panic!("Vector extensor needs to be of type Int"),
+                    }
+                } else {
+                    Value::Vector(evaluated_elements)
+                }
+            }
+            Expr::Map(map) => {
+                let mut evaluated_map: HashMap<String, Value> = HashMap::new();
 
-                Value::Vector(evaluated_elements)
+                for item in map {
+                    evaluated_map.insert(item.0.clone(), self.eval_expr(item.1));
+                }
+
+                Value::Map(evaluated_map)
+            }
+            Expr::MapKey(map_expr, key) => {
+                let map_val = self.eval_expr(map_expr);
+                if let Value::Map(map) = map_val {
+                    if map.is_empty() {
+                        panic!("Indexing with key {} in an empty Map {:?}", key, map)
+                    } else if !map.contains_key(key) {
+                        panic!("Value for key {} does not exist in the map", key)
+                    } else {
+                        map.get(key).unwrap().clone()
+                    }
+                } else {
+                    panic!("Indexing with key in a non-map type")
+                }
             }
             Expr::VectorIndex(vector_expr, vec_of_indices_expr) => {
                 let mut vector_value = self.eval_expr(vector_expr);
@@ -541,6 +575,13 @@ impl Interpreter {
                     Token::NotEqual => left_val.ne(right_val),
                     Token::And => Value::Boolean(!left_val.is_zero() && !right_val.is_zero()),
                     Token::Or => Value::Boolean(!left_val.is_zero() || !right_val.is_zero()),
+                    Token::Otherwise => {
+                        if left_val == Value::Null {
+                            right_val
+                        } else {
+                            left_val
+                        }
+                    }
                     _ => panic!("Unexpected operator: {:?}", op),
                 }
             }
@@ -597,7 +638,7 @@ impl Interpreter {
                                 );
                             }
 
-                            let mut function_return_value = Value::Boolean(true); // Default dummy value
+                            let mut function_return_value = Value::Null; // Default dummy value
                             for stmt in body {
                                 self.exec_stmt(&stmt);
                                 if let Some(return_val) = self.return_value.take() {
@@ -610,11 +651,11 @@ impl Interpreter {
                             self.scopes.pop();
 
                             // Validate return type
+
                             if !function_return_value.is_of_type(&return_type) {
-                                panic!(
-                                    "Function {} returned a value of mismatched type. Expected {:?}, got {:?}",
-                                    name, return_type, function_return_value
-                                );
+                                panic!( "Function {} returned a value of mismatched type. Expected {:?}, got {:?}",
+                                            name, return_type, function_return_value
+                                        );
                             }
                             function_return_value
                         }
@@ -631,40 +672,42 @@ impl Interpreter {
     // Execute a statement
     fn exec_stmt(&mut self, stmt: &Stmt) {
         match stmt {
-            Stmt::Use(module_path) => {
-                let parts: Vec<&str> = module_path.split("::").collect();
-                let module_name = parts[0];
-                let symbol_name = parts[1];
+            Stmt::Use(modules) => {
+                // print!("{:?}", modules);
+                for module in modules {
+                    let parts: Vec<&str> = module.split("::").collect();
+                    let module_name = parts[0];
+                    let symbol_name = parts[1];
 
-                // Load the module if not already loaded
-                if !self.modules.contains_key(module_name) {
-                    if module_name == "std" || module_name == "math" || module_name == "time" {
-                        self.load_module(module_name); // Example standard library module
-                    } else {
-                        panic!("Unknown module '{}'", module_name);
+                    // Load the module if not already loaded
+                    if !self.modules.contains_key(module_name) {
+                        if module_name == "std" || module_name == "math" || module_name == "time" {
+                            self.load_module(module_name); // Example standard library module
+                        } else {
+                            panic!("Unknown module '{}'", module_name);
+                        }
                     }
-                }
-
-                // Bind the symbol to the current scope
-                if let Some(module) = self.modules.get(module_name) {
-                    if let Some(value) = module.get(symbol_name) {
-                        let value_clone = value.clone(); // Clone the value here
-                        self.current_scope().set_variable(
-                            symbol_name.to_string(),
-                            Variable {
-                                value: value_clone,
-                                is_mutable: false,
-                                var_type: Type::Module,
-                            },
-                        );
+                    // Bind the symbol to the current scope
+                    if let Some(module) = self.modules.get(module_name) {
+                        if let Some(value) = module.get(symbol_name) {
+                            let value_clone = value.clone(); // Clone the value here
+                            self.current_scope().set_variable(
+                                symbol_name.to_string(),
+                                Variable {
+                                    value: value_clone,
+                                    is_mutable: false,
+                                    var_type: Type::Module,
+                                },
+                            );
+                        } else {
+                            panic!(
+                                "Symbol '{}' not found in module '{}'",
+                                symbol_name, module_name
+                            );
+                        }
                     } else {
-                        panic!(
-                            "Symbol '{}' not found in module '{}'",
-                            symbol_name, module_name
-                        );
+                        panic!("Module '{}' not found", module_name);
                     }
-                } else {
-                    panic!("Module '{}' not found", module_name);
                 }
             }
             Stmt::Expression(expr) => {
@@ -689,7 +732,7 @@ impl Interpreter {
 
             Stmt::Reassignment(name, vec_idx, expr) => {
                 let value = self.eval_expr(expr); // Evaluate the new value
-                let current_var = self.current_scope().get_variable(&name);
+                let current_var = self.find_variable(name);
 
                 if current_var.is_none() {
                     panic!("Variable '{}' has not been declared.", name);
@@ -799,12 +842,14 @@ impl Interpreter {
                     else_body
                 };
 
+                // self.scopes.push(Scope::new());
                 for stmt in body_to_execute {
                     self.exec_stmt(stmt);
                     if self.return_value.is_some() {
                         break;
                     }
                 }
+                // self.scopes.pop();
             }
 
             Stmt::While(condition, body) => {
@@ -932,6 +977,9 @@ impl Interpreter {
                 break;
             }
         }
+        // for scope in self.scopes.iter() {
+        //     println!("{:?}\n", scope);
+        // }
         self.return_value.clone()
     }
 }

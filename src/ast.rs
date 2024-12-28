@@ -11,7 +11,7 @@ pub enum Type {
     Char,
     String,
     Vector(Box<Type>),
-    Map(HashMap<String, Type>),
+    Map,
     Function(Vec<Type>, Box<Type>),
     BuiltinFunction,
     Module,
@@ -48,7 +48,7 @@ impl Type {
                 methods.insert("filter".to_string(), Self::Vector(vec_type.clone()));
                 Some(methods)
             }
-            Self::Map(_) => {
+            Self::Map => {
                 let mut methods = HashMap::new();
                 methods.insert("insert".to_string(), Self::Void);
                 Some(methods)
@@ -66,8 +66,10 @@ pub enum Expr {
     Boolean(bool),
     Char(char),
     String(String),
-    Vector(Vec<Expr>), // TODO Vector and its inner type
+    Vector(Vec<Expr>, Option<Box<Expr>>), // TODO Vector and its inner type
     VectorIndex(Box<Expr>, Vec<Expr>),
+    Map(HashMap<String, Expr>),
+    MapKey(Box<Expr>, String),
     Identifier(String),
     BinaryOp(Box<Expr>, Token, Box<Expr>),
     UnaryOp(Token, Box<Expr>),
@@ -77,7 +79,7 @@ pub enum Expr {
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Stmt {
-    Use(String),
+    Use(Vec<String>),
     Expression(Expr),
     Assignment(String, Expr, bool, Option<Type>),
     Reassignment(String, Option<Expr>, Expr), // Reassignment (identifier, vector_index_indentifier, value)

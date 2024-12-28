@@ -18,7 +18,7 @@ pub enum Token {
     DoubleDot,
     Comma,
     RightArrow,
-    DoubleSlash,
+    // DoubleSlash,
 
     // keywords
     Use,
@@ -33,6 +33,7 @@ pub enum Token {
     Poo,
     Poof,
     Mut,
+    Otherwise,
 
     // values
     True,
@@ -50,6 +51,7 @@ pub enum Token {
     TChar,
     TString,
     TVec,
+    TMap,
 
     // maths
     Plus,
@@ -118,6 +120,21 @@ impl Lexer {
         let current_char = self.at();
 
         match current_char {
+            '/' => {
+                self.advance();
+                if self.at() == '/' {
+                    self.advance();
+                    while self.at() != '/' && self.peek_next_char() != '/' {
+                        self.advance();
+                    }
+                    self.advance(); // above while miss 1 char
+                    self.advance(); // first /
+                    self.advance(); // second /
+                    self.next_token()
+                } else {
+                    Token::Divide
+                }
+            }
             '0'..='9' => {
                 let mut num_str: String = self.input[self.pos..]
                     .chars()
@@ -206,15 +223,7 @@ impl Lexer {
                 self.advance();
                 Token::Multiply
             }
-            '/' => {
-                self.advance();
-                if self.at() == '/' {
-                    self.advance();
-                    Token::DoubleSlash
-                } else {
-                    Token::Divide
-                }
-            }
+
             '{' => {
                 self.advance();
                 Token::LeftCurly
@@ -320,6 +329,7 @@ impl Lexer {
                     "in" => Token::In,
                     "step" => Token::Step,
                     "return" => Token::Return,
+                    "otherwise" => Token::Otherwise,
 
                     // values
                     "true" => Token::True,
@@ -333,6 +343,7 @@ impl Lexer {
                     "char" => Token::TChar,
                     "str" => Token::TString,
                     "vec" => Token::TVec,
+                    "map" => Token::TMap,
 
                     _ => Token::Identifier(id_str),
                 }
