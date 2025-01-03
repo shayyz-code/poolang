@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::ast::{Expr, Stmt, Type};
 use crate::lexer::Token;
 use crate::visitor::ScopedSymbolTable;
@@ -17,7 +19,14 @@ pub fn infer_expr_type(expr: &Expr, symbol_table: &ScopedSymbolTable) -> Type {
                 Type::Vector(Box::new(Type::Void))
             }
         }
-        Expr::Map(_) => Type::Map,
+        Expr::Map(m) => {
+            let mut map_types = HashMap::new();
+            for i in m {
+                let i_type = infer_expr_type(i.1, symbol_table);
+                map_types.insert(i.0.clone(), i_type);
+            }
+            Type::Map(map_types)
+        }
         Expr::MapKey(_, _) => Type::String,
         Expr::Identifier(name) => symbol_table
             .get(name)
@@ -127,6 +136,14 @@ pub fn infer_expr_type(expr: &Expr, symbol_table: &ScopedSymbolTable) -> Type {
                     *return_type
                 }
                 _ => panic!("{} is not callable", name),
+            }
+        }
+        Expr::StructCompound(_, props_expr) => {
+            let map_type = infer_expr_type(&Expr::Map(props_expr.clone()), symbol_table);
+            if let Type::Map(_) = map_type {
+                map_type
+            } else {
+                panic!("Struct type inferred to non-map");
             }
         }
         _ => panic!("Unexpected expression: {:?}", expr),

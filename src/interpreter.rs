@@ -36,8 +36,13 @@ pub enum Value {
     Map(HashMap<String, Value>),
     Function(Vec<(String, Type)>, Vec<Stmt>, Type), // params, body, return_type
     BuiltinFunction(fn(Vec<Value>) -> Value),
+    Struct(
+        HashMap<String, Type>,
+        Vec<String>,
+        HashMap<String, Vec<Stmt>>,
+        HashMap<String, Type>,
+    ), // properties, implementations, implementations type
 }
-
 impl Value {
     // Helper method to convert Int and Float to Float if necessary
     // fn as_int(&self) -> i64 {
@@ -78,11 +83,14 @@ impl Value {
             Value::Char(_) => Type::Char,
             Value::String(_) => Type::String,
             Value::Vector(v) => Type::Vector(Box::new(v[0].get_type())),
-            Value::Map(_) => Type::Map,
+            Value::Map(_) => Type::Map(HashMap::new()),
             Value::Function(params, _, return_type) => Type::Function(
                 params.iter().map(|p| p.1.clone()).collect(),
                 Box::new(return_type.clone()),
             ),
+            Value::Struct(prop_types, _, _, impl_types) => {
+                Type::Struct(prop_types.clone(), impl_types.clone())
+            }
             Value::BuiltinFunction(_) => Type::BuiltinFunction,
         }
     }
@@ -95,7 +103,7 @@ impl Value {
             (Value::Boolean(_), Type::Bool) => true,
             (Value::String(_), Type::String) => true,
             (Value::Vector(_), Type::Vector(_)) => true,
-            (Value::Map(_), Type::Map) => true,
+            (Value::Map(_), Type::Map(_)) => true,
             // (Value::Function { return_type, .. }, Type::Function(expected_return_type)) => {
             //     return_type == expected_return_type.as_ref()
             // }
@@ -235,6 +243,7 @@ impl ToString for Value {
             Value::Function(params, body, return_type) => {
                 format!("{:?}", (params, body, return_type))
             }
+            Value::Struct(_, _, _, _) => panic!("Cannot be displayed"),
             Value::BuiltinFunction(_) => "BuiltinFunction".to_string(),
         }
     }
@@ -266,6 +275,17 @@ impl Scope {
                 value: function,
                 is_mutable: false, // Functions are typically immutable
                 var_type: Type::Function(vec![], Box::new(Type::Void)),
+            },
+        );
+    }
+
+    pub fn define_struct(&mut self, name: String, struct_val: Value) {
+        self.variables.insert(
+            name,
+            Variable {
+                value: struct_val.clone(),
+                is_mutable: false,
+                var_type: struct_val.get_type(),
             },
         );
     }
@@ -314,6 +334,10 @@ impl Interpreter {
     // Helper to get the current scope
     fn current_scope(&mut self) -> &mut Scope {
         self.scopes.last_mut().expect("No current scope available")
+    }
+
+    fn global_scope(&mut self) -> &mut Scope {
+        self.scopes.first_mut().expect("No global scope available")
     }
 
     // Helper to find a variable from the current scope upwards
@@ -462,6 +486,89 @@ impl Interpreter {
 
                 _ => panic!("Unknown method '{}' for type Vector", method_name),
             },
+            Value::Map(m) => {
+                let mut function_return_value = Value::Null; // Default dummy value
+                let get_prototypes = m.get(&"__prototypes__".to_string());
+                if get_prototypes.is_some() {
+                    let prototypes = get_prototypes.unwrap();
+                    if let Value::Map(prototype_vals) = prototypes {
+                        let get_method_from_prototype_vals =
+                            prototype_vals.get(&method_name.to_string());
+                        if let Some(Value::Function(params, body, return_type)) =
+                            get_method_from_prototype_vals
+                        {
+                            if params.len() != args.len() {
+                                panic!(
+                                    "Method {} expects {} arguments, but {} were provided",
+                                    method_name,
+                                    params.len(),
+                                    args.len()
+                                );
+                            }
+                            // Push a new scope and set the current function context
+                            self.scopes.push(Scope::new());
+
+                            self.current_scope().set_variable(
+                                "__current_function__".to_string(),
+                                Variable {
+                                    value: get_method_from_prototype_vals.unwrap().clone(),
+                                    is_mutable: false,
+                                    var_type: Type::Function(
+                                        params.iter().map(|j| j.1.clone()).collect(),
+                                        Box::new(return_type.clone()),
+                                    ),
+                                },
+                            );
+
+                            let mut m_types = HashMap::new();
+                            // Set function parameters && m_types for self
+                            for (param, arg_value) in params.iter().zip(args) {
+                                m_types.insert(param.0.clone(), param.1.clone());
+                                self.current_scope().set_variable(
+                                    param.0.clone(),
+                                    Variable {
+                                        value: arg_value,
+                                        is_mutable: true,
+                                        var_type: param.1.clone(),
+                                    },
+                                );
+                            }
+
+                            // Set self
+                            self.current_scope().set_variable(
+                                "self".to_string(),
+                                Variable {
+                                    value: Value::Map(m.clone()),
+                                    is_mutable: true,
+                                    var_type: Type::Map(m_types),
+                                },
+                            );
+
+                            for stmt in body {
+                                self.exec_stmt(&stmt);
+                                if let Some(return_val) = self.return_value.take() {
+                                    function_return_value = return_val;
+                                    break;
+                                }
+                            }
+
+                            // Pop the scope after execution
+                            self.scopes.pop();
+
+                            // Validate return type
+
+                            if !function_return_value.is_of_type(&return_type) {
+                                panic!( "Function {} returned a value of mismatched type. Expected {:?}, got {:?}",
+                                            method_name, return_type, function_return_value
+                                        );
+                            }
+                        } else {
+                            panic!("Method '{}' not supported for type {:?}", method_name, m);
+                        }
+                    }
+                }
+                function_return_value
+            }
             _ => panic!(
                 "Method '{}' not supported for type {:?}",
                 method_name, target
@@ -597,6 +704,68 @@ impl Interpreter {
                     _ => panic!("Unexpected unary operator: {:?}", op),
                 }
             }
+            Expr::StructCompound(struct_name, prop_exprs) => {
+                let struct_var = self.find_variable(struct_name);
+                let mut props = HashMap::new();
+                for prop_expr in prop_exprs {
+                    let val = self.eval_expr(prop_expr.1);
+                    props.insert(prop_expr.0.clone(), val);
+                }
+                if struct_var.is_some() {
+                    let struct_val = struct_var.unwrap().value;
+                    if let Value::Struct(prop_types, _, impl_stmts, _) = struct_val {
+                        for prop_type in prop_types.iter() {
+                            match prop_type {
+                                (p_name, p_type) => {
+                                    let a = props.get(p_name);
+                                    if a.is_none() {
+                                        panic!(
+                                            "Mismatched key '{}' on struct compound - '{}'",
+                                            p_name, struct_name
+                                        )
+                                    }
+                                    let b = a.unwrap().get_type();
+                                    if b != p_type.clone() {
+                                        panic!(
+                                            "Mismatched data type, expected '{:?}' but got '{:?}' during initializing '{}'",
+                                            p_type, b, struct_name
+                                        )
+                                    }
+                                }
+                            }
+                        }
+
+                        let mut struct_map = props;
+                        let mut prototypes = HashMap::new();
+
+                        for (target, stmts) in impl_stmts {
+                            for method_stmt in stmts.iter() {
+                                if let Stmt::FunctionDeclaration(name, params, body, return_type) =
+                                    method_stmt
+                                {
+                                    let function = Value::Function(
+                                        params.clone(),
+                                        body.clone(),
+                                        return_type.clone(),
+                                    );
+                                    prototypes.insert(name.clone(), function);
+                                }
+                            }
+                        }
+
+                        struct_map.insert("__prototypes__".to_string(), Value::Map(prototypes));
+
+                        Value::Map(struct_map)
+                    } else {
+                        panic!(
+                            "Unexpected Compound literal on initializing non-struct type - {}",
+                            struct_name
+                        );
+                    }
+                } else {
+                    panic!("Undefined struct {}", struct_name);
+                }
+            }
             Expr::FunctionCall(name, args) => {
                 let evaluated_args: Vec<Value> =
                     args.iter().map(|arg| self.eval_expr(arg)).collect();
@@ -668,7 +837,6 @@ impl Interpreter {
             }
         }
     }
-
     // Execute a statement
     fn exec_stmt(&mut self, stmt: &Stmt) {
         match stmt {
@@ -710,6 +878,47 @@ impl Interpreter {
                     }
                 }
             }
+
+            Stmt::Struct(name, inherit_names, properties, impl_stmts_map) => {
+                let mut props = HashMap::new();
+                let mut impl_stmts = impl_stmts_map.clone();
+                for inherit_name in inherit_names.iter() {
+                    let inherit_struct = self.find_variable(&inherit_name);
+                    if inherit_struct.is_none() {
+                        panic!("Undefined Struct for inheritance");
+                    } else {
+                        let inherit_struct = inherit_struct.unwrap();
+                        match inherit_struct.value {
+                            Value::Struct(inhe_props, _, inhe_impl_stmts_map, _) => {
+                                props.extend(inhe_props);
+                                for stmt in inhe_impl_stmts_map
+                                    .get(&"Self".to_string())
+                                    .unwrap()
+                                    .clone()
+                                {
+                                    impl_stmts
+                                        .entry(inherit_name.clone())
+                                        .or_insert_with(Vec::new)
+                                        .push(stmt);
+                                }
+                            }
+                            _ => panic!("Inheritance from a Struct is only allowed"),
+                        }
+                    }
+                }
+                for property in properties.iter() {
+                    props.insert(property.name.clone(), property.prop_type.clone());
+                }
+                let struct_val = Value::Struct(
+                    props,
+                    inherit_names.clone(),
+                    impl_stmts.clone(),
+                    HashMap::new(),
+                );
+                // println!("////////{:?}", impl_stmts.clone());
+                self.current_scope().define_struct(name.clone(), struct_val);
+            }
+
             Stmt::Expression(expr) => {
                 self.eval_expr(expr);
             }

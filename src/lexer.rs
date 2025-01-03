@@ -22,6 +22,11 @@ pub enum Token {
 
     // keywords
     Use,
+    Pub,
+    Struct,
+    Inherits,
+    Implements,
+    Trait,
     If,
     Else,
     Elif,
@@ -52,6 +57,7 @@ pub enum Token {
     TString,
     TVec,
     TMap,
+    TSelf,
 
     // maths
     Plus,
@@ -318,6 +324,11 @@ impl Lexer {
                     "poo" => Token::Poo,
                     "poof" => Token::Poof,
                     "mut" => Token::Mut,
+                    "pub" => Token::Pub,
+                    "struct" => Token::Struct,
+                    "inherits" => Token::Inherits,
+                    "impl" => Token::Implements,
+                    "trait" => Token::Trait,
                     "if" => Token::If,
                     "else" => Token::Else,
                     "elif" => Token::Elif,
@@ -344,6 +355,7 @@ impl Lexer {
                     "str" => Token::TString,
                     "vec" => Token::TVec,
                     "map" => Token::TMap,
+                    "Self" => Token::TSelf,
 
                     _ => Token::Identifier(id_str),
                 }

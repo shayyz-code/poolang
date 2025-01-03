@@ -7,9 +7,9 @@ use math::PI;
 poo my_vec vec:str = ["world", "hello"];
 poo a float = 5.0 * 1.0 - 1.0 * 3.0;
 poo b int = 2 / 2;
-mut d bool = true; // hello //
+mut d bool = true; 
 d = false;
-poo e map = {name: "amk", age: 1};
+poo e map = { name: "amk", age: 1 };
 pout(e);
 pout(e.name);
 
@@ -53,4 +53,64 @@ pout(a.sin(), a.cos());
 pout("a");
 pout("b");
 
-pout(getHelloWorld(['h']) otherwise "Otherwise does not work");
+poutln(getHelloWorld(['h']) otherwise "Otherwise does not work");
+
+ struct Person {
+    name str
+    age int
+
+    impl {
+        poof hi() >> void {
+            poutln("Hi, I'm ", self.name, "!");
+        }
+    }
+} 
+//
+trait canEat {
+    eat(what Food) >> void
+} //
+
+struct Student inherits Person {
+    name str
+    age int
+    pub student_id int
+    pub rate float
+
+    impl {
+        poof new () >> Self {
+            return Student::{
+                name: "amk",
+                age: 20,
+                rate: 180.5,
+                student_id: 123
+            };
+        }
+
+        poof get_name() >> str {
+            return self.name;
+        }
+
+        poof go_to_sch() >> void {
+            poutln(self.name, " is going to School!");
+        }
+    }
+
+    impl Person {
+        poof eat(what float) >> void {
+            poutln(self.name, " is eating at Canteen.");
+        }
+    }
+}
+poo id <: 123;
+poo student <: Student::{
+    name: "amk",
+    age: 20,
+    rate: 180.5,
+    student_id: id
+};
+
+// poo student2 <: Student::new(); // 
+
+
+poutln(student.get_name());
+student.go_to_sch();

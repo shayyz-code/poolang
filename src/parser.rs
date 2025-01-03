@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 // src/parser.rs
-use crate::ast::{Expr, Stmt, Type};
+use crate::ast::{Expr, Property, Stmt, Type};
 use crate::lexer::{Lexer, Token};
 use crate::type_inference::*;
 use crate::visitor::ScopedSymbolTable;
@@ -9,6 +9,8 @@ use crate::visitor::ScopedSymbolTable;
 pub struct Parser {
     lexer: Lexer,
     current_token: Token,
+    defined_types: HashMap<String, Type>,
+    current_struct: Option<String>,
 }
 
 impl Parser {
@@ -16,6 +18,8 @@ impl Parser {
         let mut parser = Parser {
             lexer,
             current_token: Token::EOF,
+            defined_types: HashMap::new(),
+            current_struct: None,
         };
         parser.advance(); // Load the first token
         parser
@@ -62,8 +66,26 @@ impl Parser {
                 }
                 Type::Vector(Box::new(vec_type))
             }
-            Token::TMap => Type::Map,
-            _ => panic!("Expected a datatype"),
+            Token::TSelf => {
+                if let Some(struct_name) = &self.current_struct {
+                    if let Some(t) = self.defined_types.get(struct_name) {
+                        t.clone()
+                    } else {
+                        panic!("Undefined type from struct: '{}'", struct_name);
+                    }
+                } else {
+                    panic!("Current struct not found");
+                }
+            }
+            Token::TMap => Type::Map(HashMap::new()),
+            Token::Identifier(struct_name) => {
+                if let Some(t) = self.defined_types.get(struct_name) {
+                    t.clone()
+                } else {
+                    panic!("Undefined type from struct: '{}'", struct_name);
+                }
+            }
+            _ => panic!("Expected a datatype instead of {:?}", self.current_token),
         }
     }
 
@@ -87,6 +109,13 @@ impl Parser {
                     self.parse_function_call(identifier) // Function call
                 } else if self.current_token == Token::LeftBracket {
                     self.parse_vector_index(identifier)
+                } else if self.current_token == Token::DoubleColon {
+                    self.advance();
+                    if let Token::LeftCurly = &self.current_token {
+                        self.parse_struct_compound(identifier)
+                    } else {
+                        panic!("Not implemented yet");
+                    }
                 } else {
                     Expr::Identifier(identifier) // Variable or other identifier
                 }
@@ -159,6 +188,24 @@ impl Parser {
         }
 
         expr
+    }
+
+    fn parse_struct_compound(&mut self, struct_name: String) -> Expr {
+        self.eat(Token::LeftCurly);
+        let mut props_exprs = HashMap::new();
+        while &self.current_token != &Token::RightCurly {
+            if let Token::Identifier(key) = self.current_token.clone() {
+                self.advance();
+                self.eat(Token::Colon);
+                let val_expr = self.parse_expr();
+                props_exprs.insert(key, val_expr);
+                if let Token::Comma = &self.current_token {
+                    self.eat(Token::Comma);
+                }
+            }
+        }
+        self.eat(Token::RightCurly);
+        Expr::StructCompound(struct_name, props_exprs)
     }
 
     fn parse_vector(&mut self) -> Expr {
@@ -424,7 +471,6 @@ impl Parser {
                     }
                     Stmt::Return(Some(expr)) => {
                         let return_type = infer_expr_type(expr, symbol_table);
-
                         if &return_type != expected_type {
                             panic!(
                                 "Return type mismatch: expected {:?}, but found {:?}",
@@ -570,7 +616,6 @@ impl Parser {
     fn parse_use(&mut self) -> Stmt {
         self.eat(Token::Use); // Consume 'use'
         let mut modules = Vec::new();
-
         // Parse module paths (e.g., std::cout)
         while self.current_token != Token::SemiColon {
             if let Token::Identifier(part) = &self.current_token {
@@ -593,8 +638,17 @@ impl Parser {
                                 break;
                             }
                         }
-                    } else if let Token::Identifier(sub_part) = &self.current_token {
-                        modules.push(module_path.to_owned() + sub_part);
+                    } else if let Token::Identifier(_) = &self.current_token {
+                        let mut final_module_part = String::new();
+                        while let Token::Identifier(sub_part) = &self.current_token {
+                            final_module_part.push_str(&sub_part);
+                            self.advance();
+                            if let Token::DoubleColon = &self.current_token {
+                                final_module_part.push_str("::");
+                                self.eat(Token::DoubleColon);
+                            }
+                        }
+                        modules.push(module_path.to_owned() + final_module_part.as_str());
                     }
                 }
             } else {
@@ -603,8 +657,104 @@ impl Parser {
         }
 
         self.eat(Token::SemiColon); // Consume ';'
-                                    // println!("{:?}", modules);
+        println!("{:?}", modules);
         Stmt::Use(modules)
+    }
+
+    fn parse_struct(&mut self) -> Stmt {
+        self.eat(Token::Struct);
+
+        let struct_name = if let Token::Identifier(struct_name) = &self.current_token {
+            struct_name.to_owned()
+        } else {
+            panic!("Expected Identifier after struct keyword");
+        };
+        // update current struct
+        self.current_struct = Some(struct_name.clone());
+
+        self.advance();
+
+        let mut inherit_names = Vec::new();
+        if let Token::Inherits = &self.current_token {
+            self.eat(Token::Inherits);
+            while let Token::Identifier(inherit_name) = &self.current_token {
+                inherit_names.push(inherit_name.clone());
+                self.advance();
+                if let Token::Comma = &self.current_token {
+                    self.advance();
+                }
+            }
+        }
+
+        self.eat(Token::LeftCurly);
+
+        let mut struct_properties = Vec::new();
+        let mut struct_types = HashMap::new();
+
+        while matches!(&self.current_token, Token::Pub | Token::Identifier(_)) {
+            let property_access = if let Token::Pub = &self.current_token {
+                self.advance();
+                "public".to_owned()
+            } else {
+                "private".to_owned()
+            };
+
+            let property_name = if let Token::Identifier(property_name) = &self.current_token {
+                property_name.to_owned()
+            } else {
+                panic!("Expected an Identifier for property name");
+            };
+            self.advance();
+
+            let property_type = &self.infer_token_to_type();
+            self.advance();
+            struct_types.insert(property_name.clone(), property_type.clone()); // update defined types
+            struct_properties.push(Property::new(
+                property_name,
+                property_type.clone(),
+                property_access,
+            ));
+        }
+
+        // update defined types
+        self.defined_types
+            .insert(struct_name.clone(), Type::Map(struct_types));
+
+        let mut implements = HashMap::new();
+        while let Token::Implements = &self.current_token {
+            self.eat(Token::Implements);
+            let impl_target = if let Token::Identifier(target_name) = &self.current_token {
+                let name = target_name.clone();
+                self.advance();
+                name
+            } else {
+                "Self".to_string()
+            };
+            self.eat(Token::LeftCurly);
+            let mut impl_methods = Vec::new();
+            while &self.current_token != &Token::RightCurly {
+                let impl_method = self.parse_function_declaration();
+                impl_methods.push(impl_method);
+            }
+            implements.insert(impl_target, impl_methods);
+            self.eat(Token::RightCurly);
+        }
+
+        self.eat(Token::RightCurly);
+
+        // println!(
+        //     "{:?}",
+        //     Stmt::Struct(
+        //         struct_name.clone(),
+        //         inherit_names.clone(),
+        //         struct_properties.clone(),
+        //         implements.clone()
+        //     )
+        // );
+
+        // update current struct
+        self.current_struct = None;
+        Stmt::Struct(struct_name, inherit_names, struct_properties, implements)
     }
 
     // Parse a return statement
@@ -625,6 +775,7 @@ impl Parser {
     fn parse_statement(&mut self) -> Stmt {
         match &self.current_token {
             Token::Use => self.parse_use(),
+            Token::Struct => self.parse_struct(),
             Token::Poof => self.parse_function_declaration(),
             Token::If => self.parse_if(),
             Token::While => self.parse_while(),

@@ -3,6 +3,23 @@ use crate::lexer::Token;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, PartialEq)]
+pub struct Property {
+    pub name: String,
+    pub prop_type: Type,
+    pub access: String,
+}
+
+impl Property {
+    pub fn new(key: String, value: Type, access: String) -> Self {
+        Self {
+            name: key,
+            prop_type: value,
+            access,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq)]
 pub enum Type {
     Void,
     Bool,
@@ -11,9 +28,10 @@ pub enum Type {
     Char,
     String,
     Vector(Box<Type>),
-    Map,
+    Map(HashMap<String, Type>),
     Function(Vec<Type>, Box<Type>),
     BuiltinFunction,
+    Struct(HashMap<String, Type>, HashMap<String, Type>),
     Module,
 }
 
@@ -48,11 +66,12 @@ impl Type {
                 methods.insert("filter".to_string(), Self::Vector(vec_type.clone()));
                 Some(methods)
             }
-            Self::Map => {
+            Self::Map(_) => {
                 let mut methods = HashMap::new();
                 methods.insert("insert".to_string(), Self::Void);
                 Some(methods)
             }
+            Self::Struct(_, impl_return_types) => Some(impl_return_types.clone()),
             Self::Module => None,
         }
     }
@@ -75,12 +94,19 @@ pub enum Expr {
     UnaryOp(Token, Box<Expr>),
     FunctionCall(String, Vec<Expr>),
     MethodCall(Box<Expr>, String, Vec<Expr>),
+    StructCompound(String, HashMap<String, Expr>),
 }
 
 #[derive(Debug, PartialEq, Clone)]
 pub enum Stmt {
     Use(Vec<String>),
     Expression(Expr),
+    Struct(
+        String,
+        Vec<String>,
+        Vec<Property>,
+        HashMap<String, Vec<Stmt>>,
+    ), // Struct (Struct_name, Properties, Implementations)
     Assignment(String, Expr, bool, Option<Type>),
     Reassignment(String, Option<Expr>, Expr), // Reassignment (identifier, vector_index_indentifier, value)
     FunctionDeclaration(String, Vec<(String, Type)>, Vec<Stmt>, Type),
