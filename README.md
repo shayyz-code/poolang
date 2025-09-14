@@ -1,5 +1,10 @@
 # PooLang
 
+<p align="center">
+<img width="220" height="220" alt="Poo Banner" src="https://github.com/user-attachments/assets/121d688b-d442-48f4-9f50-99bb0029331d" />
+</p>
+
+
 A Tiny Interpreted language written in Rust, featuring variable declarations, arithmetic operations, conditional statements, and control flow. This project includes a lexer, parser, and interpreter. The name `Poo` originates from Guinea Pig translated from `Burmese`.
 
 ## Crafted by **Shayy**
