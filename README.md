@@ -1,15 +1,15 @@
-# PooLang
+[![Rust](https://img.shields.io/badge/rust-1.75%2B-orange.svg?style=for-the-badge&logo=rust)](https://www.rust-lang.org)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](CONTRIBUTING.md)
 
 <p align="center">
-<img width="220" height="220" alt="Poo Banner" src="https://github.com/user-attachments/assets/121d688b-d442-48f4-9f50-99bb0029331d" />
+  <img width="500" height="281" alt="poo-banner-transparent" src="https://github.com/user-attachments/assets/70181432-f458-4949-beb2-51e6e9eb8549" />
 </p>
 
+# About PooLang
 
 A Tiny Interpreted language written in Rust, featuring variable declarations, arithmetic operations, conditional statements, and control flow. This project includes a lexer, parser, and interpreter. The name `Poo` originates from Guinea Pig translated from `Burmese`.
 
-## Crafted by **Shayy**
-
-## 📜 Table of Contents
+## Table of Contents
 
 - [Features](#features)
 - [Installation](#installation)
@@ -19,7 +19,7 @@ A Tiny Interpreted language written in Rust, featuring variable declarations, ar
 - [Development](#development)
 - [Contributing](#contributing)
 
-## ✨ Features
+## Features
 
 - **Arithmetic Expressions**: Supports addition, subtraction, multiplication, and division with correct operator precedence.
 - **Variable Declarations**: Uses `poo` keyword for variable declarations.
@@ -31,7 +31,7 @@ A Tiny Interpreted language written in Rust, featuring variable declarations, ar
   - Arrow operator: `>>`
 - **Lexer, Parser, and Interpreter**: A full pipeline from tokenizing source code to executing it.
 
-## 🚀 Installation
+## Installation
 
 ### Prerequisites
 
@@ -57,7 +57,7 @@ A Tiny Interpreted language written in Rust, featuring variable declarations, ar
    cargo test
    ```
 
-## 🛠️ Usage
+## Usage
 
 You can use the interpreter to run files containing your custom language code.
 
@@ -75,7 +75,7 @@ Example:
 cargo run app.poo
 ```
 
-## 📝 Syntax Overview
+## Syntax Overview
 
 The language features basic syntax for arithmetic, variable declarations, and control flow:
 
@@ -131,7 +131,7 @@ poof getName () >> string {
 pout(getName());
 ```
 
-## 📚 Example Code
+## Example Code
 
 Here is a sample program in my PooLang:
 
@@ -162,7 +162,7 @@ Hello, Poo!1
 Hello, World!
 ```
 
-## 🛠️ Development
+## Development
 
 ### Project Structure
 
@@ -180,7 +180,7 @@ Hello, World!
 └── Cargo.toml           # Project configuration
 ```
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request or open an Issue if you find a bug or have a feature request.
 
@@ -193,7 +193,9 @@ Contributions are welcome! Please feel free to submit a Pull Request or open an 
    ```
 3. Make your changes and commit them:
    ```bash
-   git commit -m "Add your feature description"
+   feat: Allow provided config object to extend other configs by <your-username>
+
+   BREAKING CHANGE: `extends` key in config file is now used for extending other config files.
    ```
 4. Push to the branch:
    ```bash
@@ -201,12 +203,8 @@ Contributions are welcome! Please feel free to submit a Pull Request or open an 
    ```
 5. Open a Pull Request.
 
-## 💬 Feedback
+## Feedback
 
 If you have any questions or feedback, feel free to reach out or open an issue in the repository.
 
----
-
-Happy Coding! 🎉
-
----
+<p align="center">Hand-Crafted by <em><b><a href="https://github.com/shayyz-code">Shayy</a></b></em></p>
