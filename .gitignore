@@ -1,1 +1,5 @@
 /target
+/images
+
+# macOS
+.DS_Store

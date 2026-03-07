@@ -102,7 +102,7 @@ struct Student inherits Person {
     }
 }
 poo id <: 123;
-poo student <: Student::{
+poo student vec:Student = Student::{
     name: "amk",
     age: 20,
     rate: 180.5,
@@ -110,7 +110,6 @@ poo student <: Student::{
 };
 
 // poo student2 <: Student::new(); // 
-
 
 poutln(student.get_name());
 student.go_to_sch();
