@@ -267,6 +267,23 @@ fn spec_checked_api_reports_runtime_error_when_reassigning_for_iterator() {
 }
 
 #[test]
+fn spec_checked_api_reports_runtime_error_when_reassigning_vector_for_iterator() {
+    let result = run_source_checked(
+        r#"
+        for item in [1, 2, 3] {
+            item = item + 1;
+        }
+        return 0;
+        "#
+        .to_string(),
+    );
+
+    let error = result.expect_err("expected runtime error");
+    assert_eq!(error.kind, LangErrorKind::Runtime);
+    assert!(error.message.contains("Variable 'item' is not mutable."));
+}
+
+#[test]
 fn spec_for_vector_loop_accumulates_values() {
     let result = run_source_checked(
         r#"
