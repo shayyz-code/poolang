@@ -204,6 +204,36 @@ fn spec_checked_file_api_returns_runtime_error_for_invalid_runtime_content() {
 }
 
 #[test]
+fn spec_checked_file_api_returns_parse_error_for_function_return_type_mismatch() {
+    let file_path = format!(
+        "/tmp/poolang-return-type-{}-{}.poo",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("system clock before unix epoch")
+            .as_nanos()
+    );
+
+    fs::write(
+        &file_path,
+        r#"
+        poof bad() >> int {
+            return "oops";
+        }
+        return bad();
+        "#,
+    )
+    .expect("failed to write temp source");
+
+    let result = run_file_checked(&file_path);
+    let _ = fs::remove_file(&file_path);
+
+    let error = result.expect_err("expected parse error");
+    assert_eq!(error.kind, LangErrorKind::Parse);
+    assert!(error.message.contains("Return type mismatch"));
+}
+
+#[test]
 fn spec_for_range_loop_accumulates_values() {
     let result = run_source_checked(
         r#"
