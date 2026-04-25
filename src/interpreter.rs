@@ -1,5 +1,5 @@
 use crate::ast::{Expr, Stmt, Type};
-use crate::errors::{LangError, panic_payload_to_message};
+use crate::errors::{LangError, catch_unwind_silent, panic_payload_to_message};
 use crate::lexer::Token;
 use crate::type_inference::infer_stmt_types;
 use crate::visitor::ScopedSymbolTable;
@@ -7,7 +7,7 @@ use core::panic;
 use std::collections::HashMap;
 
 use std::fmt;
-use std::panic::{AssertUnwindSafe, catch_unwind};
+use std::panic::AssertUnwindSafe;
 
 pub struct DebuggableIterator {
     // inner: Box<dyn Iterator<Item = Value>>,
@@ -1202,7 +1202,7 @@ impl Interpreter {
     }
 
     pub fn interpret_checked(&mut self, statements: &[Stmt]) -> Result<Option<Value>, LangError> {
-        catch_unwind(AssertUnwindSafe(|| self.interpret(statements)))
+        catch_unwind_silent(AssertUnwindSafe(|| self.interpret(statements)))
             .map_err(|payload| LangError::runtime(panic_payload_to_message(payload)))
     }
 }

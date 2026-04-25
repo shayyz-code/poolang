@@ -1,5 +1,7 @@
 use std::error::Error;
 use std::fmt;
+use std::panic::{catch_unwind, set_hook, take_hook, UnwindSafe};
+use std::sync::{Mutex, OnceLock};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LangErrorKind {
@@ -53,4 +55,23 @@ pub fn panic_payload_to_message(payload: Box<dyn std::any::Any + Send>) -> Strin
     } else {
         "unknown panic".to_string()
     }
+}
+
+fn panic_hook_lock() -> &'static Mutex<()> {
+    static LOCK: OnceLock<Mutex<()>> = OnceLock::new();
+    LOCK.get_or_init(|| Mutex::new(()))
+}
+
+pub fn catch_unwind_silent<F, T>(f: F) -> std::thread::Result<T>
+where
+    F: FnOnce() -> T + UnwindSafe,
+{
+    let _guard = panic_hook_lock()
+        .lock()
+        .expect("failed to lock panic hook mutex");
+    let previous_hook = take_hook();
+    set_hook(Box::new(|_| {}));
+    let result = catch_unwind(f);
+    set_hook(previous_hook);
+    result
 }
