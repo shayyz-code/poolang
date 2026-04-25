@@ -472,3 +472,20 @@ fn spec_elif_body_variable_is_scoped_to_block() {
     assert_eq!(error.kind, LangErrorKind::Runtime);
     assert!(error.message.contains("Undefined variable: only_elif"));
 }
+
+#[test]
+fn spec_for_vector_iterator_is_scoped_to_loop_body() {
+    let result = run_source_checked(
+        r#"
+        for item in [1, 2, 3] {
+            poo seen <: item;
+        }
+        return item;
+        "#
+        .to_string(),
+    );
+
+    let error = result.expect_err("expected runtime error");
+    assert_eq!(error.kind, LangErrorKind::Runtime);
+    assert!(error.message.contains("Undefined variable: item"));
+}
