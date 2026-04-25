@@ -416,6 +416,27 @@ fn spec_if_elif_else_executes_first_truthy_branch() {
 }
 
 #[test]
+fn spec_checked_api_reports_runtime_error_for_non_boolean_if_condition() {
+    let result = run_source_checked(
+        r#"
+        if "poolang" {
+            return 1;
+        }
+        return 0;
+        "#
+        .to_string(),
+    );
+
+    let error = result.expect_err("expected runtime error");
+    assert_eq!(error.kind, LangErrorKind::Runtime);
+    assert!(
+        error
+            .message
+            .contains("Condition in if statement must be a boolean")
+    );
+}
+
+#[test]
 fn spec_while_loop_accumulates_until_condition_fails() {
     let result = run_source_checked(
         r#"
