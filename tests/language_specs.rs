@@ -18,11 +18,19 @@ fn unique_temp_file_path(label: &str) -> String {
     )
 }
 
-fn run_checked_with_temp_file(label: &str, source: &str) -> Result<Option<Value>, LangError> {
+fn run_checked_with_temp_file_path(
+    label: &str,
+    source: &str,
+) -> (String, Result<Option<Value>, LangError>) {
     let file_path = unique_temp_file_path(label);
     fs::write(&file_path, source).expect("failed to write temp source");
     let result = run_file_checked(&file_path);
     let _ = fs::remove_file(&file_path);
+    (file_path, result)
+}
+
+fn run_checked_with_temp_file(label: &str, source: &str) -> Result<Option<Value>, LangError> {
+    let (_, result) = run_checked_with_temp_file_path(label, source);
     result
 }
 
@@ -174,10 +182,7 @@ fn spec_checked_file_api_returns_parse_error_for_invalid_file_content() {
 
 #[test]
 fn spec_checked_file_api_includes_file_path_in_parse_errors() {
-    let file_path = unique_temp_file_path("parse-path");
-    fs::write(&file_path, "poo x <: 1").expect("failed to write temp source");
-    let result = run_file_checked(&file_path);
-    let _ = fs::remove_file(&file_path);
+    let (file_path, result) = run_checked_with_temp_file_path("parse-path", "poo x <: 1");
 
     let error = result.expect_err("expected parse error");
     assert_eq!(error.kind, LangErrorKind::Parse);
@@ -195,13 +200,29 @@ fn spec_checked_file_api_returns_runtime_error_for_invalid_runtime_content() {
 
 #[test]
 fn spec_checked_file_api_includes_file_path_in_runtime_errors() {
-    let file_path = unique_temp_file_path("runtime-path");
-    fs::write(&file_path, "return unknown_identifier;").expect("failed to write temp source");
-    let result = run_file_checked(&file_path);
-    let _ = fs::remove_file(&file_path);
+    let (file_path, result) =
+        run_checked_with_temp_file_path("runtime-path", "return unknown_identifier;");
 
     let error = result.expect_err("expected runtime error");
     assert_eq!(error.kind, LangErrorKind::Runtime);
+    assert!(error.message.contains(&file_path));
+}
+
+#[test]
+fn spec_checked_file_api_includes_file_path_for_function_return_type_mismatch() {
+    let (file_path, result) = run_checked_with_temp_file_path(
+        "return-type-path",
+        r#"
+        poof bad() >> int {
+            return "oops";
+        }
+        return bad();
+        "#,
+    );
+
+    let error = result.expect_err("expected parse error");
+    assert_eq!(error.kind, LangErrorKind::Parse);
+    assert!(error.message.contains("Return type mismatch"));
     assert!(error.message.contains(&file_path));
 }
 
