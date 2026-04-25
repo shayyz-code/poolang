@@ -27,7 +27,7 @@ jobs:
         run: "curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/cargo-dist/releases/download/v0.28.0/cargo-dist-installer.sh | sh"
       - id: plan
         run: |
-          dist plan --output-format=json > plan.json
+          dist plan --tag=${{ github.ref_name }} --output-format=json > plan.json
           echo "manifest=$(cat plan.json | jq -c .)" >> "$GITHUB_OUTPUT"
 
   # Build and upload artifacts for each platform
@@ -48,7 +48,7 @@ jobs:
       - name: Install dist
         run: ${{ matrix.install_dist }}
       - name: Build artifacts
-        run: dist build --tag=${{ needs.plan.outputs.tag }} --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
+        run: dist build --tag=${{ github.ref_name }} --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
