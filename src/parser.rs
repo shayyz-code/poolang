@@ -583,12 +583,13 @@ impl Parser {
         let iterable = self.parse_expr();
 
         // Check if it's a range (by looking for a DoubleDot) or a vector
-        let (from, to, is_range) = if self.current_token == Token::DoubleDot {
+        let is_range = self.current_token == Token::DoubleDot;
+        let from = iterable;
+        let to = if is_range {
             self.eat(Token::DoubleDot);
-            let to = self.parse_expr();
-            (Some(iterable), Some(to), true) // It's a range
+            Some(self.parse_expr()) // It's a range
         } else {
-            (Some(iterable), None, false) // It's a vector or other iterable
+            None // It's a vector or other iterable
         };
 
         let step = if self.current_token == Token::Step {
@@ -608,10 +609,10 @@ impl Parser {
         }
         self.eat(Token::RightCurly); // Consume '}'
 
-        if is_range {
-            Stmt::ForRange(iter_identifier, from.unwrap(), to.unwrap(), step, body)
+        if let Some(range_end) = to {
+            Stmt::ForRange(iter_identifier, from, range_end, step, body)
         } else {
-            Stmt::ForVector(iter_identifier, from.unwrap(), body)
+            Stmt::ForVector(iter_identifier, from, body)
         }
     }
 
@@ -659,7 +660,6 @@ impl Parser {
         }
 
         self.eat(Token::SemiColon); // Consume ';'
-        println!("{:?}", modules);
         Stmt::Use(modules)
     }
 
