@@ -48,6 +48,19 @@ impl Parser {
         }
     }
 
+    // Checked token consumption used by parse_checked's non-panicking slice.
+    fn eat_checked(&mut self, expected: Token) -> Result<(), LangError> {
+        if self.current_token == expected {
+            self.advance();
+            Ok(())
+        } else {
+            Err(LangError::parse(format!(
+                "Unexpected token: {:?}, expected: {:?}",
+                self.current_token, expected
+            )))
+        }
+    }
+
     // fn error(&self, message: &str) {
     //     eprintln!("Parse error: {} at {:?}", message, self.current_token);
     // }
@@ -803,6 +816,36 @@ impl Parser {
         }
     }
 
+    // First checked parsing slice: expression statements use checked token consumption.
+    fn parse_statement_checked(&mut self) -> Result<Stmt, LangError> {
+        match &self.current_token {
+            Token::Use => Ok(self.parse_use()),
+            Token::Struct => Ok(self.parse_struct()),
+            Token::Poof => Ok(self.parse_function_declaration()),
+            Token::If => Ok(self.parse_if()),
+            Token::While => Ok(self.parse_while()),
+            Token::For => Ok(self.parse_for_in_range()),
+            Token::Return => Ok(self.parse_return()),
+            Token::Poo | Token::Mut => Ok(self.parse_assignment()),
+            Token::Identifier(_) => {
+                if self.peek_token() == Token::Assignment || self.peek_token() == Token::LeftBracket
+                // vector index reassignment
+                {
+                    Ok(self.parse_reassignment())
+                } else {
+                    let expr = self.parse_expr();
+                    self.eat_checked(Token::SemiColon)?;
+                    Ok(Stmt::Expression(expr))
+                }
+            }
+            _ => {
+                let expr = self.parse_expr();
+                self.eat_checked(Token::SemiColon)?;
+                Ok(Stmt::Expression(expr))
+            }
+        }
+    }
+
     // Parse a list of statements
     pub fn parse(&mut self) -> Vec<Stmt> {
         let mut statements = Vec::new();
@@ -813,7 +856,13 @@ impl Parser {
     }
 
     pub fn parse_checked(&mut self) -> Result<Vec<Stmt>, LangError> {
-        catch_unwind_silent(AssertUnwindSafe(|| self.parse()))
-            .map_err(|payload| LangError::parse(panic_payload_to_message(payload)))
+        let mut statements = Vec::new();
+        while self.current_token != Token::EOF {
+            let statement =
+                catch_unwind_silent(AssertUnwindSafe(|| self.parse_statement_checked()))
+                    .map_err(|payload| LangError::parse(panic_payload_to_message(payload)))??;
+            statements.push(statement);
+        }
+        Ok(statements)
     }
 }
