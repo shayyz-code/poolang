@@ -26,6 +26,7 @@ impl fmt::Debug for DebuggableIterator {
 }
 
 // Extend Value to support Int, Float, Boolean, and String
+#[allow(unpredictable_function_pointer_comparisons)]
 #[derive(Debug, Clone, PartialEq)]
 pub enum Value {
     Null,
@@ -303,6 +304,7 @@ impl Scope {
     }
 
     // Reassign a variable in the curent scope
+    #[allow(dead_code)]
     fn reassign_variable(&mut self, name: &str, new_value: Value) {
         if let Some(variable) = self.variables.get_mut(name) {
             if !variable.is_mutable {
@@ -338,6 +340,7 @@ impl Interpreter {
         self.scopes.last_mut().expect("No current scope available")
     }
 
+    #[allow(dead_code)]
     fn global_scope(&mut self) -> &mut Scope {
         self.scopes.first_mut().expect("No global scope available")
     }
@@ -560,9 +563,10 @@ impl Interpreter {
                             // Validate return type
 
                             if !function_return_value.is_of_type(&return_type) {
-                                panic!( "Function {} returned a value of mismatched type. Expected {:?}, got {:?}",
-                                            method_name, return_type, function_return_value
-                                        );
+                                panic!(
+                                    "Function {} returned a value of mismatched type. Expected {:?}, got {:?}",
+                                    method_name, return_type, function_return_value
+                                );
                             }
                         } else {
                             panic!("Method '{}' not supported for type {:?}", method_name, m);
@@ -740,7 +744,7 @@ impl Interpreter {
                         let mut struct_map = props;
                         let mut prototypes = HashMap::new();
 
-                        for (target, stmts) in impl_stmts {
+                        for (_target, stmts) in impl_stmts {
                             for method_stmt in stmts.iter() {
                                 if let Stmt::FunctionDeclaration(name, params, body, return_type) =
                                     method_stmt
@@ -824,9 +828,10 @@ impl Interpreter {
                             // Validate return type
 
                             if !function_return_value.is_of_type(&return_type) {
-                                panic!( "Function {} returned a value of mismatched type. Expected {:?}, got {:?}",
-                                            name, return_type, function_return_value
-                                        );
+                                panic!(
+                                    "Function {} returned a value of mismatched type. Expected {:?}, got {:?}",
+                                    name, return_type, function_return_value
+                                );
                             }
                             function_return_value
                         }
