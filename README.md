@@ -75,6 +75,8 @@ Example:
 cargo run app.poo
 ```
 
+The CLI uses typed checked execution (`run_file_checked`) and prints structured error kinds (`Io`, `Parse`, `Runtime`) with a non-zero exit code on failure.
+
 ## Syntax Overview
 
 The language features basic syntax for arithmetic, variable declarations, and control flow:
@@ -171,6 +173,10 @@ Current executable specs live in `tests/language_specs.rs`:
 - `spec_lexer_skips_inline_comment_block`
 - `spec_parser_respects_multiplication_precedence`
 - `spec_interpreter_executes_program_to_return_value`
+- `spec_checked_api_returns_typed_error_on_parse_failure`
+- `spec_checked_api_returns_typed_error_on_runtime_failure`
+- `spec_checked_file_api_returns_io_error_for_missing_file`
+- `spec_checked_file_api_executes_valid_file`
 
 Run them with:
 
@@ -183,7 +189,8 @@ cargo test
 - [x] Expose core modules as a reusable library API (`src/lib.rs`).
 - [x] Keep CLI thin by delegating execution to library entrypoints.
 - [x] Upgrade crate to Rust Edition 2024.
-- [ ] Replace panic-driven parser/interpreter errors with typed errors.
+- [x] Introduce checked execution APIs with typed error kinds (`Io`, `Parse`, `Runtime`).
+- [ ] Replace panic-driven parser/interpreter internals with native `Result` propagation.
 - [ ] Split large parser and interpreter files into focused submodules.
 - [ ] Add integration specs for structs, methods, inheritance, and loops.
 
@@ -192,14 +199,18 @@ cargo test
 ```
 .
 ├── src
+│   ├── lib.rs           # Reusable library API
 │   ├── lexer.rs         # Lexical analysis (tokenizer)
 │   ├── parser.rs        # Parsing logic
 │   ├── interpreter.rs   # Interpreter for executing code
 │   ├── ast.rs           # Abstract Syntax Tree (AST) definitions
+│   ├── errors.rs        # Typed error definitions
 │   └── main.rs          # Entry point
 ├── examples             # Sample code
 │   ├── donut.poo
 │   └── app.poo
+├── tests
+│   └── language_specs.rs # TDD integration specs
 └── Cargo.toml           # Project configuration
 ```
 
@@ -215,11 +226,13 @@ Contributions are welcome! Please feel free to submit a Pull Request or open an 
    git checkout -b feature/your-feature-name
    ```
 3. Make your changes and commit them:
+
    ```bash
    feat: Allow provided config object to extend other configs by <your-username>
 
    BREAKING CHANGE: `extends` key in config file is now used for extending other config files.
    ```
+
 4. Push to the branch:
    ```bash
    git push origin feature/your-feature-name
