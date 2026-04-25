@@ -12,10 +12,14 @@ installers = ["shell", "powershell", "homebrew"]
 targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc"]
 # Publish jobs to run
 publish-jobs = ["homebrew"]
+# Homebrew tap repository
+tap = "shayyz-code/homebrew-tap"
+# Allow the CI workflow to be managed manually
+allow-dirty = ["ci"]
 
 [package]
 name = "poo"
-version = "0.1.4-beta.5"
+version = "0.1.4-beta.6"
 edition = "2024"
 authors = ["Shayy <aungminkhant.shay@gmail.com>"]
 description = "Tiny interpreted language written in Rust"
