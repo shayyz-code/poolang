@@ -1,4 +1,5 @@
 use poo::ast::{Expr, Stmt};
+use poo::errors::LangErrorKind;
 use poo::interpreter::Value;
 use poo::lexer::{Lexer, Token};
 use poo::parser::Parser;
@@ -80,11 +81,15 @@ fn spec_interpreter_executes_program_to_return_value() {
 #[test]
 fn spec_checked_api_returns_typed_error_on_parse_failure() {
     let result = run_source_checked("poo x <: 1".to_string());
-    assert!(result.is_err());
+    let error = result.expect_err("expected parse error");
+    assert_eq!(error.kind, LangErrorKind::Parse);
+    assert!(!error.message.is_empty());
 }
 
 #[test]
 fn spec_checked_api_returns_typed_error_on_runtime_failure() {
     let result = run_source_checked("return unknown_identifier;".to_string());
-    assert!(result.is_err());
+    let error = result.expect_err("expected runtime error");
+    assert_eq!(error.kind, LangErrorKind::Runtime);
+    assert!(error.message.contains("Undefined variable"));
 }
