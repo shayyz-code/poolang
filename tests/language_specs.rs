@@ -3,7 +3,7 @@ use poo::errors::LangErrorKind;
 use poo::interpreter::Value;
 use poo::lexer::{Lexer, Token};
 use poo::parser::Parser;
-use poo::{run_source, run_source_checked};
+use poo::{run_file_checked, run_source, run_source_checked};
 
 #[test]
 fn spec_lexer_skips_inline_comment_block() {
@@ -92,4 +92,20 @@ fn spec_checked_api_returns_typed_error_on_runtime_failure() {
     let error = result.expect_err("expected runtime error");
     assert_eq!(error.kind, LangErrorKind::Runtime);
     assert!(error.message.contains("Undefined variable"));
+}
+
+#[test]
+fn spec_checked_file_api_returns_io_error_for_missing_file() {
+    let file_path = format!(
+        "/tmp/poolang-missing-{}-{}.poo",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("system clock before unix epoch")
+            .as_nanos()
+    );
+
+    let result = run_file_checked(&file_path);
+    let error = result.expect_err("expected io error");
+    assert_eq!(error.kind, LangErrorKind::Io);
 }

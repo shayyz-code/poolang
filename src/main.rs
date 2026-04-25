@@ -1,6 +1,5 @@
-use poo::run_source_checked;
+use poo::run_file_checked;
 use std::env;
-use std::fs;
 use std::process;
 
 // speed
@@ -18,16 +17,7 @@ fn main() {
 
     let file_path = &args[1];
 
-    // Read the file content
-    let input = match fs::read_to_string(file_path) {
-        Ok(content) => content,
-        Err(error) => {
-            eprintln!("Error reading file: {}", error);
-            process::exit(1);
-        }
-    };
-
-    let result = match run_source_checked(input) {
+    let result = match run_file_checked(file_path) {
         Ok(result) => result,
         Err(error) => {
             eprintln!("{error}");

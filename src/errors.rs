@@ -3,6 +3,7 @@ use std::fmt;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LangErrorKind {
+    Io,
     Parse,
     Runtime,
 }
@@ -14,6 +15,13 @@ pub struct LangError {
 }
 
 impl LangError {
+    pub fn io(message: String) -> Self {
+        Self {
+            kind: LangErrorKind::Io,
+            message,
+        }
+    }
+
     pub fn parse(message: String) -> Self {
         Self {
             kind: LangErrorKind::Parse,
