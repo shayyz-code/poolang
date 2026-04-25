@@ -160,3 +160,22 @@ fn spec_for_range_loop_accumulates_values() {
         Some(Value::Int(10))
     );
 }
+
+#[test]
+fn spec_for_range_loop_honors_step_value() {
+    let result = run_source_checked(
+        r#"
+        mut total <: 0;
+        for i in 0..10 step 2 {
+            total = total + i;
+        }
+        return total;
+        "#
+        .to_string(),
+    );
+
+    assert_eq!(
+        result.expect("expected successful execution"),
+        Some(Value::Int(20))
+    );
+}
