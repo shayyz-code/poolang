@@ -1,10 +1,30 @@
 use poo::ast::{Expr, Stmt};
-use poo::errors::LangErrorKind;
+use poo::errors::{LangError, LangErrorKind};
 use poo::interpreter::Value;
 use poo::lexer::{Lexer, Token};
 use poo::parser::Parser;
 use poo::{run_file_checked, run_source, run_source_checked};
 use std::fs;
+
+fn unique_temp_file_path(label: &str) -> String {
+    format!(
+        "/tmp/poolang-{}-{}-{}.poo",
+        label,
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("system clock before unix epoch")
+            .as_nanos()
+    )
+}
+
+fn run_checked_with_temp_file(label: &str, source: &str) -> Result<Option<Value>, LangError> {
+    let file_path = unique_temp_file_path(label);
+    fs::write(&file_path, source).expect("failed to write temp source");
+    let result = run_file_checked(&file_path);
+    let _ = fs::remove_file(&file_path);
+    result
+}
 
 #[test]
 fn spec_lexer_skips_inline_comment_block() {
@@ -117,14 +137,7 @@ fn spec_checked_api_returns_typed_error_on_runtime_failure() {
 
 #[test]
 fn spec_checked_file_api_returns_io_error_for_missing_file() {
-    let file_path = format!(
-        "/tmp/poolang-missing-{}-{}.poo",
-        std::process::id(),
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .expect("system clock before unix epoch")
-            .as_nanos()
-    );
+    let file_path = unique_temp_file_path("missing");
 
     let result = run_file_checked(&file_path);
     let error = result.expect_err("expected io error");
@@ -134,28 +147,15 @@ fn spec_checked_file_api_returns_io_error_for_missing_file() {
 
 #[test]
 fn spec_checked_file_api_executes_valid_file() {
-    let file_path = format!(
-        "/tmp/poolang-valid-{}-{}.poo",
-        std::process::id(),
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .expect("system clock before unix epoch")
-            .as_nanos()
-    );
-
-    fs::write(
-        &file_path,
+    let result = run_checked_with_temp_file(
+        "valid",
         r#"
         poof add(a int, b int) >> int {
             return a + b;
         }
         return add(4, 5);
         "#,
-    )
-    .expect("failed to write temp source");
-
-    let result = run_file_checked(&file_path);
-    let _ = fs::remove_file(&file_path);
+    );
 
     assert_eq!(
         result.expect("expected successful file run"),
@@ -165,18 +165,7 @@ fn spec_checked_file_api_executes_valid_file() {
 
 #[test]
 fn spec_checked_file_api_returns_parse_error_for_invalid_file_content() {
-    let file_path = format!(
-        "/tmp/poolang-invalid-{}-{}.poo",
-        std::process::id(),
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .expect("system clock before unix epoch")
-            .as_nanos()
-    );
-
-    fs::write(&file_path, "poo x <: 1").expect("failed to write temp source");
-    let result = run_file_checked(&file_path);
-    let _ = fs::remove_file(&file_path);
+    let result = run_checked_with_temp_file("invalid", "poo x <: 1");
 
     let error = result.expect_err("expected parse error");
     assert_eq!(error.kind, LangErrorKind::Parse);
@@ -185,18 +174,7 @@ fn spec_checked_file_api_returns_parse_error_for_invalid_file_content() {
 
 #[test]
 fn spec_checked_file_api_returns_runtime_error_for_invalid_runtime_content() {
-    let file_path = format!(
-        "/tmp/poolang-runtime-{}-{}.poo",
-        std::process::id(),
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .expect("system clock before unix epoch")
-            .as_nanos()
-    );
-
-    fs::write(&file_path, "return unknown_identifier;").expect("failed to write temp source");
-    let result = run_file_checked(&file_path);
-    let _ = fs::remove_file(&file_path);
+    let result = run_checked_with_temp_file("runtime", "return unknown_identifier;");
 
     let error = result.expect_err("expected runtime error");
     assert_eq!(error.kind, LangErrorKind::Runtime);
@@ -205,28 +183,15 @@ fn spec_checked_file_api_returns_runtime_error_for_invalid_runtime_content() {
 
 #[test]
 fn spec_checked_file_api_returns_parse_error_for_function_return_type_mismatch() {
-    let file_path = format!(
-        "/tmp/poolang-return-type-{}-{}.poo",
-        std::process::id(),
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .expect("system clock before unix epoch")
-            .as_nanos()
-    );
-
-    fs::write(
-        &file_path,
+    let result = run_checked_with_temp_file(
+        "return-type",
         r#"
         poof bad() >> int {
             return "oops";
         }
         return bad();
         "#,
-    )
-    .expect("failed to write temp source");
-
-    let result = run_file_checked(&file_path);
-    let _ = fs::remove_file(&file_path);
+    );
 
     let error = result.expect_err("expected parse error");
     assert_eq!(error.kind, LangErrorKind::Parse);
