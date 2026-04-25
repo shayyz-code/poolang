@@ -128,6 +128,11 @@ Release flow:
 3. GoReleaser updates the formula in the tap repo under `Formula/`.
 4. The workflow updates `poo.json` in `shayyz-code/scoop-bucket` for Windows Scoop installs.
 
+CI checks:
+
+- Pull requests and pushes to `main` run build + tests on Linux, macOS, and Windows.
+- Unix runners also validate installer script syntax (`sh -n install.sh`).
+
 ## Syntax Overview
 
 The language features basic syntax for arithmetic, variable declarations, and control flow:
