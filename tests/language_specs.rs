@@ -377,3 +377,20 @@ fn spec_function_return_inside_loop_preserves_outer_scope() {
         Some(Value::Int(3))
     );
 }
+
+#[test]
+fn spec_for_loop_iterator_is_scoped_to_loop_body() {
+    let result = run_source_checked(
+        r#"
+        for i in 0..3 {
+            poo inside <: i;
+        }
+        return i;
+        "#
+        .to_string(),
+    );
+
+    let error = result.expect_err("expected runtime error");
+    assert_eq!(error.kind, LangErrorKind::Runtime);
+    assert!(error.message.contains("Undefined variable: i"));
+}

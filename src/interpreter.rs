@@ -354,6 +354,16 @@ impl Interpreter {
         }
         None
     }
+
+    fn set_existing_variable(&mut self, name: &str, value: Variable) {
+        for scope in self.scopes.iter_mut().rev() {
+            if scope.get_variable(name).is_some() {
+                scope.set_variable(name.to_string(), value);
+                return;
+            }
+        }
+        panic!("Variable '{}' has not been declared.", name);
+    }
     fn load_module(&mut self, module_name: &str) {
         match module_name {
             "std" => {
@@ -1012,9 +1022,8 @@ impl Interpreter {
                             panic!("Index '{}' out of bounds for vector.", final_index);
                         }
 
-                        // Update the variable in the current scope
-                        self.current_scope().set_variable(
-                            name.clone(),
+                        self.set_existing_variable(
+                            name,
                             Variable {
                                 value: Value::Vector(vec),
                                 is_mutable: current_var.is_mutable,
@@ -1025,8 +1034,8 @@ impl Interpreter {
                         panic!("Variable '{}' is not a vector.", name);
                     }
                 } else {
-                    self.current_scope().set_variable(
-                        name.clone(),
+                    self.set_existing_variable(
+                        name,
                         Variable {
                             value,
                             is_mutable: current_var.is_mutable,
@@ -1101,9 +1110,8 @@ impl Interpreter {
                 }
 
                 for i in (start..end).step_by(step as usize) {
-                    // Push a new scope for the loop iteration
-                    // self.scopes.push(Scope::new());
-                    // Assign the loop variable in the current scope
+                    // Isolate the loop variable to the current iteration scope.
+                    self.scopes.push(Scope::new());
                     self.current_scope().set_variable(
                         iter.clone(),
                         Variable {
@@ -1117,12 +1125,12 @@ impl Interpreter {
                     for stmt in body {
                         self.exec_stmt(stmt);
                         if self.return_value.is_some() {
+                            self.scopes.pop();
                             return; // Exit if there's a return statement
                         }
                     }
 
-                    // Pop the scope after each iteration
-                    // self.scopes.pop();
+                    self.scopes.pop();
                 }
             }
             Stmt::ForVector(iter, vector, body) => {
@@ -1132,10 +1140,8 @@ impl Interpreter {
                 };
 
                 for item in evaluated_vector {
-                    // Push a new scope for the loop iteration
-                    // self.scopes.push(Scope::new());
-
-                    // Assign the loop variable in the current scope
+                    // Isolate the loop variable to the current iteration scope.
+                    self.scopes.push(Scope::new());
                     self.current_scope().set_variable(
                         iter.clone(),
                         Variable {
@@ -1149,12 +1155,12 @@ impl Interpreter {
                     for stmt in body {
                         self.exec_stmt(stmt);
                         if self.return_value.is_some() {
+                            self.scopes.pop();
                             return; // Exit if there's a return statement
                         }
                     }
 
-                    // Pop the scope after each iteration
-                    // self.scopes.pop();
+                    self.scopes.pop();
                 }
             }
 
