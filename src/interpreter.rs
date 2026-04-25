@@ -1067,14 +1067,19 @@ impl Interpreter {
                     else_body
                 };
 
-                // self.scopes.push(Scope::new());
+                self.scopes.push(Scope::new());
+                let mut popped_scope = false;
                 for stmt in body_to_execute {
                     self.exec_stmt(stmt);
                     if self.return_value.is_some() {
+                        self.scopes.pop();
+                        popped_scope = true;
                         break;
                     }
                 }
-                // self.scopes.pop();
+                if !popped_scope {
+                    self.scopes.pop();
+                }
             }
 
             Stmt::While(condition, body) => {

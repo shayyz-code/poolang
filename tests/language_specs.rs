@@ -413,3 +413,22 @@ fn spec_while_body_variable_is_scoped_to_loop() {
     assert_eq!(error.kind, LangErrorKind::Runtime);
     assert!(error.message.contains("Undefined variable: inner"));
 }
+
+#[test]
+fn spec_if_body_variable_is_scoped_to_block() {
+    let result = run_source_checked(
+        r#"
+        if true {
+            poo only_if <: 10;
+        } else {
+            poo only_else <: 20;
+        }
+        return only_if;
+        "#
+        .to_string(),
+    );
+
+    let error = result.expect_err("expected runtime error");
+    assert_eq!(error.kind, LangErrorKind::Runtime);
+    assert!(error.message.contains("Undefined variable: only_if"));
+}
