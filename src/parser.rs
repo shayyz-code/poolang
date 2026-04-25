@@ -324,6 +324,10 @@ impl Parser {
         self.parse_binary_op(0)
     }
 
+    fn parse_expr_checked(&mut self) -> Result<Expr, LangError> {
+        Ok(self.parse_expr())
+    }
+
     // Parse assignment statements
     fn parse_assignment(&mut self) -> Stmt {
         self.parse_assignment_checked()
@@ -351,7 +355,7 @@ impl Parser {
             } else {
                 self.eat_checked(Token::ShortAssignment)?;
             }
-            let expr = self.parse_expr();
+            let expr = self.parse_expr_checked()?;
             self.eat_checked(Token::SemiColon)?;
             Ok(Stmt::Assignment(
                 identifier,
@@ -381,7 +385,7 @@ impl Parser {
                 vec_item_iden = Some(self.parse_vector_index(identifier.clone()));
             }
             self.eat_checked(Token::Assignment)?;
-            let expr = self.parse_expr();
+            let expr = self.parse_expr_checked()?;
             self.eat_checked(Token::SemiColon)?;
             if let Some(v) = vec_item_iden {
                 Ok(Stmt::Reassignment(identifier, Some(v), expr))
@@ -588,7 +592,7 @@ impl Parser {
             }
         }
 
-        let condition = self.parse_expr();
+        let condition = self.parse_expr_checked()?;
         self.eat_checked(Token::LeftCurly)?;
 
         let mut if_body = Vec::new();
@@ -623,7 +627,7 @@ impl Parser {
 
     fn parse_while_checked(&mut self) -> Result<Stmt, LangError> {
         self.eat_checked(Token::While)?;
-        let condition = self.parse_expr();
+        let condition = self.parse_expr_checked()?;
         self.eat_checked(Token::LeftCurly)?;
 
         let mut body = Vec::new();
@@ -657,21 +661,21 @@ impl Parser {
 
         // Parse the range expressions
         // Parse the iterable (can be a range or vector)
-        let iterable = self.parse_expr();
+        let iterable = self.parse_expr_checked()?;
 
         // Check if it's a range (by looking for a DoubleDot) or a vector
         let is_range = self.current_token == Token::DoubleDot;
         let from = iterable;
         let to = if is_range {
             self.eat_checked(Token::DoubleDot)?;
-            Some(self.parse_expr()) // It's a range
+            Some(self.parse_expr_checked()?) // It's a range
         } else {
             None // It's a vector or other iterable
         };
 
         let step = if self.current_token == Token::Step {
             self.advance();
-            let step_size = self.parse_expr();
+            let step_size = self.parse_expr_checked()?;
             step_size
         } else {
             Expr::Int(1)
@@ -857,7 +861,7 @@ impl Parser {
         self.eat_checked(Token::Return)?;
 
         let expr = if self.current_token != Token::SemiColon {
-            Some(self.parse_expr())
+            Some(self.parse_expr_checked()?)
         } else {
             None
         };
@@ -913,13 +917,13 @@ impl Parser {
                 {
                     self.parse_reassignment_checked()
                 } else {
-                    let expr = self.parse_expr();
+                    let expr = self.parse_expr_checked()?;
                     self.eat_checked(Token::SemiColon)?;
                     Ok(Stmt::Expression(expr))
                 }
             }
             _ => {
-                let expr = self.parse_expr();
+                let expr = self.parse_expr_checked()?;
                 self.eat_checked(Token::SemiColon)?;
                 Ok(Stmt::Expression(expr))
             }
