@@ -451,3 +451,24 @@ fn spec_for_iterator_shadowing_does_not_overwrite_outer_variable() {
         Some(Value::Int(100))
     );
 }
+
+#[test]
+fn spec_elif_body_variable_is_scoped_to_block() {
+    let result = run_source_checked(
+        r#"
+        if false {
+            poo only_if <: 10;
+        } elif true {
+            poo only_elif <: 20;
+        } else {
+            poo only_else <: 30;
+        }
+        return only_elif;
+        "#
+        .to_string(),
+    );
+
+    let error = result.expect_err("expected runtime error");
+    assert_eq!(error.kind, LangErrorKind::Runtime);
+    assert!(error.message.contains("Undefined variable: only_elif"));
+}
