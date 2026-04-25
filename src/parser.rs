@@ -396,13 +396,20 @@ impl Parser {
     }
 
     fn parse_function_declaration(&mut self) -> Stmt {
-        self.eat(Token::Poof); // Consume 'poof'
+        self.parse_function_declaration_checked()
+            .unwrap_or_else(|error| panic!("{}", error.message))
+    }
+
+    fn parse_function_declaration_checked(&mut self) -> Result<Stmt, LangError> {
+        self.eat_checked(Token::Poof)?; // Consume 'poof'
 
         // Parse function name
         let function_name = if let Token::Identifier(name) = &self.current_token {
             name.clone()
         } else {
-            panic!("Expected function name after 'poof'");
+            return Err(LangError::parse(
+                "Expected function name after 'poof'".to_string(),
+            ));
         };
         self.advance();
 
@@ -422,14 +429,16 @@ impl Parser {
         // }
 
         // Parse parameters
-        self.eat(Token::LeftParen); // Consume '('
+        self.eat_checked(Token::LeftParen)?; // Consume '('
         let mut parameters = Vec::new();
         while self.current_token != Token::RightParen {
             // Parse parameter name
             let param_name = if let Token::Identifier(name) = &self.current_token {
                 name.clone()
             } else {
-                panic!("Expected parameter name in function declaration");
+                return Err(LangError::parse(
+                    "Expected parameter name in function declaration".to_string(),
+                ));
             };
             self.advance(); // Move past the parameter name
 
@@ -445,13 +454,13 @@ impl Parser {
                 self.advance(); // Consume ',' if more parameters
             }
         }
-        self.eat(Token::RightParen); // Consume ')'
+        self.eat_checked(Token::RightParen)?; // Consume ')'
 
         let return_type: Type;
         if self.current_token != Token::RightArrow {
             return_type = Type::Void;
         } else {
-            self.eat(Token::RightArrow);
+            self.eat_checked(Token::RightArrow)?;
             // Consume '>>'
 
             return_type = self.infer_token_to_type();
@@ -460,12 +469,12 @@ impl Parser {
             }
         }
 
-        self.eat(Token::LeftCurly); // Consume '{'
+        self.eat_checked(Token::LeftCurly)?; // Consume '{'
 
         // Parse the function body
         let mut body = Vec::new();
         while self.current_token != Token::RightCurly {
-            body.push(self.parse_statement());
+            body.push(self.parse_statement_checked()?);
         }
         let is_returning = &body.iter().any(|s| match s {
             Stmt::Return(_) => true,
@@ -475,13 +484,13 @@ impl Parser {
             body.push(Stmt::Return(None))
         }
 
-        self.eat(Token::RightCurly); // Consume '}'
+        self.eat_checked(Token::RightCurly)?; // Consume '}'
 
         fn validate_function_return_type(
             body: &[Stmt],
             expected_type: &Type,
             symbol_table: &mut ScopedSymbolTable,
-        ) {
+        ) -> Result<(), LangError> {
             symbol_table.enter_scope(); // New scope for the function body
 
             for stmt in body {
@@ -494,30 +503,33 @@ impl Parser {
                         if let Some(var_type) = symbol_table.get(var_name) {
                             let expr_type = infer_expr_type(expr, symbol_table);
                             if var_type != &expr_type {
-                                panic!(
+                                return Err(LangError::parse(format!(
                                     "Type mismatch in reassignment: expected {:?}, found {:?} for variable {}",
                                     var_type, expr_type, var_name
-                                );
+                                )));
                             }
                         } else {
-                            panic!("Variable {} used before declaration", var_name);
+                            return Err(LangError::parse(format!(
+                                "Variable {} used before declaration",
+                                var_name
+                            )));
                         }
                     }
                     Stmt::Return(Some(expr)) => {
                         let return_type = infer_expr_type(expr, symbol_table);
                         if &return_type != expected_type {
-                            panic!(
+                            return Err(LangError::parse(format!(
                                 "Return type mismatch: expected {:?}, but found {:?}",
                                 expected_type, return_type
-                            );
+                            )));
                         }
                     }
                     Stmt::Return(None) => {
                         if *expected_type != Type::Void {
-                            panic!(
+                            return Err(LangError::parse(format!(
                                 "Expected return type {:?}, but function returned nothing",
                                 expected_type
-                            );
+                            )));
                         }
                     }
                     _ => {}
@@ -525,6 +537,7 @@ impl Parser {
             }
 
             symbol_table.exit_scope(); // Exit the function body scope
+            Ok(())
         }
 
         let mut symbol_table = ScopedSymbolTable::new();
@@ -533,8 +546,13 @@ impl Parser {
         for (param_name, param_type) in &parameters {
             symbol_table.insert(param_name.clone(), param_type.clone());
         }
-        validate_function_return_type(&body, &return_type, &mut symbol_table);
-        Stmt::FunctionDeclaration(function_name, parameters, body, return_type)
+        validate_function_return_type(&body, &return_type, &mut symbol_table)?;
+        Ok(Stmt::FunctionDeclaration(
+            function_name,
+            parameters,
+            body,
+            return_type,
+        ))
     }
 
     fn parse_function_call(&mut self, function_name: String) -> Expr {
@@ -877,7 +895,7 @@ impl Parser {
         match &self.current_token {
             Token::Use => self.parse_use_checked(),
             Token::Struct => Ok(self.parse_struct()),
-            Token::Poof => Ok(self.parse_function_declaration()),
+            Token::Poof => self.parse_function_declaration_checked(),
             Token::If => self.parse_if_checked(),
             Token::While => self.parse_while_checked(),
             Token::For => self.parse_for_in_range_checked(),
