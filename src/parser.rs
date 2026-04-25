@@ -65,42 +65,56 @@ impl Parser {
     //     eprintln!("Parse error: {} at {:?}", message, self.current_token);
     // }
     pub fn infer_token_to_type(&mut self) -> Type {
+        self.infer_token_to_type_checked()
+            .unwrap_or_else(|error| panic!("{}", error.message))
+    }
+
+    fn infer_token_to_type_checked(&mut self) -> Result<Type, LangError> {
         match &self.current_token {
-            Token::TBool => Type::Bool,
-            Token::TInt => Type::Int,
-            Token::TFloat => Type::Float,
-            Token::TVoid => Type::Void,
-            Token::TChar => Type::Char,
-            Token::TString => Type::String,
+            Token::TBool => Ok(Type::Bool),
+            Token::TInt => Ok(Type::Int),
+            Token::TFloat => Ok(Type::Float),
+            Token::TVoid => Ok(Type::Void),
+            Token::TChar => Ok(Type::Char),
+            Token::TString => Ok(Type::String),
             Token::TVec => {
                 self.advance();
-                self.eat(Token::Colon);
-                let vec_type = self.infer_token_to_type();
+                self.eat_checked(Token::Colon)?;
+                let vec_type = self.infer_token_to_type_checked()?;
                 if !matches!(vec_type, Type::Vector(_)) {
                     self.advance();
                 }
-                Type::Vector(Box::new(vec_type))
+                Ok(Type::Vector(Box::new(vec_type)))
             }
             Token::TSelf => {
                 if let Some(struct_name) = &self.current_struct {
                     if let Some(t) = self.defined_types.get(struct_name) {
-                        t.clone()
+                        Ok(t.clone())
                     } else {
-                        panic!("Undefined type from struct: '{}'", struct_name);
+                        Err(LangError::parse(format!(
+                            "Undefined type from struct: '{}'",
+                            struct_name
+                        )))
                     }
                 } else {
-                    panic!("Current struct not found");
+                    Err(LangError::parse("Current struct not found".to_string()))
                 }
             }
-            Token::TMap => Type::Map(HashMap::new()),
+            Token::TMap => Ok(Type::Map(HashMap::new())),
             Token::Identifier(struct_name) => {
                 if let Some(t) = self.defined_types.get(struct_name) {
-                    t.clone()
+                    Ok(t.clone())
                 } else {
-                    panic!("Undefined type from struct: '{}'", struct_name);
+                    Err(LangError::parse(format!(
+                        "Undefined type from struct: '{}'",
+                        struct_name
+                    )))
                 }
             }
-            _ => panic!("Expected a datatype instead of {:?}", self.current_token),
+            _ => Err(LangError::parse(format!(
+                "Expected a datatype instead of {:?}",
+                self.current_token
+            ))),
         }
     }
 
@@ -348,7 +362,7 @@ impl Parser {
             let identifier = var_name.clone();
             self.advance();
             if self.current_token != Token::ShortAssignment {
-                explicit_var_type = Some(self.infer_token_to_type());
+                explicit_var_type = Some(self.infer_token_to_type_checked()?);
                 if !matches!(explicit_var_type, Some(Type::Vector(_))) {
                     self.advance(); // Move past the type if not vector because vector type has already advanced
                 }
@@ -448,7 +462,7 @@ impl Parser {
             self.advance(); // Move past the parameter name
 
             // Parse type annotation
-            let param_type = self.infer_token_to_type();
+            let param_type = self.infer_token_to_type_checked()?;
             if !matches!(param_type, Type::Vector(_)) {
                 self.advance(); // Move past the type if not vector because vector type has already advanced
             }
@@ -468,7 +482,7 @@ impl Parser {
             self.eat_checked(Token::RightArrow)?;
             // Consume '>>'
 
-            return_type = self.infer_token_to_type();
+            return_type = self.infer_token_to_type_checked()?;
             if !matches!(return_type, Type::Vector(_)) {
                 self.advance(); // Move past the type if not vector because vector type has already advanced
             }
@@ -804,7 +818,7 @@ impl Parser {
                 };
                 self.advance();
 
-                let property_type = &self.infer_token_to_type();
+                let property_type = &self.infer_token_to_type_checked()?;
                 self.advance();
                 struct_types.insert(property_name.clone(), property_type.clone()); // update defined types
                 struct_properties.push(Property::new(
