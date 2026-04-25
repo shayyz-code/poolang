@@ -94,6 +94,12 @@ fn spec_unchecked_api_panics_on_parse_failure() {
 }
 
 #[test]
+fn spec_unchecked_api_panics_on_runtime_failure() {
+    let result = std::panic::catch_unwind(|| run_source("return unknown_identifier;".to_string()));
+    assert!(result.is_err());
+}
+
+#[test]
 fn spec_checked_api_reports_parse_error_for_missing_semicolon() {
     let result = run_source_checked("poo x <: 1 return x;".to_string());
     let error = result.expect_err("expected parse error");
