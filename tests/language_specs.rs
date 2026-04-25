@@ -259,3 +259,32 @@ fn spec_checked_api_reports_parse_error_for_function_return_type_mismatch() {
     assert_eq!(error.kind, LangErrorKind::Parse);
     assert!(error.message.contains("Return type mismatch"));
 }
+
+#[test]
+fn spec_struct_instance_method_can_access_self_properties() {
+    let result = run_source_checked(
+        r#"
+        struct Person {
+            name str
+
+            impl {
+                poof get_name() >> str {
+                    return self.name;
+                }
+            }
+        }
+
+        poo person <: Person::{
+            name: "Shayy"
+        };
+
+        return person.get_name();
+        "#
+        .to_string(),
+    );
+
+    assert_eq!(
+        result.expect("expected successful execution"),
+        Some(Value::String("Shayy".to_string()))
+    );
+}
