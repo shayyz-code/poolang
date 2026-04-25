@@ -432,3 +432,22 @@ fn spec_if_body_variable_is_scoped_to_block() {
     assert_eq!(error.kind, LangErrorKind::Runtime);
     assert!(error.message.contains("Undefined variable: only_if"));
 }
+
+#[test]
+fn spec_for_iterator_shadowing_does_not_overwrite_outer_variable() {
+    let result = run_source_checked(
+        r#"
+        mut i <: 100;
+        for i in 0..3 {
+            poo seen <: i;
+        }
+        return i;
+        "#
+        .to_string(),
+    );
+
+    assert_eq!(
+        result.expect("expected successful execution"),
+        Some(Value::Int(100))
+    );
+}
