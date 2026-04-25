@@ -15,7 +15,7 @@ publish-jobs = ["homebrew"]
 
 [package]
 name = "poo"
-version = "0.1.4"
+version = "0.1.4-beta.5"
 edition = "2024"
 authors = ["Shayy <aungminkhant.shay@gmail.com>"]
 description = "Tiny interpreted language written in Rust"
