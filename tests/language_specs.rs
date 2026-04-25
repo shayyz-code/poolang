@@ -194,6 +194,18 @@ fn spec_checked_file_api_returns_runtime_error_for_invalid_runtime_content() {
 }
 
 #[test]
+fn spec_checked_file_api_includes_file_path_in_runtime_errors() {
+    let file_path = unique_temp_file_path("runtime-path");
+    fs::write(&file_path, "return unknown_identifier;").expect("failed to write temp source");
+    let result = run_file_checked(&file_path);
+    let _ = fs::remove_file(&file_path);
+
+    let error = result.expect_err("expected runtime error");
+    assert_eq!(error.kind, LangErrorKind::Runtime);
+    assert!(error.message.contains(&file_path));
+}
+
+#[test]
 fn spec_checked_file_api_returns_parse_error_for_function_return_type_mismatch() {
     let result = run_checked_with_temp_file(
         "return-type",
