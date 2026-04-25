@@ -212,6 +212,24 @@ fn spec_checked_api_reports_runtime_error_for_zero_for_step() {
 }
 
 #[test]
+fn spec_checked_api_reports_runtime_error_for_non_integer_for_step() {
+    let result = run_source_checked(
+        r#"
+        mut total <: 0;
+        for i in 0..10 step 1.5 {
+            total = total + i;
+        }
+        return total;
+        "#
+        .to_string(),
+    );
+
+    let error = result.expect_err("expected runtime error");
+    assert_eq!(error.kind, LangErrorKind::Runtime);
+    assert!(error.message.contains("For loop step must be type Int"));
+}
+
+#[test]
 fn spec_for_vector_loop_accumulates_values() {
     let result = run_source_checked(
         r#"
