@@ -957,9 +957,7 @@ impl Parser {
     pub fn parse_checked(&mut self) -> Result<Vec<Stmt>, LangError> {
         let mut statements = Vec::new();
         while self.current_token != Token::EOF {
-            let statement =
-                catch_unwind_silent(AssertUnwindSafe(|| self.parse_statement_checked()))
-                    .map_err(|payload| LangError::parse(panic_payload_to_message(payload)))??;
+            let statement = self.parse_statement_checked()?;
             statements.push(statement);
         }
         Ok(statements)
