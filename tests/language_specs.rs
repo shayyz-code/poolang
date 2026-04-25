@@ -221,3 +221,24 @@ fn spec_if_elif_else_executes_first_truthy_branch() {
         Some(Value::Int(3))
     );
 }
+
+#[test]
+fn spec_while_loop_accumulates_until_condition_fails() {
+    let result = run_source_checked(
+        r#"
+        mut i <: 0;
+        mut total <: 0;
+        while i < 4 {
+            total = total + i;
+            i = i + 1;
+        }
+        return total;
+        "#
+        .to_string(),
+    );
+
+    assert_eq!(
+        result.expect("expected successful execution"),
+        Some(Value::Int(6))
+    );
+}
