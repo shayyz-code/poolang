@@ -26,6 +26,7 @@ pub fn run_source_checked(input: String) -> Result<Option<Value>, LangError> {
 }
 
 pub fn run_file_checked(file_path: &str) -> Result<Option<Value>, LangError> {
-    let input = fs::read_to_string(file_path).map_err(|error| LangError::io(error.to_string()))?;
+    let input = fs::read_to_string(file_path)
+        .map_err(|error| LangError::io(format!("failed to read '{file_path}': {error}")))?;
     run_source_checked(input)
 }

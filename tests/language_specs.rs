@@ -109,6 +109,7 @@ fn spec_checked_file_api_returns_io_error_for_missing_file() {
     let result = run_file_checked(&file_path);
     let error = result.expect_err("expected io error");
     assert_eq!(error.kind, LangErrorKind::Io);
+    assert!(error.message.contains(&file_path));
 }
 
 #[test]
