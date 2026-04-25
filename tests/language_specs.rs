@@ -88,6 +88,14 @@ fn spec_checked_api_returns_typed_error_on_parse_failure() {
 }
 
 #[test]
+fn spec_checked_api_reports_parse_error_for_missing_semicolon() {
+    let result = run_source_checked("poo x <: 1 return x;".to_string());
+    let error = result.expect_err("expected parse error");
+    assert_eq!(error.kind, LangErrorKind::Parse);
+    assert!(error.message.contains("Unexpected token"));
+}
+
+#[test]
 fn spec_checked_api_returns_typed_error_on_runtime_failure() {
     let result = run_source_checked("return unknown_identifier;".to_string());
     let error = result.expect_err("expected runtime error");
