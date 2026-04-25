@@ -326,6 +326,11 @@ impl Parser {
 
     // Parse assignment statements
     fn parse_assignment(&mut self) -> Stmt {
+        self.parse_assignment_checked()
+            .unwrap_or_else(|error| panic!("{}", error.message))
+    }
+
+    fn parse_assignment_checked(&mut self) -> Result<Stmt, LangError> {
         let mut is_mutable: bool = false;
         let mut explicit_var_type: Option<Type> = None;
         if let Token::Mut = &self.current_token {
@@ -342,20 +347,32 @@ impl Parser {
                 if !matches!(explicit_var_type, Some(Type::Vector(_))) {
                     self.advance(); // Move past the type if not vector because vector type has already advanced
                 }
-                self.eat(Token::Assignment);
+                self.eat_checked(Token::Assignment)?;
             } else {
-                self.eat(Token::ShortAssignment);
+                self.eat_checked(Token::ShortAssignment)?;
             }
             let expr = self.parse_expr();
-            self.eat(Token::SemiColon);
-            Stmt::Assignment(identifier, expr, is_mutable, explicit_var_type)
+            self.eat_checked(Token::SemiColon)?;
+            Ok(Stmt::Assignment(
+                identifier,
+                expr,
+                is_mutable,
+                explicit_var_type,
+            ))
         } else {
-            panic!("Expected an identifier after 'poo' or 'mut'");
+            Err(LangError::parse(
+                "Expected an identifier after 'poo' or 'mut'".to_string(),
+            ))
         }
     }
 
     // Parse reassignment statements
     fn parse_reassignment(&mut self) -> Stmt {
+        self.parse_reassignment_checked()
+            .unwrap_or_else(|error| panic!("{}", error.message))
+    }
+
+    fn parse_reassignment_checked(&mut self) -> Result<Stmt, LangError> {
         if let Token::Identifier(var_name) = &self.current_token {
             let identifier = var_name.clone();
             let mut vec_item_iden: Option<Expr> = None;
@@ -363,16 +380,18 @@ impl Parser {
             if self.current_token == Token::LeftBracket {
                 vec_item_iden = Some(self.parse_vector_index(identifier.clone()));
             }
-            self.eat(Token::Assignment);
+            self.eat_checked(Token::Assignment)?;
             let expr = self.parse_expr();
-            self.eat(Token::SemiColon);
+            self.eat_checked(Token::SemiColon)?;
             if let Some(v) = vec_item_iden {
-                Stmt::Reassignment(identifier, Some(v), expr)
+                Ok(Stmt::Reassignment(identifier, Some(v), expr))
             } else {
-                Stmt::Reassignment(identifier, None, expr)
+                Ok(Stmt::Reassignment(identifier, None, expr))
             }
         } else {
-            panic!("Expected an identifier for reassignment");
+            Err(LangError::parse(
+                "Expected an identifier for reassignment".to_string(),
+            ))
         }
     }
 
@@ -774,7 +793,12 @@ impl Parser {
 
     // Parse a return statement
     fn parse_return(&mut self) -> Stmt {
-        self.eat(Token::Return);
+        self.parse_return_checked()
+            .unwrap_or_else(|error| panic!("{}", error.message))
+    }
+
+    fn parse_return_checked(&mut self) -> Result<Stmt, LangError> {
+        self.eat_checked(Token::Return)?;
 
         let expr = if self.current_token != Token::SemiColon {
             Some(self.parse_expr())
@@ -782,8 +806,8 @@ impl Parser {
             None
         };
 
-        self.eat(Token::SemiColon);
-        Stmt::Return(expr)
+        self.eat_checked(Token::SemiColon)?;
+        Ok(Stmt::Return(expr))
     }
 
     // Parse any statement
@@ -825,13 +849,13 @@ impl Parser {
             Token::If => Ok(self.parse_if()),
             Token::While => Ok(self.parse_while()),
             Token::For => Ok(self.parse_for_in_range()),
-            Token::Return => Ok(self.parse_return()),
-            Token::Poo | Token::Mut => Ok(self.parse_assignment()),
+            Token::Return => self.parse_return_checked(),
+            Token::Poo | Token::Mut => self.parse_assignment_checked(),
             Token::Identifier(_) => {
                 if self.peek_token() == Token::Assignment || self.peek_token() == Token::LeftBracket
                 // vector index reassignment
                 {
-                    Ok(self.parse_reassignment())
+                    self.parse_reassignment_checked()
                 } else {
                     let expr = self.parse_expr();
                     self.eat_checked(Token::SemiColon)?;
