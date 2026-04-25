@@ -34,6 +34,30 @@ fn run_checked_with_temp_file(label: &str, source: &str) -> Result<Option<Value>
     result
 }
 
+fn run_unchecked_with_temp_file_path(label: &str, source: &str) -> (String, Option<Value>) {
+    let file_path = unique_temp_file_path(label);
+    fs::write(&file_path, source).expect("failed to write temp source");
+    let result = run_file(&file_path);
+    let _ = fs::remove_file(&file_path);
+    (file_path, result)
+}
+
+fn unchecked_file_panics_with_temp_file(label: &str, source: &str) -> bool {
+    let file_path = unique_temp_file_path(label);
+    fs::write(&file_path, source).expect("failed to write temp source");
+    let result = std::panic::catch_unwind(|| run_file(&file_path));
+    let _ = fs::remove_file(&file_path);
+    result.is_err()
+}
+
+fn unchecked_file_panic_message_with_temp_file(label: &str, source: &str) -> (String, String) {
+    let file_path = unique_temp_file_path(label);
+    fs::write(&file_path, source).expect("failed to write temp source");
+    let message = unchecked_file_panic_message(&file_path);
+    let _ = fs::remove_file(&file_path);
+    (file_path, message)
+}
+
 fn unchecked_file_panic_message(file_path: &str) -> String {
     let payload =
         std::panic::catch_unwind(|| run_file(file_path)).expect_err("expected panic payload");
@@ -135,24 +159,18 @@ fn spec_unchecked_api_panics_on_runtime_failure() {
 
 #[test]
 fn spec_unchecked_file_api_panics_on_parse_failure() {
-    let file_path = unique_temp_file_path("unchecked-parse");
-    fs::write(&file_path, "poo x <: 1").expect("failed to write temp source");
-
-    let result = std::panic::catch_unwind(|| run_file(&file_path));
-    let _ = fs::remove_file(&file_path);
-
-    assert!(result.is_err());
+    assert!(unchecked_file_panics_with_temp_file(
+        "unchecked-parse",
+        "poo x <: 1",
+    ));
 }
 
 #[test]
 fn spec_unchecked_file_api_panics_on_runtime_failure() {
-    let file_path = unique_temp_file_path("unchecked-runtime");
-    fs::write(&file_path, "return unknown_identifier;").expect("failed to write temp source");
-
-    let result = std::panic::catch_unwind(|| run_file(&file_path));
-    let _ = fs::remove_file(&file_path);
-
-    assert!(result.is_err());
+    assert!(unchecked_file_panics_with_temp_file(
+        "unchecked-runtime",
+        "return unknown_identifier;",
+    ));
 }
 
 #[test]
@@ -172,10 +190,8 @@ fn spec_unchecked_file_api_missing_file_panic_message_includes_file_path() {
 
 #[test]
 fn spec_unchecked_file_api_parse_panic_message_includes_file_path() {
-    let file_path = unique_temp_file_path("unchecked-parse-msg");
-    fs::write(&file_path, "poo x <: 1").expect("failed to write temp source");
-    let message = unchecked_file_panic_message(&file_path);
-    let _ = fs::remove_file(&file_path);
+    let (file_path, message) =
+        unchecked_file_panic_message_with_temp_file("unchecked-parse-msg", "poo x <: 1");
 
     assert!(message.contains(&file_path));
 }
@@ -226,20 +242,15 @@ fn spec_checked_file_api_executes_valid_file() {
 
 #[test]
 fn spec_unchecked_file_api_executes_valid_file() {
-    let file_path = unique_temp_file_path("unchecked-valid");
-    fs::write(
-        &file_path,
+    let (_, result) = run_unchecked_with_temp_file_path(
+        "unchecked-valid",
         r#"
         poof add(a int, b int) >> int {
             return a + b;
         }
         return add(4, 5);
         "#,
-    )
-    .expect("failed to write temp source");
-
-    let result = run_file(&file_path);
-    let _ = fs::remove_file(&file_path);
+    );
 
     assert_eq!(result, Some(Value::Int(9)));
 }
