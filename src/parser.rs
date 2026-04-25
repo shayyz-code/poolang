@@ -584,31 +584,43 @@ impl Parser {
 
     // Parse while loops
     fn parse_while(&mut self) -> Stmt {
-        self.eat(Token::While);
+        self.parse_while_checked()
+            .unwrap_or_else(|error| panic!("{}", error.message))
+    }
+
+    fn parse_while_checked(&mut self) -> Result<Stmt, LangError> {
+        self.eat_checked(Token::While)?;
         let condition = self.parse_expr();
-        self.eat(Token::LeftCurly);
+        self.eat_checked(Token::LeftCurly)?;
 
         let mut body = Vec::new();
         while self.current_token != Token::EOF && self.current_token != Token::RightCurly {
-            body.push(self.parse_statement());
+            body.push(self.parse_statement_checked()?);
         }
-        self.eat(Token::RightCurly);
+        self.eat_checked(Token::RightCurly)?;
 
-        Stmt::While(condition, body)
+        Ok(Stmt::While(condition, body))
     }
 
     fn parse_for_in_range(&mut self) -> Stmt {
-        self.eat(Token::For); // Consume 'for'
+        self.parse_for_in_range_checked()
+            .unwrap_or_else(|error| panic!("{}", error.message))
+    }
+
+    fn parse_for_in_range_checked(&mut self) -> Result<Stmt, LangError> {
+        self.eat_checked(Token::For)?; // Consume 'for'
 
         // Ensure we have an identifier for the loop variable
         let iter_identifier = if let Token::Identifier(var_name) = &self.current_token {
             var_name.clone()
         } else {
-            panic!("Expected an identifier as the loop variable in 'for' statement");
+            return Err(LangError::parse(
+                "Expected an identifier as the loop variable in 'for' statement".to_string(),
+            ));
         };
         self.advance(); // Move past the loop variable
 
-        self.eat(Token::In); // Consume 'in'
+        self.eat_checked(Token::In)?; // Consume 'in'
 
         // Parse the range expressions
         // Parse the iterable (can be a range or vector)
@@ -618,7 +630,7 @@ impl Parser {
         let is_range = self.current_token == Token::DoubleDot;
         let from = iterable;
         let to = if is_range {
-            self.eat(Token::DoubleDot);
+            self.eat_checked(Token::DoubleDot)?;
             Some(self.parse_expr()) // It's a range
         } else {
             None // It's a vector or other iterable
@@ -632,24 +644,29 @@ impl Parser {
             Expr::Int(1)
         };
 
-        self.eat(Token::LeftCurly); // Consume '{'
+        self.eat_checked(Token::LeftCurly)?; // Consume '{'
 
         // Parse the body of the loop
         let mut body = Vec::new();
         while self.current_token != Token::EOF && self.current_token != Token::RightCurly {
-            body.push(self.parse_statement());
+            body.push(self.parse_statement_checked()?);
         }
-        self.eat(Token::RightCurly); // Consume '}'
+        self.eat_checked(Token::RightCurly)?; // Consume '}'
 
         if let Some(range_end) = to {
-            Stmt::ForRange(iter_identifier, from, range_end, step, body)
+            Ok(Stmt::ForRange(iter_identifier, from, range_end, step, body))
         } else {
-            Stmt::ForVector(iter_identifier, from, body)
+            Ok(Stmt::ForVector(iter_identifier, from, body))
         }
     }
 
     fn parse_use(&mut self) -> Stmt {
-        self.eat(Token::Use); // Consume 'use'
+        self.parse_use_checked()
+            .unwrap_or_else(|error| panic!("{}", error.message))
+    }
+
+    fn parse_use_checked(&mut self) -> Result<Stmt, LangError> {
+        self.eat_checked(Token::Use)?; // Consume 'use'
         let mut modules = Vec::new();
         // Parse module paths (e.g., std::cout)
         while self.current_token != Token::SemiColon {
@@ -669,7 +686,7 @@ impl Parser {
                             if self.current_token == Token::Comma {
                                 self.advance();
                             } else {
-                                self.eat(Token::RightParen);
+                                self.eat_checked(Token::RightParen)?;
                                 break;
                             }
                         }
@@ -680,7 +697,7 @@ impl Parser {
                             self.advance();
                             if let Token::DoubleColon = &self.current_token {
                                 final_module_part.push_str("::");
-                                self.eat(Token::DoubleColon);
+                                self.eat_checked(Token::DoubleColon)?;
                             }
                         }
                         modules.push(module_path.to_owned() + final_module_part.as_str());
@@ -691,8 +708,8 @@ impl Parser {
             }
         }
 
-        self.eat(Token::SemiColon); // Consume ';'
-        Stmt::Use(modules)
+        self.eat_checked(Token::SemiColon)?; // Consume ';'
+        Ok(Stmt::Use(modules))
     }
 
     fn parse_struct(&mut self) -> Stmt {
@@ -843,12 +860,12 @@ impl Parser {
     // First checked parsing slice: expression statements use checked token consumption.
     fn parse_statement_checked(&mut self) -> Result<Stmt, LangError> {
         match &self.current_token {
-            Token::Use => Ok(self.parse_use()),
+            Token::Use => self.parse_use_checked(),
             Token::Struct => Ok(self.parse_struct()),
             Token::Poof => Ok(self.parse_function_declaration()),
             Token::If => Ok(self.parse_if()),
-            Token::While => Ok(self.parse_while()),
-            Token::For => Ok(self.parse_for_in_range()),
+            Token::While => self.parse_while_checked(),
+            Token::For => self.parse_for_in_range_checked(),
             Token::Return => self.parse_return_checked(),
             Token::Poo | Token::Mut => self.parse_assignment_checked(),
             Token::Identifier(_) => {
