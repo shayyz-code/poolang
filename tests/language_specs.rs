@@ -3,7 +3,7 @@ use poo::errors::{LangError, LangErrorKind};
 use poo::interpreter::Value;
 use poo::lexer::{Lexer, Token};
 use poo::parser::Parser;
-use poo::{run_file_checked, run_source, run_source_checked};
+use poo::{run_file, run_file_checked, run_source, run_source_checked};
 use std::fs;
 
 fn unique_temp_file_path(label: &str) -> String {
@@ -128,6 +128,28 @@ fn spec_unchecked_api_panics_on_runtime_failure() {
 }
 
 #[test]
+fn spec_unchecked_file_api_panics_on_parse_failure() {
+    let file_path = unique_temp_file_path("unchecked-parse");
+    fs::write(&file_path, "poo x <: 1").expect("failed to write temp source");
+
+    let result = std::panic::catch_unwind(|| run_file(&file_path));
+    let _ = fs::remove_file(&file_path);
+
+    assert!(result.is_err());
+}
+
+#[test]
+fn spec_unchecked_file_api_panics_on_runtime_failure() {
+    let file_path = unique_temp_file_path("unchecked-runtime");
+    fs::write(&file_path, "return unknown_identifier;").expect("failed to write temp source");
+
+    let result = std::panic::catch_unwind(|| run_file(&file_path));
+    let _ = fs::remove_file(&file_path);
+
+    assert!(result.is_err());
+}
+
+#[test]
 fn spec_checked_api_reports_parse_error_for_missing_semicolon() {
     let result = run_source_checked("poo x <: 1 return x;".to_string());
     let error = result.expect_err("expected parse error");
@@ -169,6 +191,26 @@ fn spec_checked_file_api_executes_valid_file() {
         result.expect("expected successful file run"),
         Some(Value::Int(9))
     );
+}
+
+#[test]
+fn spec_unchecked_file_api_executes_valid_file() {
+    let file_path = unique_temp_file_path("unchecked-valid");
+    fs::write(
+        &file_path,
+        r#"
+        poof add(a int, b int) >> int {
+            return a + b;
+        }
+        return add(4, 5);
+        "#,
+    )
+    .expect("failed to write temp source");
+
+    let result = run_file(&file_path);
+    let _ = fs::remove_file(&file_path);
+
+    assert_eq!(result, Some(Value::Int(9)));
 }
 
 #[test]

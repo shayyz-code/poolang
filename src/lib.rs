@@ -16,6 +16,10 @@ pub fn run_source(input: String) -> Option<Value> {
     run_source_checked(input).unwrap_or_else(|error| panic!("{error}"))
 }
 
+pub fn run_file(file_path: &str) -> Option<Value> {
+    run_file_checked(file_path).unwrap_or_else(|error| panic!("{error}"))
+}
+
 pub fn run_source_checked(input: String) -> Result<Option<Value>, LangError> {
     let lexer = Lexer::new(input);
     let mut parser = Parser::new(lexer);
