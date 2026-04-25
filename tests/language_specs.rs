@@ -179,3 +179,22 @@ fn spec_for_range_loop_honors_step_value() {
         Some(Value::Int(20))
     );
 }
+
+#[test]
+fn spec_for_vector_loop_accumulates_values() {
+    let result = run_source_checked(
+        r#"
+        mut total <: 0;
+        for i in [1, 2, 3, 4] {
+            total = total + i;
+        }
+        return total;
+        "#
+        .to_string(),
+    );
+
+    assert_eq!(
+        result.expect("expected successful execution"),
+        Some(Value::Int(10))
+    );
+}
