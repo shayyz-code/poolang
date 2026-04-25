@@ -3,6 +3,26 @@ name = "poo"
 version = "0.1.4"
 edition = "2024"
 authors = ["Shayy <aungminkhant.shay@gmail.com>"]
+description = "Tiny interpreted language written in Rust"
+repository = "https://github.com/shayyz-code/poolang"
+homepage = "https://github.com/shayyz-code/poolang"
+license = "MIT"
 
+[package.metadata.dist]
+# The version of cargo-dist used to generate this config
+cargo-dist-version = "0.28.0"
+# CI providers to generate scripts for
+ci = ["github"]
+# The installers to generate for users
+installers = ["shell", "powershell", "homebrew"]
+# Target platforms to build for
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc"]
+# Publish jobs to run
+publish-jobs = ["homebrew"]
+
+[profile.dist]
+inherits = "release"
+lto = "thin"
+strip = true
 
 [dependencies]
