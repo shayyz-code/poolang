@@ -1,23 +1,38 @@
-pub struct TypeError {
+use std::error::Error;
+use std::fmt;
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum LangErrorKind {
+    Parse,
+    Runtime,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct LangError {
+    pub kind: LangErrorKind,
     pub message: String,
 }
 
-impl TypeError {
-    pub fn new(message: &str) -> Self { 
+impl LangError {
+    pub fn parse(message: String) -> Self {
         Self {
-            message: message.to_string(),
+            kind: LangErrorKind::Parse,
+            message,
+        }
+    }
+
+    pub fn runtime(message: String) -> Self {
+        Self {
+            kind: LangErrorKind::Runtime,
+            message,
         }
     }
 }
 
-pub struct UndefinedVariableError {
-    pub message: String,
-}
-
-impl UndefinedVariableError {
-    pub fn new(variable_name: &str) -> Self {
-        Self {
-            message: format!("Undefined variable: {}", variable_name),
-        }
+impl fmt::Display for LangError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?} error: {}", self.kind, self.message)
     }
 }
+
+impl Error for LangError {}

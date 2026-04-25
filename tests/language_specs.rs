@@ -2,7 +2,7 @@ use poo::ast::{Expr, Stmt};
 use poo::interpreter::Value;
 use poo::lexer::{Lexer, Token};
 use poo::parser::Parser;
-use poo::run_source;
+use poo::{run_source, run_source_checked};
 
 #[test]
 fn spec_lexer_skips_inline_comment_block() {
@@ -75,4 +75,16 @@ fn spec_interpreter_executes_program_to_return_value() {
     );
 
     assert_eq!(result, Some(Value::Int(7)));
+}
+
+#[test]
+fn spec_checked_api_returns_typed_error_on_parse_failure() {
+    let result = run_source_checked("poo x <: 1".to_string());
+    assert!(result.is_err());
+}
+
+#[test]
+fn spec_checked_api_returns_typed_error_on_runtime_failure() {
+    let result = run_source_checked("return unknown_identifier;".to_string());
+    assert!(result.is_err());
 }
