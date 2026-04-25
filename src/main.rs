@@ -1,4 +1,4 @@
-use poo::run_source;
+use poo::run_source_checked;
 use std::env;
 use std::fs;
 use std::process;
@@ -27,7 +27,13 @@ fn main() {
         }
     };
 
-    let result = run_source(input);
+    let result = match run_source_checked(input) {
+        Ok(result) => result,
+        Err(error) => {
+            eprintln!("{error}");
+            process::exit(1);
+        }
+    };
 
     match result {
         Some(value) => println!("Result: {:?}", value),
