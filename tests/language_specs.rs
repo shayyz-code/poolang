@@ -1,5 +1,5 @@
 use poo::ast::{Expr, Stmt};
-use poo::errors::{LangError, LangErrorKind};
+use poo::errors::{LangError, LangErrorKind, panic_payload_to_message};
 use poo::interpreter::Value;
 use poo::lexer::{Lexer, Token};
 use poo::parser::Parser;
@@ -32,16 +32,6 @@ fn run_checked_with_temp_file_path(
 fn run_checked_with_temp_file(label: &str, source: &str) -> Result<Option<Value>, LangError> {
     let (_, result) = run_checked_with_temp_file_path(label, source);
     result
-}
-
-fn panic_payload_to_string(payload: Box<dyn std::any::Any + Send>) -> String {
-    if let Some(msg) = payload.downcast_ref::<&str>() {
-        (*msg).to_string()
-    } else if let Some(msg) = payload.downcast_ref::<String>() {
-        msg.clone()
-    } else {
-        "unknown panic".to_string()
-    }
 }
 
 #[test]
@@ -171,7 +161,7 @@ fn spec_unchecked_file_api_missing_file_panic_message_includes_file_path() {
     let file_path = unique_temp_file_path("unchecked-missing-msg");
     let payload =
         std::panic::catch_unwind(|| run_file(&file_path)).expect_err("expected panic payload");
-    let message = panic_payload_to_string(payload);
+    let message = panic_payload_to_message(payload);
 
     assert!(message.contains(&file_path));
 }
@@ -183,7 +173,7 @@ fn spec_unchecked_file_api_parse_panic_message_includes_file_path() {
     let payload =
         std::panic::catch_unwind(|| run_file(&file_path)).expect_err("expected panic payload");
     let _ = fs::remove_file(&file_path);
-    let message = panic_payload_to_string(payload);
+    let message = panic_payload_to_message(payload);
 
     assert!(message.contains(&file_path));
 }
