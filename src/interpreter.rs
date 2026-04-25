@@ -1097,6 +1097,10 @@ impl Interpreter {
                     _ => panic!("For loop step must be type Int"),
                 };
 
+                if step <= 0 {
+                    panic!("For loop step must be a positive integer");
+                }
+
                 for i in (start..end).step_by(step as usize) {
                     // Push a new scope for the loop iteration
                     // self.scopes.push(Scope::new());
