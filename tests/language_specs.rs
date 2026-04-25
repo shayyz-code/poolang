@@ -242,3 +242,20 @@ fn spec_while_loop_accumulates_until_condition_fails() {
         Some(Value::Int(6))
     );
 }
+
+#[test]
+fn spec_checked_api_reports_parse_error_for_function_return_type_mismatch() {
+    let result = run_source_checked(
+        r#"
+        poof bad() >> int {
+            return "oops";
+        }
+        return bad();
+        "#
+        .to_string(),
+    );
+
+    let error = result.expect_err("expected parse type error");
+    assert_eq!(error.kind, LangErrorKind::Parse);
+    assert!(error.message.contains("Return type mismatch"));
+}
