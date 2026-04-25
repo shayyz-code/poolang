@@ -177,6 +177,9 @@ Current executable specs live in `tests/language_specs.rs`:
 - `spec_checked_api_returns_typed_error_on_runtime_failure`
 - `spec_checked_file_api_returns_io_error_for_missing_file`
 - `spec_checked_file_api_executes_valid_file`
+- loop coverage (`for` range, `for` range with `step`, `for` vector, `while`)
+- control-flow coverage (`if` / `elif` / `else`)
+- struct coverage (instance methods, inheritance method lookup)
 
 Run them with:
 
@@ -192,7 +195,7 @@ cargo test
 - [x] Introduce checked execution APIs with typed error kinds (`Io`, `Parse`, `Runtime`).
 - [ ] Replace panic-driven parser/interpreter internals with native `Result` propagation.
 - [ ] Split large parser and interpreter files into focused submodules.
-- [ ] Add integration specs for structs, methods, inheritance, and loops.
+- [x] Add integration specs for structs, methods, inheritance, and loops.
 
 ### Project Structure
 
