@@ -47,6 +47,10 @@ pub fn infer_expr_type(expr: &Expr, symbol_table: &ScopedSymbolTable) -> Type {
                 (Type::Float, Type::Float, Token::Minus) => Type::Float,
                 (Type::Float, Type::Float, Token::Multiply) => Type::Float,
                 (Type::Float, Type::Float, Token::Divide) => Type::Float,
+                (Type::Int, Type::Int, Token::LessThan) => Type::Bool,
+                (Type::Int, Type::Int, Token::GreaterThan) => Type::Bool,
+                (Type::Float, Type::Float, Token::LessThan) => Type::Bool,
+                (Type::Float, Type::Float, Token::GreaterThan) => Type::Bool,
                 (_, _, Token::Equal) => Type::Bool,
                 (_, _, Token::NotEqual) => Type::Bool,
                 (_, _, Token::And) => Type::Bool,
@@ -127,9 +131,9 @@ pub fn infer_expr_type(expr: &Expr, symbol_table: &ScopedSymbolTable) -> Type {
                         let arg_type = infer_expr_type(arg, symbol_table);
                         if param != &arg_type {
                             panic!(
-                                    "Type mismatch in argument for function {}: expected {:?}, got {:?}",
-                                    name, param, arg_type
-                                );
+                                "Type mismatch in argument for function {}: expected {:?}, got {:?}",
+                                name, param, arg_type
+                            );
                         }
                     }
 
@@ -183,6 +187,18 @@ pub fn infer_stmt_types(stmt: &Stmt, symbol_table: &mut ScopedSymbolTable) {
 
             symbol_table.enter_scope();
             for stmt in else_body {
+                infer_stmt_types(stmt, symbol_table);
+            }
+            symbol_table.exit_scope();
+        }
+        Stmt::While(cond, body) => {
+            let cond_type = infer_expr_type(cond, symbol_table);
+            if cond_type != Type::Bool {
+                panic!("Condition in while statement must be a boolean");
+            }
+
+            symbol_table.enter_scope();
+            for stmt in body {
                 infer_stmt_types(stmt, symbol_table);
             }
             symbol_table.exit_scope();
