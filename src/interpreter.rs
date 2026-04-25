@@ -1074,7 +1074,6 @@ impl Interpreter {
                     for stmt in body {
                         self.exec_stmt(stmt);
                         if self.return_value.is_some() {
-                            self.scopes.pop();
                             return;
                         }
                     }
@@ -1118,7 +1117,6 @@ impl Interpreter {
                     for stmt in body {
                         self.exec_stmt(stmt);
                         if self.return_value.is_some() {
-                            self.scopes.pop();
                             return; // Exit if there's a return statement
                         }
                     }
@@ -1151,7 +1149,6 @@ impl Interpreter {
                     for stmt in body {
                         self.exec_stmt(stmt);
                         if self.return_value.is_some() {
-                            self.scopes.pop();
                             return; // Exit if there's a return statement
                         }
                     }

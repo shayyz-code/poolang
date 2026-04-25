@@ -353,3 +353,27 @@ fn spec_struct_inheritance_exposes_parent_methods_on_child_instance() {
         Some(Value::String("Ada".to_string()))
     );
 }
+
+#[test]
+fn spec_function_return_inside_loop_preserves_outer_scope() {
+    let result = run_source_checked(
+        r#"
+        poof pick() >> int {
+            while true {
+                return 1;
+            }
+            return 0;
+        }
+
+        poo x <: pick();
+        poo y <: 2;
+        return x + y;
+        "#
+        .to_string(),
+    );
+
+    assert_eq!(
+        result.expect("expected successful execution"),
+        Some(Value::Int(3))
+    );
+}
