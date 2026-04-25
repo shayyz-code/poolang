@@ -164,6 +164,29 @@ Hello, World!
 
 ## Development
 
+### TDD Specs
+
+Current executable specs live in `tests/language_specs.rs`:
+
+- `spec_lexer_skips_inline_comment_block`
+- `spec_parser_respects_multiplication_precedence`
+- `spec_interpreter_executes_program_to_return_value`
+
+Run them with:
+
+```bash
+cargo test
+```
+
+### Refactor TODOs
+
+- [x] Expose core modules as a reusable library API (`src/lib.rs`).
+- [x] Keep CLI thin by delegating execution to library entrypoints.
+- [x] Upgrade crate to Rust Edition 2024.
+- [ ] Replace panic-driven parser/interpreter errors with typed errors.
+- [ ] Split large parser and interpreter files into focused submodules.
+- [ ] Add integration specs for structs, methods, inheritance, and loops.
+
 ### Project Structure
 
 ```

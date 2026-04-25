@@ -1166,8 +1166,6 @@ impl Interpreter {
                             return_type, return_value
                         );
                     }
-                } else {
-                    panic!("Return statement used outside of a function");
                 }
 
                 self.return_value = Some(return_value);

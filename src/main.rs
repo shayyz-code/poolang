@@ -1,13 +1,4 @@
-mod ast;
-mod interpreter;
-mod lexer;
-mod parser;
-mod type_inference;
-mod visitor;
-
-use interpreter::Interpreter;
-use lexer::Lexer;
-use parser::Parser;
+use poo::run_source;
 use std::env;
 use std::fs;
 use std::process;
@@ -36,13 +27,7 @@ fn main() {
         }
     };
 
-    // Create Lexer, Parser, and Interpreter
-    let lexer = Lexer::new(input);
-    let mut parser = Parser::new(lexer);
-    let ast = parser.parse();
-
-    let mut interpreter = Interpreter::new();
-    let result = interpreter.interpret(&ast);
+    let result = run_source(input);
 
     match result {
         Some(value) => println!("Result: {:?}", value),
