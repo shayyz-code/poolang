@@ -141,3 +141,22 @@ fn spec_checked_file_api_executes_valid_file() {
         Some(Value::Int(9))
     );
 }
+
+#[test]
+fn spec_for_range_loop_accumulates_values() {
+    let result = run_source_checked(
+        r#"
+        mut total <: 0;
+        for i in 0..5 {
+            total = total + i;
+        }
+        return total;
+        "#
+        .to_string(),
+    );
+
+    assert_eq!(
+        result.expect("expected successful execution"),
+        Some(Value::Int(10))
+    );
+}
