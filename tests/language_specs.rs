@@ -34,6 +34,12 @@ fn run_checked_with_temp_file(label: &str, source: &str) -> Result<Option<Value>
     result
 }
 
+fn unchecked_file_panic_message(file_path: &str) -> String {
+    let payload =
+        std::panic::catch_unwind(|| run_file(file_path)).expect_err("expected panic payload");
+    panic_payload_to_message(payload)
+}
+
 #[test]
 fn spec_lexer_skips_inline_comment_block() {
     let mut lexer = Lexer::new("poo x <: 1; // comment // poo y <: 2;".to_string());
@@ -159,9 +165,7 @@ fn spec_unchecked_file_api_panics_on_missing_file() {
 #[test]
 fn spec_unchecked_file_api_missing_file_panic_message_includes_file_path() {
     let file_path = unique_temp_file_path("unchecked-missing-msg");
-    let payload =
-        std::panic::catch_unwind(|| run_file(&file_path)).expect_err("expected panic payload");
-    let message = panic_payload_to_message(payload);
+    let message = unchecked_file_panic_message(&file_path);
 
     assert!(message.contains(&file_path));
 }
@@ -170,10 +174,8 @@ fn spec_unchecked_file_api_missing_file_panic_message_includes_file_path() {
 fn spec_unchecked_file_api_parse_panic_message_includes_file_path() {
     let file_path = unique_temp_file_path("unchecked-parse-msg");
     fs::write(&file_path, "poo x <: 1").expect("failed to write temp source");
-    let payload =
-        std::panic::catch_unwind(|| run_file(&file_path)).expect_err("expected panic payload");
+    let message = unchecked_file_panic_message(&file_path);
     let _ = fs::remove_file(&file_path);
-    let message = panic_payload_to_message(payload);
 
     assert!(message.contains(&file_path));
 }
