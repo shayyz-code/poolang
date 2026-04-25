@@ -2,11 +2,10 @@ use std::collections::HashMap;
 
 // src/parser.rs
 use crate::ast::{Expr, Property, Stmt, Type};
-use crate::errors::{LangError, catch_unwind_silent, panic_payload_to_message};
+use crate::errors::LangError;
 use crate::lexer::{Lexer, Token};
 use crate::type_inference::*;
 use crate::visitor::ScopedSymbolTable;
-use std::panic::AssertUnwindSafe;
 
 pub struct Parser {
     lexer: Lexer,
@@ -119,77 +118,79 @@ impl Parser {
     }
 
     // Parse primary expressions (numbers, identifiers, or parenthesized expressions)
-    fn parse_primary(&mut self) -> Expr {
+    fn parse_primary_checked(&mut self) -> Result<Expr, LangError> {
         let mut expr = match &self.current_token {
             Token::Int(value) => {
                 let expr = Expr::Int(*value);
                 self.advance();
-                expr
+                Ok(expr)
             }
             Token::Float(value) => {
                 let expr = Expr::Float(*value);
                 self.advance();
-                expr
+                Ok(expr)
             }
             Token::Identifier(name) => {
                 let identifier = name.clone();
                 self.advance();
                 if self.current_token == Token::LeftParen {
-                    self.parse_function_call(identifier) // Function call
+                    self.parse_function_call_checked(identifier)
                 } else if self.current_token == Token::LeftBracket {
-                    self.parse_vector_index(identifier)
+                    self.parse_vector_index_checked(identifier)
                 } else if self.current_token == Token::DoubleColon {
                     self.advance();
                     if let Token::LeftCurly = &self.current_token {
-                        self.parse_struct_compound(identifier)
+                        self.parse_struct_compound_checked(identifier)
                     } else {
-                        panic!("Not implemented yet");
+                        Err(LangError::parse(
+                            "Expected struct compound after namespace access".to_string(),
+                        ))
                     }
                 } else {
-                    Expr::Identifier(identifier) // Variable or other identifier
+                    Ok(Expr::Identifier(identifier)) // Variable or other identifier
                 }
             }
             Token::Char(value) => {
                 let expr = Expr::Char(value.clone());
                 self.advance();
-                expr
+                Ok(expr)
             }
             Token::String(value) => {
                 let expr = Expr::String(value.clone());
                 self.advance();
-                expr
+                Ok(expr)
             }
             Token::True => {
                 self.advance();
-                Expr::Boolean(true)
+                Ok(Expr::Boolean(true))
             }
             Token::False => {
                 self.advance();
-                Expr::Boolean(false)
+                Ok(Expr::Boolean(false))
             }
             Token::Not => {
                 self.advance();
-                let expr = self.parse_primary();
-                Expr::UnaryOp(Token::Not, Box::new(expr))
+                let expr = self.parse_primary_checked()?;
+                Ok(Expr::UnaryOp(Token::Not, Box::new(expr)))
             }
             Token::LeftParen => {
                 self.advance(); // Consume '('
-                let expr = self.parse_expr();
-                self.eat(Token::RightParen); // Consume ')'
-                expr
+                let expr = self.parse_expr_checked()?;
+                self.eat_checked(Token::RightParen)?; // Consume ')'
+                Ok(expr)
             }
-            Token::LeftBracket => self.parse_vector(),
-            Token::LeftCurly => self.parse_map(),
+            Token::LeftBracket => self.parse_vector_checked(),
+            Token::LeftCurly => self.parse_map_checked(),
             Token::Minus => {
                 self.advance();
-                let expr = self.parse_primary();
-                Expr::UnaryOp(Token::Minus, Box::new(expr))
+                let expr = self.parse_primary_checked()?;
+                Ok(Expr::UnaryOp(Token::Minus, Box::new(expr)))
             }
 
-            _ => panic!(
+            _ => Err(LangError::parse(format!(
                 "Unexpected token in primary expression: {:?}",
                 self.current_token
-            ),
+            ))),
         };
 
         while self.current_token == Token::Dot {
@@ -201,62 +202,68 @@ impl Parser {
                 if self.current_token == Token::LeftParen {
                     self.advance(); // Consume '('
                     while self.current_token != Token::RightParen {
-                        args.push(self.parse_expr());
+                        args.push(self.parse_expr_checked()?);
                         if self.current_token == Token::Comma {
                             self.advance();
                         }
                     }
-                    self.eat(Token::RightParen); // Consume ')'
-                    expr = Expr::MethodCall(Box::new(expr), method, args);
+                    self.eat_checked(Token::RightParen)?; // Consume ')'
+                    expr = Ok(Expr::MethodCall(Box::new(expr?), method, args));
                 } else {
-                    expr = Expr::MapKey(Box::new(expr), method);
+                    expr = Ok(Expr::MapKey(Box::new(expr?), method));
                 }
             } else {
-                panic!("Expected method name after '.'");
+                return Err(LangError::parse(
+                    "Expected method name after '.'".to_string(),
+                ));
             }
         }
 
         expr
     }
 
-    fn parse_struct_compound(&mut self, struct_name: String) -> Expr {
-        self.eat(Token::LeftCurly);
+    fn parse_struct_compound_checked(&mut self, struct_name: String) -> Result<Expr, LangError> {
+        self.eat_checked(Token::LeftCurly)?;
         let mut props_exprs = HashMap::new();
         while &self.current_token != &Token::RightCurly {
             if let Token::Identifier(key) = self.current_token.clone() {
                 self.advance();
-                self.eat(Token::Colon);
-                let val_expr = self.parse_expr();
+                self.eat_checked(Token::Colon)?;
+                let val_expr = self.parse_expr_checked()?;
                 props_exprs.insert(key, val_expr);
                 if let Token::Comma = &self.current_token {
-                    self.eat(Token::Comma);
+                    self.eat_checked(Token::Comma)?;
                 }
+            } else {
+                return Err(LangError::parse(
+                    "Expected identifier in struct compound".to_string(),
+                ));
             }
         }
-        self.eat(Token::RightCurly);
-        Expr::StructCompound(struct_name, props_exprs)
+        self.eat_checked(Token::RightCurly)?;
+        Ok(Expr::StructCompound(struct_name, props_exprs))
     }
 
-    fn parse_vector(&mut self) -> Expr {
+    fn parse_vector_checked(&mut self) -> Result<Expr, LangError> {
         self.advance(); // Consume '['
         let mut elements = Vec::new();
         let mut extensor: Option<Box<Expr>> = None;
         while self.current_token != Token::RightBracket {
-            elements.push(self.parse_expr());
+            elements.push(self.parse_expr_checked()?);
             if self.current_token == Token::RightArrow {
                 self.advance();
-                extensor = Some(Box::new(self.parse_expr()));
+                extensor = Some(Box::new(self.parse_expr_checked()?));
                 break;
             }
             if self.current_token == Token::Comma {
                 self.advance();
             }
         }
-        self.eat(Token::RightBracket);
-        Expr::Vector(elements, extensor)
+        self.eat_checked(Token::RightBracket)?;
+        Ok(Expr::Vector(elements, extensor))
     }
 
-    fn parse_map(&mut self) -> Expr {
+    fn parse_map_checked(&mut self) -> Result<Expr, LangError> {
         self.advance(); // Consume '{'
         let mut map = HashMap::new();
         while self.current_token != Token::RightCurly {
@@ -267,32 +274,35 @@ impl Parser {
                 self.advance();
             }
 
-            self.eat(Token::Colon);
-            let value = self.parse_expr();
+            self.eat_checked(Token::Colon)?;
+            let value = self.parse_expr_checked()?;
             if self.current_token == Token::Comma {
                 self.advance(); // Consume ','
             }
             map.insert(key, value);
         }
-        self.eat(Token::RightCurly);
-        Expr::Map(map)
+        self.eat_checked(Token::RightCurly)?;
+        Ok(Expr::Map(map))
     }
 
-    fn parse_vector_index(&mut self, vector_name: String) -> Expr {
+    fn parse_vector_index_checked(&mut self, vector_name: String) -> Result<Expr, LangError> {
         let mut vec_of_indices = Vec::new();
         while let Token::LeftBracket = self.current_token {
             self.advance();
-            let index = self.parse_primary();
-            self.eat(Token::RightBracket);
+            let index = self.parse_primary_checked()?;
+            self.eat_checked(Token::RightBracket)?;
             vec_of_indices.push(index);
         }
 
-        Expr::VectorIndex(Box::new(Expr::Identifier(vector_name)), vec_of_indices)
+        Ok(Expr::VectorIndex(
+            Box::new(Expr::Identifier(vector_name)),
+            vec_of_indices,
+        ))
     }
 
     // Parse binary operations with precedence
-    fn parse_binary_op(&mut self, precedence: u8) -> Expr {
-        let mut left = self.parse_primary();
+    fn parse_binary_op_checked(&mut self, precedence: u8) -> Result<Expr, LangError> {
+        let mut left = self.parse_primary_checked()?;
 
         while let Some(op_prec) = self.get_precedence(&self.current_token) {
             // Break if current token's precedence is less than or equal to the current precedence
@@ -305,12 +315,12 @@ impl Parser {
             self.advance();
 
             // Recursively parse the right-hand side expression with higher precedence
-            let right = self.parse_binary_op(op_prec);
+            let right = self.parse_binary_op_checked(op_prec)?;
 
             // Construct a binary operation node with left and right expressions
             left = Expr::BinaryOp(Box::new(left), op, Box::new(right));
         }
-        left
+        Ok(left)
     }
 
     // Get operator precedence
@@ -335,12 +345,12 @@ impl Parser {
 
     // Parse general expressions
     fn parse_expr(&mut self) -> Expr {
-        self.parse_binary_op(0)
+        self.parse_expr_checked()
+            .unwrap_or_else(|error| panic!("{}", error.message))
     }
 
     fn parse_expr_checked(&mut self) -> Result<Expr, LangError> {
-        catch_unwind_silent(AssertUnwindSafe(|| self.parse_expr()))
-            .map_err(|payload| LangError::parse(panic_payload_to_message(payload)))
+        self.parse_binary_op_checked(0)
     }
 
     // Parse assignment statements
@@ -397,7 +407,7 @@ impl Parser {
             let mut vec_item_iden: Option<Expr> = None;
             self.advance();
             if self.current_token == Token::LeftBracket {
-                vec_item_iden = Some(self.parse_vector_index(identifier.clone()));
+                vec_item_iden = Some(self.parse_vector_index_checked(identifier.clone())?);
             }
             self.eat_checked(Token::Assignment)?;
             let expr = self.parse_expr_checked()?;
@@ -574,19 +584,19 @@ impl Parser {
         ))
     }
 
-    fn parse_function_call(&mut self, function_name: String) -> Expr {
-        self.eat(Token::LeftParen); // Consume '('
+    fn parse_function_call_checked(&mut self, function_name: String) -> Result<Expr, LangError> {
+        self.eat_checked(Token::LeftParen)?; // Consume '('
 
         let mut arguments = Vec::new();
         while self.current_token != Token::RightParen {
-            arguments.push(self.parse_expr());
+            arguments.push(self.parse_expr_checked()?);
             if self.current_token == Token::Comma {
                 self.advance(); // Consume ','
             }
         }
-        self.eat(Token::RightParen); // Consume ')'
+        self.eat_checked(Token::RightParen)?; // Consume ')'
 
-        Expr::FunctionCall(function_name, arguments)
+        Ok(Expr::FunctionCall(function_name, arguments))
     }
 
     // Parse if statements
