@@ -1079,14 +1079,15 @@ impl Interpreter {
 
             Stmt::While(condition, body) => {
                 while !self.eval_expr(condition).is_zero() {
-                    // self.scopes.push(Scope::new());
+                    self.scopes.push(Scope::new());
                     for stmt in body {
                         self.exec_stmt(stmt);
                         if self.return_value.is_some() {
+                            self.scopes.pop();
                             return;
                         }
                     }
-                    // self.scopes.pop();
+                    self.scopes.pop();
                 }
             }
             Stmt::ForRange(iter, from, to, step_size, body) => {

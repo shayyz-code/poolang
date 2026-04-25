@@ -394,3 +394,22 @@ fn spec_for_loop_iterator_is_scoped_to_loop_body() {
     assert_eq!(error.kind, LangErrorKind::Runtime);
     assert!(error.message.contains("Undefined variable: i"));
 }
+
+#[test]
+fn spec_while_body_variable_is_scoped_to_loop() {
+    let result = run_source_checked(
+        r#"
+        mut i <: 0;
+        while i < 1 {
+            poo inner <: 42;
+            i = i + 1;
+        }
+        return inner;
+        "#
+        .to_string(),
+    );
+
+    let error = result.expect_err("expected runtime error");
+    assert_eq!(error.kind, LangErrorKind::Runtime);
+    assert!(error.message.contains("Undefined variable: inner"));
+}
