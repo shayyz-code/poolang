@@ -198,3 +198,26 @@ fn spec_for_vector_loop_accumulates_values() {
         Some(Value::Int(10))
     );
 }
+
+#[test]
+fn spec_if_elif_else_executes_first_truthy_branch() {
+    let result = run_source_checked(
+        r#"
+        mut value <: 1;
+        if false {
+            value = 2;
+        } elif true {
+            value = 3;
+        } else {
+            value = 4;
+        }
+        return value;
+        "#
+        .to_string(),
+    );
+
+    assert_eq!(
+        result.expect("expected successful execution"),
+        Some(Value::Int(3))
+    );
+}
