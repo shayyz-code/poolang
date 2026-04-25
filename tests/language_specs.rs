@@ -4,6 +4,7 @@ use poo::interpreter::Value;
 use poo::lexer::{Lexer, Token};
 use poo::parser::Parser;
 use poo::{run_file_checked, run_source, run_source_checked};
+use std::fs;
 
 #[test]
 fn spec_lexer_skips_inline_comment_block() {
@@ -108,4 +109,35 @@ fn spec_checked_file_api_returns_io_error_for_missing_file() {
     let result = run_file_checked(&file_path);
     let error = result.expect_err("expected io error");
     assert_eq!(error.kind, LangErrorKind::Io);
+}
+
+#[test]
+fn spec_checked_file_api_executes_valid_file() {
+    let file_path = format!(
+        "/tmp/poolang-valid-{}-{}.poo",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("system clock before unix epoch")
+            .as_nanos()
+    );
+
+    fs::write(
+        &file_path,
+        r#"
+        poof add(a int, b int) >> int {
+            return a + b;
+        }
+        return add(4, 5);
+        "#,
+    )
+    .expect("failed to write temp source");
+
+    let result = run_file_checked(&file_path);
+    let _ = fs::remove_file(&file_path);
+
+    assert_eq!(
+        result.expect("expected successful file run"),
+        Some(Value::Int(9))
+    );
 }
