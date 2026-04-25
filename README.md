@@ -12,7 +12,9 @@ A Tiny Interpreted language written in Rust, featuring variable declarations, ar
 ## Table of Contents
 
 - [Features](#features)
+- [Get Started](#get-started)
 - [Installation](#installation)
+- [Release](#release)
 - [Usage](#usage)
 - [Syntax Overview](#syntax-overview)
 - [Example Code](#example-code)
@@ -30,6 +32,41 @@ A Tiny Interpreted language written in Rust, featuring variable declarations, ar
   - Assignment operator: `<<`
   - Arrow operator: `>>`
 - **Lexer, Parser, and Interpreter**: A full pipeline from tokenizing source code to executing it.
+
+## Get Started
+
+Choose the fastest install path for your platform:
+
+### Linux / macOS (Universal Shell Installer)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/shayyz-code/poolang/main/install.sh | sh
+```
+
+Install a specific version:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/shayyz-code/poolang/main/install.sh | sh -s -- v0.1.4
+```
+
+### macOS (Homebrew)
+
+```bash
+brew install shayyz-code/tap/poo
+```
+
+### Windows (Scoop)
+
+```powershell
+scoop bucket add shayyz-code https://github.com/shayyz-code/scoop-bucket
+scoop install poo
+```
+
+### Verify Installation
+
+```bash
+poo --help
+```
 
 ## Installation
 
@@ -76,6 +113,20 @@ cargo run app.poo
 ```
 
 The CLI uses typed checked execution (`run_file_checked`) and prints structured error kinds (`Io`, `Parse`, `Runtime`) with a non-zero exit code on failure.
+
+## Release
+
+Releases are automated with GitHub Actions + GoReleaser and publish:
+
+- Homebrew formula updates to `shayyz-code/tap` (`shayyz-code/homebrew-tap`)
+- Scoop manifest updates to `shayyz-code/scoop-bucket`
+
+Release flow:
+
+1. Create and push a version tag (example: `v0.2.0`).
+2. The `release` workflow builds macOS archives with GoReleaser, creates a GitHub Release, and uploads Linux and Windows binaries.
+3. GoReleaser updates the formula in the tap repo under `Formula/`.
+4. The workflow updates `poo.json` in `shayyz-code/scoop-bucket` for Windows Scoop installs.
 
 ## Syntax Overview
 

@@ -1,0 +1,49 @@
+version: 2
+
+project_name: poo
+
+before:
+  hooks:
+    - cargo test -q
+
+builds:
+  - id: poo
+    builder: rust
+    binary: poo
+    targets:
+      - x86_64-apple-darwin
+      - aarch64-apple-darwin
+
+archives:
+  - id: default
+    ids:
+      - poo
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    formats:
+      - tar.gz
+    files:
+      - README.md
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  use: git
+
+brews:
+  - name: poo
+    repository:
+      owner: shayyz-code
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Formula
+    homepage: "https://github.com/shayyz-code/poolang"
+    description: "Tiny interpreted language written in Rust"
+    commit_author:
+      name: shayyz-code
+      email: 17557626+github-actions[bot]@users.noreply.github.com
+    install: |
+      bin.install "poo"
+    test: |
+      assert_match "Usage", shell_output("#{bin}/poo 2>&1", 1)
