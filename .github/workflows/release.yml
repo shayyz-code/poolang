@@ -35,9 +35,7 @@ jobs:
     needs: plan
     strategy:
       fail-fast: false
-      matrix:
-        # These are computed by 'dist plan' and passed here
-        include: ${{ fromJson(needs.plan.outputs.val).upload_artifacts_matrix }}
+      matrix: ${{ fromJson(needs.plan.outputs.val).ci.github.artifacts_matrix }}
     runs-on: ${{ matrix.runner }}
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -46,7 +44,7 @@ jobs:
         with:
           submodules: recursive
       - name: Install dist
-        run: ${{ matrix.install_dist }}
+        run: ${{ matrix.install_dist.run }}
       - name: Build artifacts
         run: dist build --tag=${{ github.ref_name }} --output-format=json ${{ matrix.dist_args }} > dist-manifest.json
       - name: Upload artifacts
