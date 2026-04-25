@@ -554,32 +554,47 @@ impl Parser {
 
     // Parse if statements
     fn parse_if(&mut self) -> Stmt {
-        self.advance(); // cannot use self.eat (if && selif)
+        self.parse_if_checked()
+            .unwrap_or_else(|error| panic!("{}", error.message))
+    }
+
+    fn parse_if_checked(&mut self) -> Result<Stmt, LangError> {
+        // `elif` reuses this parser, so we accept both tokens here.
+        match self.current_token {
+            Token::If | Token::Elif => self.advance(),
+            _ => {
+                return Err(LangError::parse(format!(
+                    "Unexpected token: {:?}, expected: If or Elif",
+                    self.current_token
+                )));
+            }
+        }
+
         let condition = self.parse_expr();
-        self.eat(Token::LeftCurly);
+        self.eat_checked(Token::LeftCurly)?;
 
         let mut if_body = Vec::new();
         while self.current_token != Token::EOF && self.current_token != Token::RightCurly {
-            if_body.push(self.parse_statement());
+            if_body.push(self.parse_statement_checked()?);
         }
-        self.eat(Token::RightCurly);
+        self.eat_checked(Token::RightCurly)?;
 
         let mut else_body = Vec::new();
         if self.current_token == Token::Else || self.current_token == Token::Elif {
             if self.current_token == Token::Elif {
                 // Parse `else if` as a nested `If` statement
-                else_body.push(self.parse_if());
+                else_body.push(self.parse_if_checked()?);
             } else {
-                self.eat(Token::Else);
-                self.eat(Token::LeftCurly);
+                self.eat_checked(Token::Else)?;
+                self.eat_checked(Token::LeftCurly)?;
                 while self.current_token != Token::EOF && self.current_token != Token::RightCurly {
-                    else_body.push(self.parse_statement());
+                    else_body.push(self.parse_statement_checked()?);
                 }
-                self.eat(Token::RightCurly);
+                self.eat_checked(Token::RightCurly)?;
             }
         }
 
-        Stmt::If(condition, if_body, else_body)
+        Ok(Stmt::If(condition, if_body, else_body))
     }
 
     // Parse while loops
@@ -863,7 +878,7 @@ impl Parser {
             Token::Use => self.parse_use_checked(),
             Token::Struct => Ok(self.parse_struct()),
             Token::Poof => Ok(self.parse_function_declaration()),
-            Token::If => Ok(self.parse_if()),
+            Token::If => self.parse_if_checked(),
             Token::While => self.parse_while_checked(),
             Token::For => self.parse_for_in_range_checked(),
             Token::Return => self.parse_return_checked(),
