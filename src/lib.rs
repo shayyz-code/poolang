@@ -6,7 +6,7 @@ pub mod parser;
 pub mod type_inference;
 pub mod visitor;
 
-use errors::LangError;
+use errors::{LangError, LangErrorKind};
 use interpreter::{Interpreter, Value};
 use lexer::Lexer;
 use parser::Parser;
@@ -28,5 +28,11 @@ pub fn run_source_checked(input: String) -> Result<Option<Value>, LangError> {
 pub fn run_file_checked(file_path: &str) -> Result<Option<Value>, LangError> {
     let input = fs::read_to_string(file_path)
         .map_err(|error| LangError::io(format!("failed to read '{file_path}': {error}")))?;
-    run_source_checked(input)
+    run_source_checked(input).map_err(|error| match error.kind {
+        LangErrorKind::Parse => LangError::parse(format!("in '{file_path}': {}", error.message)),
+        LangErrorKind::Runtime => {
+            LangError::runtime(format!("in '{file_path}': {}", error.message))
+        }
+        LangErrorKind::Io => error,
+    })
 }

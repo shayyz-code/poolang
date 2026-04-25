@@ -173,6 +173,18 @@ fn spec_checked_file_api_returns_parse_error_for_invalid_file_content() {
 }
 
 #[test]
+fn spec_checked_file_api_includes_file_path_in_parse_errors() {
+    let file_path = unique_temp_file_path("parse-path");
+    fs::write(&file_path, "poo x <: 1").expect("failed to write temp source");
+    let result = run_file_checked(&file_path);
+    let _ = fs::remove_file(&file_path);
+
+    let error = result.expect_err("expected parse error");
+    assert_eq!(error.kind, LangErrorKind::Parse);
+    assert!(error.message.contains(&file_path));
+}
+
+#[test]
 fn spec_checked_file_api_returns_runtime_error_for_invalid_runtime_content() {
     let result = run_checked_with_temp_file("runtime", "return unknown_identifier;");
 
