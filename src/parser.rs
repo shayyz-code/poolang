@@ -325,7 +325,8 @@ impl Parser {
     }
 
     fn parse_expr_checked(&mut self) -> Result<Expr, LangError> {
-        Ok(self.parse_expr())
+        catch_unwind_silent(AssertUnwindSafe(|| self.parse_expr()))
+            .map_err(|payload| LangError::parse(panic_payload_to_message(payload)))
     }
 
     // Parse assignment statements

@@ -1,5 +1,6 @@
 use std::error::Error;
 use std::fmt;
+use std::cell::Cell;
 use std::panic::{catch_unwind, set_hook, take_hook, UnwindSafe};
 use std::sync::{Mutex, OnceLock};
 
@@ -62,16 +63,37 @@ fn panic_hook_lock() -> &'static Mutex<()> {
     LOCK.get_or_init(|| Mutex::new(()))
 }
 
+thread_local! {
+    static PANIC_HOOK_DEPTH: Cell<usize> = const { Cell::new(0) };
+}
+
 pub fn catch_unwind_silent<F, T>(f: F) -> std::thread::Result<T>
 where
     F: FnOnce() -> T + UnwindSafe,
 {
-    let _guard = panic_hook_lock()
-        .lock()
-        .expect("failed to lock panic hook mutex");
-    let previous_hook = take_hook();
-    set_hook(Box::new(|_| {}));
-    let result = catch_unwind(f);
-    set_hook(previous_hook);
+    let previous_depth = PANIC_HOOK_DEPTH.with(|depth| {
+        let current = depth.get();
+        depth.set(current + 1);
+        current
+    });
+
+    let result = if previous_depth > 0 {
+        catch_unwind(f)
+    } else {
+        let _guard = panic_hook_lock()
+            .lock()
+            .expect("failed to lock panic hook mutex");
+        let previous_hook = take_hook();
+        set_hook(Box::new(|_| {}));
+        let result = catch_unwind(f);
+        set_hook(previous_hook);
+        result
+    };
+
+    PANIC_HOOK_DEPTH.with(|depth| {
+        let current = depth.get();
+        depth.set(current.saturating_sub(1));
+    });
+
     result
 }
