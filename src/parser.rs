@@ -2,9 +2,11 @@ use std::collections::HashMap;
 
 // src/parser.rs
 use crate::ast::{Expr, Property, Stmt, Type};
+use crate::errors::{LangError, panic_payload_to_message};
 use crate::lexer::{Lexer, Token};
 use crate::type_inference::*;
 use crate::visitor::ScopedSymbolTable;
+use std::panic::{AssertUnwindSafe, catch_unwind};
 
 pub struct Parser {
     lexer: Lexer,
@@ -808,5 +810,10 @@ impl Parser {
             statements.push(self.parse_statement());
         }
         statements
+    }
+
+    pub fn parse_checked(&mut self) -> Result<Vec<Stmt>, LangError> {
+        catch_unwind(AssertUnwindSafe(|| self.parse()))
+            .map_err(|payload| LangError::parse(panic_payload_to_message(payload)))
     }
 }

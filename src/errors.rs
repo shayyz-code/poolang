@@ -36,3 +36,13 @@ impl fmt::Display for LangError {
 }
 
 impl Error for LangError {}
+
+pub fn panic_payload_to_message(payload: Box<dyn std::any::Any + Send>) -> String {
+    if let Some(msg) = payload.downcast_ref::<&str>() {
+        (*msg).to_string()
+    } else if let Some(msg) = payload.downcast_ref::<String>() {
+        msg.clone()
+    } else {
+        "unknown panic".to_string()
+    }
+}
