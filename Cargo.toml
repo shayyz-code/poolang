@@ -1,31 +1,21 @@
 [workspace]
 members = ["."]
 
-[workspace.metadata.dist]
-# The version of cargo-dist used to generate this config
-cargo-dist-version = "0.28.0"
-# CI providers to generate scripts for
-ci = ["github"]
-# The installers to generate for users
-installers = ["shell", "powershell", "homebrew"]
-# Target platforms to build for
-targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-pc-windows-msvc"]
-# Publish jobs to run
-publish-jobs = ["homebrew"]
-# Homebrew tap repository
-tap = "shayyz-code/homebrew-tap"
-# Allow the CI workflow to be managed manually (to use ubuntu-latest)
-allow-dirty = ["ci"]
-
 [package]
 name = "poo"
-version = "0.1.4-beta.10"
+version = "0.1.4-beta.11"
 edition = "2024"
 authors = ["Shayy <aungminkhant.shay@gmail.com>"]
 description = "Tiny interpreted language written in Rust"
 repository = "https://github.com/shayyz-code/poolang"
 homepage = "https://github.com/shayyz-code/poolang"
 license = "MIT"
+
+[package.metadata.wix]
+upgrade-guid = "C3C2DD2F-C1BE-458A-AE1D-0F6E8EC91587"
+path-guid = "0CAAE148-B181-4C04-AA04-B72B6B6DF2CF"
+license = false
+eula = false
 
 [profile.dist]
 inherits = "release"
