@@ -1,9 +1,6 @@
-[workspace]
-members = ["."]
-
 [package]
 name = "poo"
-version = "0.1.4-beta.12"
+version = "0.1.4-beta.13"
 edition = "2024"
 authors = ["Shayy <aungminkhant.shay@gmail.com>"]
 description = "Tiny interpreted language written in Rust"
@@ -12,14 +9,14 @@ homepage = "https://github.com/shayyz-code/poolang"
 license = "MIT"
 
 [package.metadata.wix]
-upgrade-guid = "C3C2DD2F-C1BE-458A-AE1D-0F6E8EC91587"
-path-guid = "0CAAE148-B181-4C04-AA04-B72B6B6DF2CF"
+upgrade-guid = "9019CB96-3E79-4E19-B28F-4213BEE3FD2E"
+path-guid = "3822313C-D94C-44A2-B2BD-BF4F64D5ACC9"
 license = false
 eula = false
 
+[dependencies]
+
+# The profile that 'dist' will build with
 [profile.dist]
 inherits = "release"
 lto = "thin"
-strip = true
-
-[dependencies]

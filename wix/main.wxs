@@ -61,7 +61,7 @@
     <Product
         Id='*'
         Name='poo'
-        UpgradeCode='C3C2DD2F-C1BE-458A-AE1D-0F6E8EC91587'
+        UpgradeCode='9019CB96-3E79-4E19-B28F-4213BEE3FD2E'
         Manufacturer='Shayy'
         Language='1033'
         Codepage='1252'
@@ -110,7 +110,7 @@
                     -->
 
                     <Directory Id='Bin' Name='bin'>
-                        <Component Id='Path' Guid='0CAAE148-B181-4C04-AA04-B72B6B6DF2CF' KeyPath='yes'>
+                        <Component Id='Path' Guid='3822313C-D94C-44A2-B2BD-BF4F64D5ACC9' KeyPath='yes'>
                             <Environment
                                 Id='PATH'
                                 Name='PATH'
