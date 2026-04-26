@@ -1,6 +1,9 @@
 {
   "build": {
-    "path_prefix": "poolang"
+    "path_prefix": "poolang",
+    "additional_pages": {
+      "Contributing": "./contributing.md"
+    }
   },
   "styles": {
     "theme": "axodark"
