@@ -73,7 +73,7 @@ jobs:
       - name: Prepare HTML for link checking
         # untitaker/hyperlink supports no site prefixes, move entire site into
         # a subfolder
-        run: mkdir -p /tmp/link-check/poolang && cp -R public/* /tmp/link-check/poolang/ && cp CONTRIBUTING.md /tmp/link-check/poolang/
+        run: mkdir -p /tmp/link-check/poolang && cp -R public/* /tmp/link-check/poolang/ && cp CONTRIBUTING.md /tmp/link-check/poolang/ && cp LICENSE /tmp/link-check/poolang/
 
       - name: Check HTML for broken internal links
         uses: untitaker/hyperlink@0.1.29
