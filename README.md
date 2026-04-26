@@ -1,4 +1,10 @@
 <p align="center">
+  <img width="500" height="281" alt="poo-banner-transparent" src="https://github.com/user-attachments/assets/70181432-f458-4949-beb2-51e6e9eb8549" />
+</p>
+
+<h1 align="center">PooLang</h1>
+
+<p align="center">
   <a href="https://www.rust-lang.org">
     <img src="https://img.shields.io/badge/rust-1.75%2B-orange.svg?style=for-the-badge&logo=rust" alt="Rust" />
   </a>
@@ -10,13 +16,7 @@
   </a>
 </p>
 
-<p align="center">
-  <img width="500" height="281" alt="poo-banner-transparent" src="https://github.com/user-attachments/assets/70181432-f458-4949-beb2-51e6e9eb8549" />
-</p>
-
-<h1 align="center">PooLang</h1>
-
-<p align="center">
+<p align="center" class="oranda-hide">
   <b><a href="#features">Features</a></b> •
   <b><a href="#get-started">Get Started</a></b> •
   <b><a href="#installation">Installation</a></b> •
