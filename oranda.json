@@ -1,0 +1,11 @@
+{
+  "styles": {
+    "theme": "axodark"
+  },
+  "components": {
+    "changelog": false,
+    "mdbook": {
+      "path": "./docs"
+    }
+  }
+}
