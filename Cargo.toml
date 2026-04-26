@@ -3,7 +3,7 @@ members = ["."]
 
 [package]
 name = "poo"
-version = "0.1.4-beta.11"
+version = "0.1.4-beta.12"
 edition = "2024"
 authors = ["Shayy <aungminkhant.shay@gmail.com>"]
 description = "Tiny interpreted language written in Rust"
