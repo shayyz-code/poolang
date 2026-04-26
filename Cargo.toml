@@ -1,6 +1,6 @@
 [package]
 name = "poo"
-version = "0.1.4-beta.17"
+version = "0.1.4-beta.18"
 edition = "2024"
 authors = ["Shayy <aungminkhant.shay@gmail.com>"]
 description = "Tiny interpreted language written in Rust"
@@ -9,8 +9,8 @@ homepage = "https://github.com/shayyz-code/poolang"
 license = "MIT"
 
 [package.metadata.wix]
-upgrade-guid = "9019CB96-3E79-4E19-B28F-4213BEE3FD2E"
-path-guid = "3822313C-D94C-44A2-B2BD-BF4F64D5ACC9"
+upgrade-guid = "E5BAFDF3-D829-4C38-B58D-49491C5C6445"
+path-guid = "B8D61EE3-90EE-43B8-991B-C6285CC61AA8"
 license = false
 eula = false
 

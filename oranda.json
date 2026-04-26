@@ -1,4 +1,7 @@
 {
+  "build": {
+    "path_prefix": "poolang"
+  },
   "styles": {
     "theme": "axodark"
   },
