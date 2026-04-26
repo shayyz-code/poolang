@@ -40,13 +40,13 @@ Choose the fastest install path for your platform:
 ### Linux / macOS (Universal Shell Installer)
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/shayyz-code/poolang/main/install.sh | sh
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/shayyz-code/poolang/releases/latest/download/poo-installer.sh | sh
 ```
 
-Install a specific version:
+### Windows (PowerShell Installer)
 
-```bash
-curl -fsSL https://raw.githubusercontent.com/shayyz-code/poolang/main/install.sh | sh -s -- v0.1.4
+```powershell
+powershell -c "irm https://github.com/shayyz-code/poolang/releases/latest/download/poo-installer.ps1 | iex"
 ```
 
 ### macOS (Homebrew)
@@ -116,17 +116,18 @@ The CLI uses typed checked execution (`run_file_checked`) and prints structured 
 
 ## Release
 
-Releases are automated with GitHub Actions + GoReleaser and publish:
+Releases are automated with GitHub Actions + [cargo-dist](https://opensource.axo.dev/cargo-dist/) and publish:
 
+- Multi-platform binaries (Linux, macOS, Windows)
+- Optimized installers (Shell, PowerShell)
 - Homebrew formula updates to `shayyz-code/tap` (`shayyz-code/homebrew-tap`)
 - Scoop manifest updates to `shayyz-code/scoop-bucket`
 
 Release flow:
 
-1. Create and push a version tag (example: `v0.2.0`).
-2. The `release` workflow builds macOS archives with GoReleaser, creates a GitHub Release, and uploads Linux and Windows binaries.
-3. GoReleaser updates the formula in the tap repo under `Formula/`.
-4. The workflow updates `poo.json` in `shayyz-code/scoop-bucket` for Windows Scoop installs.
+1. Update version in `Cargo.toml`.
+2. Create and push a version tag (example: `v0.1.5`).
+3. The `Release` workflow builds all artifacts, creates a GitHub Release, and handles downstream publishing.
 
 CI checks:
 
