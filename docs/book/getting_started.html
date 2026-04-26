@@ -3,8 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>Page not found - The PooLang Book</title>
-        <base href="/">
+        <title>Getting Started - The PooLang Book</title>
 
 
         <!-- Custom HTML head -->
@@ -83,7 +82,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><a href="getting_started.html">Getting Started</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">1.</strong> Syntax Guide</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="syntax/variables.html"><strong aria-hidden="true">1.1.</strong> Variables & Types</a></li><li class="chapter-item expanded "><a href="syntax/operators.html"><strong aria-hidden="true">1.2.</strong> Operators & Math</a></li><li class="chapter-item expanded "><a href="syntax/comments.html"><strong aria-hidden="true">1.3.</strong> Comments</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.</strong> Control Flow</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="control_flow/conditionals.html"><strong aria-hidden="true">2.1.</strong> Conditionals</a></li><li class="chapter-item expanded "><a href="control_flow/loops.html"><strong aria-hidden="true">2.2.</strong> Loops</a></li></ol></li><li class="chapter-item expanded "><a href="functions.html"><strong aria-hidden="true">3.</strong> Functions</a></li><li class="chapter-item expanded "><a href="std.html"><strong aria-hidden="true">4.</strong> Standard Library</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.</strong> Internal Architecture</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="internals/lexer.html"><strong aria-hidden="true">5.1.</strong> Lexer</a></li><li class="chapter-item expanded "><a href="internals/parser.html"><strong aria-hidden="true">5.2.</strong> Parser</a></li><li class="chapter-item expanded "><a href="internals/interpreter.html"><strong aria-hidden="true">5.3.</strong> Interpreter</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded affix "><a href="getting_started.html" class="active">Getting Started</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">1.</strong> Syntax Guide</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="syntax/variables.html"><strong aria-hidden="true">1.1.</strong> Variables & Types</a></li><li class="chapter-item expanded "><a href="syntax/operators.html"><strong aria-hidden="true">1.2.</strong> Operators & Math</a></li><li class="chapter-item expanded "><a href="syntax/comments.html"><strong aria-hidden="true">1.3.</strong> Comments</a></li></ol></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.</strong> Control Flow</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="control_flow/conditionals.html"><strong aria-hidden="true">2.1.</strong> Conditionals</a></li><li class="chapter-item expanded "><a href="control_flow/loops.html"><strong aria-hidden="true">2.2.</strong> Loops</a></li></ol></li><li class="chapter-item expanded "><a href="functions.html"><strong aria-hidden="true">3.</strong> Functions</a></li><li class="chapter-item expanded "><a href="std.html"><strong aria-hidden="true">4.</strong> Standard Library</a></li><li class="chapter-item expanded "><div><strong aria-hidden="true">5.</strong> Internal Architecture</div></li><li><ol class="section"><li class="chapter-item expanded "><a href="internals/lexer.html"><strong aria-hidden="true">5.1.</strong> Lexer</a></li><li class="chapter-item expanded "><a href="internals/parser.html"><strong aria-hidden="true">5.2.</strong> Parser</a></li><li class="chapter-item expanded "><a href="internals/interpreter.html"><strong aria-hidden="true">5.3.</strong> Interpreter</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -147,14 +146,46 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="document-not-found-404"><a class="header" href="#document-not-found-404">Document not found (404)</a></h1>
-<p>This URL is invalid, sorry. Please use the navigation bar or search to continue.</p>
+                        <h1 id="getting-started"><a class="header" href="#getting-started">Getting Started</a></h1>
+<h2 id="installation"><a class="header" href="#installation">Installation</a></h2>
+<h3 id="using-automated-installers"><a class="header" href="#using-automated-installers">Using Automated Installers</a></h3>
+<p>The fastest way to install PooLang is via our universal installers:</p>
+<p><strong>Linux / macOS</strong></p>
+<pre><code class="language-bash">curl --proto '=https' --tlsv1.2 -LsSf https://github.com/shayyz-code/poolang/releases/latest/download/poo-installer.sh | sh
+</code></pre>
+<p><strong>Windows</strong></p>
+<pre><code class="language-powershell">powershell -c "irm https://github.com/shayyz-code/poolang/releases/latest/download/poo-installer.ps1 | iex"
+</code></pre>
+<h3 id="from-source"><a class="header" href="#from-source">From Source</a></h3>
+<p>If you have Rust and Cargo installed, you can build from source:</p>
+<pre><code class="language-bash">git clone https://github.com/shayyz-code/poolang.git
+cd poolang
+cargo build --release
+</code></pre>
+<p>The binary will be available at <code>./target/release/poo</code>.</p>
+<h2 id="running-your-first-program"><a class="header" href="#running-your-first-program">Running your first program</a></h2>
+<p>Create a file named <code>hello.poo</code>:</p>
+<pre><code class="language-poo">use std::pout;
+
+pout("Hello, Guinea Pig!");
+</code></pre>
+<p>Run it using the PooLang CLI:</p>
+<pre><code class="language-bash">poo hello.poo
+</code></pre>
+<h2 id="next-steps"><a class="header" href="#next-steps">Next Steps</a></h2>
+<p>Check out the <a href="./syntax/variables.html">Variables &amp; Types</a> section to learn more about PooLang syntax.</p>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
+                            <a rel="prev" href="introduction.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
+                            </a>
 
+                            <a rel="next" href="syntax/variables.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                                <i class="fa fa-angle-right"></i>
+                            </a>
 
                         <div style="clear: both"></div>
                     </nav>
@@ -162,7 +193,13 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
+                    <a rel="prev" href="introduction.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
+                    </a>
 
+                    <a rel="next" href="syntax/variables.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
+                        <i class="fa fa-angle-right"></i>
+                    </a>
             </nav>
 
         </div>

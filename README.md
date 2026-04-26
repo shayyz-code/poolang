@@ -44,22 +44,32 @@ A Tiny Interpreted language written in Rust, featuring variable declarations, ar
 
 ## Get Started
 
-For the best experience and automated installers for all platforms, visit our project site:
-
-<p align="center">
-  <b>👉 <a href="https://shayyz-code.github.io/poolang/">shayyz-code.github.io/poolang</a></b>
-</p>
+For instructions on installing PooLang on your platform, visit our project site via [https://shayyz-code.github.io/poolang](https://shayyz-code.github.io/poolang/). We provide automated installers for all platforms.
 
 ### Quick Install
 
+Recommended:
+
+```bash
+brew install shayyz-code/tap/poo
+```
+
+or
+
+```bash
+npm install @shayyz-code/poo@latest
+```
+
 **Linux / macOS**
+
 ```bash
 curl --proto '=https' --tlsv1.2 -LsSf https://github.com/shayyz-code/poolang/releases/latest/download/poo-installer.sh | sh
 ```
 
 **Windows**
+
 ```powershell
-powershell -c "irm https://github.com/shayyz-code/poolang/releases/latest/download/poo-installer.ps1 | iex"
+powershell -ExecutionPolicy Bypass -c "irm https://github.com/shayyz-code/poolang/releases/latest/download/poo-installer.ps1 | iex"
 ```
 
 ### Verify Installation
@@ -68,7 +78,7 @@ powershell -c "irm https://github.com/shayyz-code/poolang/releases/latest/downlo
 poo --help
 ```
 
-## Installation
+## Build from Source
 
 ### Prerequisites
 
@@ -83,15 +93,10 @@ poo --help
    cd poolang
    ```
 
-2. Build the project:
+2. Install with cargo:
 
    ```bash
-   cargo build
-   ```
-
-3. Run tests:
-   ```bash
-   cargo test
+   cargo install --path .
    ```
 
 ## Usage
