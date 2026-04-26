@@ -14,10 +14,12 @@ targets = ["aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-
 publish-jobs = ["homebrew"]
 # Homebrew tap repository
 tap = "shayyz-code/homebrew-tap"
+# Allow the CI workflow to be managed manually (to use ubuntu-latest)
+allow-dirty = ["ci"]
 
 [package]
 name = "poo"
-version = "0.1.4-beta.9"
+version = "0.1.4-beta.10"
 edition = "2024"
 authors = ["Shayy <aungminkhant.shay@gmail.com>"]
 description = "Tiny interpreted language written in Rust"
