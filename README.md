@@ -1,25 +1,34 @@
-[![Rust](https://img.shields.io/badge/rust-1.75%2B-orange.svg?style=for-the-badge&logo=rust)](https://www.rust-lang.org)
-[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](CONTRIBUTING.md)
+<p align="center">
+  <a href="https://www.rust-lang.org">
+    <img src="https://img.shields.io/badge/rust-1.75%2B-orange.svg?style=for-the-badge&logo=rust" alt="Rust" />
+  </a>
+  <a href="CONTRIBUTING.md">
+    <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge" alt="PRs Welcome" />
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge" alt="License MIT" />
+  </a>
+</p>
 
 <p align="center">
   <img width="500" height="281" alt="poo-banner-transparent" src="https://github.com/user-attachments/assets/70181432-f458-4949-beb2-51e6e9eb8549" />
 </p>
 
-# About PooLang
+<h1 align="center">PooLang</h1>
 
-A Tiny Interpreted language written in Rust, featuring variable declarations, arithmetic operations, conditional statements, and control flow. This project includes a lexer, parser, and interpreter. The name `Poo` originates from Guinea Pig translated from `Burmese`.
+<p align="center">
+  <b><a href="#features">Features</a></b> •
+  <b><a href="#get-started">Get Started</a></b> •
+  <b><a href="#installation">Installation</a></b> •
+  <b><a href="#usage">Usage</a></b> •
+  <b><a href="#syntax-overview">Syntax</a></b> •
+  <b><a href="#example-code">Example</a></b> •
+  <b><a href="#development">Dev</a></b>
+</p>
 
-## Table of Contents
-
-- [Features](#features)
-- [Get Started](#get-started)
-- [Installation](#installation)
-- [Release](#release)
-- [Usage](#usage)
-- [Syntax Overview](#syntax-overview)
-- [Example Code](#example-code)
-- [Development](#development)
-- [Contributing](#contributing)
+<p align="center">
+A Tiny Interpreted language written in Rust, featuring variable declarations, arithmetic operations, conditional statements, and control flow. The name <code>Poo</code> originates from Guinea Pig translated from <code>Burmese</code>.
+</p>
 
 ## Features
 
@@ -35,31 +44,22 @@ A Tiny Interpreted language written in Rust, featuring variable declarations, ar
 
 ## Get Started
 
-Choose the fastest install path for your platform:
+For the best experience and automated installers for all platforms, visit our project site:
 
-### Linux / macOS (Universal Shell Installer)
+<p align="center">
+  <b>👉 <a href="https://shayyz-code.github.io/poolang/">shayyz-code.github.io/poolang</a></b>
+</p>
 
+### Quick Install
+
+**Linux / macOS**
 ```bash
 curl --proto '=https' --tlsv1.2 -LsSf https://github.com/shayyz-code/poolang/releases/latest/download/poo-installer.sh | sh
 ```
 
-### Windows (PowerShell Installer)
-
+**Windows**
 ```powershell
 powershell -c "irm https://github.com/shayyz-code/poolang/releases/latest/download/poo-installer.ps1 | iex"
-```
-
-### macOS (Homebrew)
-
-```bash
-brew install shayyz-code/tap/poo
-```
-
-### Windows (Scoop)
-
-```powershell
-scoop bucket add shayyz-code https://github.com/shayyz-code/scoop-bucket
-scoop install poo
 ```
 
 ### Verify Installation
@@ -276,31 +276,10 @@ cargo test
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request or open an Issue if you find a bug or have a feature request.
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
-### Steps to Contribute
+## License
 
-1. Fork the repository.
-2. Create a new branch:
-   ```bash
-   git checkout -b feature/your-feature-name
-   ```
-3. Make your changes and commit them:
-
-   ```bash
-   feat: Allow provided config object to extend other configs by <your-username>
-
-   BREAKING CHANGE: `extends` key in config file is now used for extending other config files.
-   ```
-
-4. Push to the branch:
-   ```bash
-   git push origin feature/your-feature-name
-   ```
-5. Open a Pull Request.
-
-## Feedback
-
-If you have any questions or feedback, feel free to reach out or open an issue in the repository.
+PooLang is licensed under the MIT License. See [LICENSE](LICENSE) for details.
 
 <p align="center">Hand-Crafted by <em><b><a href="https://github.com/shayyz-code">Shayy</a></b></em></p>
