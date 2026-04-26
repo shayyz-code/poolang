@@ -6,6 +6,9 @@
     "theme": "axodark"
   },
   "components": {
+    "artifacts": {
+      "cargo_dist": true
+    },
     "changelog": false,
     "mdbook": {
       "path": "./docs"
