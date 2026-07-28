@@ -64,9 +64,9 @@ Snapshot: 2026-07-28.
 - [x] Add issue-first, small-PR, Conventional Commit, and squash-only rules to contributor and agent guidance.
 - [x] Add a pull-request template and validate exactly one pre-existing issue reference.
 - [x] Add a passing `cargo check --all-targets` pull-request baseline.
-- [ ] Protect `main`, require PR checks and resolved conversations, enforce rules for administrators, and block force pushes/deletion.
-- [ ] Disable merge commits and rebase merges; keep squash merge and automatic source-branch deletion.
-- [ ] Delete remote `master` after `main`, workflows, default-branch state, and protection are verified.
+- [x] Protect `main`, require PR checks and resolved conversations, enforce rules for administrators, and block force pushes/deletion.
+- [x] Disable merge commits and rebase merges; keep squash merge and automatic source-branch deletion.
+- [x] Delete remote `master` after `main`, workflows, default-branch state, and protection are verified.
 
 ## Phase 1 — Clean Legacy Baselines
 
