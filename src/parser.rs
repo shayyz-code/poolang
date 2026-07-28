@@ -151,7 +151,7 @@ impl Parser {
                 }
             }
             Token::Char(value) => {
-                let expr = Expr::Char(value.clone());
+                let expr = Expr::Char(*value);
                 self.advance();
                 Ok(expr)
             }
@@ -225,7 +225,7 @@ impl Parser {
     fn parse_struct_compound_checked(&mut self, struct_name: String) -> Result<Expr, LangError> {
         self.eat_checked(Token::LeftCurly)?;
         let mut props_exprs = HashMap::new();
-        while &self.current_token != &Token::RightCurly {
+        while self.current_token != Token::RightCurly {
             if let Token::Identifier(key) = self.current_token.clone() {
                 self.advance();
                 self.eat_checked(Token::Colon)?;
@@ -505,10 +505,7 @@ impl Parser {
         while self.current_token != Token::RightCurly {
             body.push(self.parse_statement_checked()?);
         }
-        let is_returning = &body.iter().any(|s| match s {
-            Stmt::Return(_) => true,
-            _ => false,
-        });
+        let is_returning = body.iter().any(|s| matches!(s, Stmt::Return(_)));
         if !is_returning {
             body.push(Stmt::Return(None))
         }
@@ -553,13 +550,11 @@ impl Parser {
                             )));
                         }
                     }
-                    Stmt::Return(None) => {
-                        if *expected_type != Type::Void {
-                            return Err(LangError::parse(format!(
-                                "Expected return type {:?}, but function returned nothing",
-                                expected_type
-                            )));
-                        }
+                    Stmt::Return(None) if *expected_type != Type::Void => {
+                        return Err(LangError::parse(format!(
+                            "Expected return type {:?}, but function returned nothing",
+                            expected_type
+                        )));
                     }
                     _ => {}
                 }
@@ -700,8 +695,7 @@ impl Parser {
 
         let step = if self.current_token == Token::Step {
             self.advance();
-            let step_size = self.parse_expr_checked()?;
-            step_size
+            self.parse_expr_checked()?
         } else {
             Expr::Int(1)
         };
@@ -755,7 +749,7 @@ impl Parser {
                     } else if let Token::Identifier(_) = &self.current_token {
                         let mut final_module_part = String::new();
                         while let Token::Identifier(sub_part) = &self.current_token {
-                            final_module_part.push_str(&sub_part);
+                            final_module_part.push_str(sub_part);
                             self.advance();
                             if let Token::DoubleColon = &self.current_token {
                                 final_module_part.push_str("::");
@@ -854,7 +848,7 @@ impl Parser {
                 };
                 self.eat_checked(Token::LeftCurly)?;
                 let mut impl_methods = Vec::new();
-                while &self.current_token != &Token::RightCurly {
+                while self.current_token != Token::RightCurly {
                     let impl_method = self.parse_function_declaration_checked()?;
                     impl_methods.push(impl_method);
                 }
@@ -897,6 +891,8 @@ impl Parser {
 
     // Parse any statement
     fn parse_statement(&mut self) -> Stmt {
+        let identifier_is_reassignment = matches!(self.current_token, Token::Identifier(_))
+            && matches!(self.peek_token(), Token::Assignment | Token::LeftBracket);
         match &self.current_token {
             Token::Use => self.parse_use(),
             Token::Struct => self.parse_struct(),
@@ -906,16 +902,11 @@ impl Parser {
             Token::For => self.parse_for_in_range(),
             Token::Return => self.parse_return(),
             Token::Poo | Token::Mut => self.parse_assignment(),
+            Token::Identifier(_) if identifier_is_reassignment => self.parse_reassignment(),
             Token::Identifier(_) => {
-                if self.peek_token() == Token::Assignment || self.peek_token() == Token::LeftBracket
-                // vector index reassingment
-                {
-                    self.parse_reassignment()
-                } else {
-                    let expr = self.parse_expr();
-                    self.eat(Token::SemiColon);
-                    Stmt::Expression(expr)
-                }
+                let expr = self.parse_expr();
+                self.eat(Token::SemiColon);
+                Stmt::Expression(expr)
             }
             _ => {
                 let expr = self.parse_expr();
@@ -927,6 +918,8 @@ impl Parser {
 
     // First checked parsing slice: expression statements use checked token consumption.
     fn parse_statement_checked(&mut self) -> Result<Stmt, LangError> {
+        let identifier_is_reassignment = matches!(self.current_token, Token::Identifier(_))
+            && matches!(self.peek_token(), Token::Assignment | Token::LeftBracket);
         match &self.current_token {
             Token::Use => self.parse_use_checked(),
             Token::Struct => self.parse_struct_checked(),
@@ -936,16 +929,11 @@ impl Parser {
             Token::For => self.parse_for_in_range_checked(),
             Token::Return => self.parse_return_checked(),
             Token::Poo | Token::Mut => self.parse_assignment_checked(),
+            Token::Identifier(_) if identifier_is_reassignment => self.parse_reassignment_checked(),
             Token::Identifier(_) => {
-                if self.peek_token() == Token::Assignment || self.peek_token() == Token::LeftBracket
-                // vector index reassignment
-                {
-                    self.parse_reassignment_checked()
-                } else {
-                    let expr = self.parse_expr_checked()?;
-                    self.eat_checked(Token::SemiColon)?;
-                    Ok(Stmt::Expression(expr))
-                }
+                let expr = self.parse_expr_checked()?;
+                self.eat_checked(Token::SemiColon)?;
+                Ok(Stmt::Expression(expr))
             }
             _ => {
                 let expr = self.parse_expr_checked()?;

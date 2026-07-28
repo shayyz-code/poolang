@@ -6,6 +6,12 @@ pub struct ScopedSymbolTable {
     scopes: Vec<HashMap<String, Type>>,
 }
 
+impl Default for ScopedSymbolTable {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl ScopedSymbolTable {
     pub fn new() -> Self {
         Self {

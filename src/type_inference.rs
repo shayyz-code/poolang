@@ -13,7 +13,7 @@ pub fn infer_expr_type(expr: &Expr, symbol_table: &ScopedSymbolTable) -> Type {
         Expr::String(_) => Type::String,
         Expr::Boolean(_) => Type::Bool,
         Expr::Vector(v, _) => {
-            if let Some(a) = v.get(0) {
+            if let Some(a) = v.first() {
                 infer_expr_type(a, symbol_table)
             } else {
                 Type::Vector(Box::new(Type::Void))
@@ -31,7 +31,7 @@ pub fn infer_expr_type(expr: &Expr, symbol_table: &ScopedSymbolTable) -> Type {
         Expr::Identifier(name) => symbol_table
             .get(name)
             .cloned()
-            .expect(&format!("Undefined variable: {}", name)),
+            .unwrap_or_else(|| panic!("Undefined variable: {}", name)),
         Expr::UnaryOp(_, _) => Type::Bool,
         Expr::BinaryOp(lhs, op, rhs) => {
             let lhs_type = infer_expr_type(lhs, symbol_table);
@@ -114,7 +114,7 @@ pub fn infer_expr_type(expr: &Expr, symbol_table: &ScopedSymbolTable) -> Type {
             let func_type = symbol_table
                 .get(name)
                 .cloned()
-                .expect(&format!("Undefined function: {}", name));
+                .unwrap_or_else(|| panic!("Undefined function: {}", name));
 
             match func_type {
                 Type::Function(params, return_type) => {
@@ -164,7 +164,7 @@ pub fn infer_stmt_types(stmt: &Stmt, symbol_table: &mut ScopedSymbolTable) {
             let expr_type = infer_expr_type(expr, symbol_table);
             let var_type = symbol_table
                 .get(name)
-                .expect(&format!("Variable '{}' used before declaration", name));
+                .unwrap_or_else(|| panic!("Variable '{}' used before declaration", name));
 
             if var_type != &expr_type {
                 panic!(
