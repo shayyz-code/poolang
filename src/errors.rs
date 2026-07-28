@@ -1,7 +1,7 @@
+use std::cell::Cell;
 use std::error::Error;
 use std::fmt;
-use std::cell::Cell;
-use std::panic::{catch_unwind, set_hook, take_hook, UnwindSafe};
+use std::panic::{UnwindSafe, catch_unwind, set_hook, take_hook};
 use std::sync::{Mutex, OnceLock};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
