@@ -10,9 +10,9 @@
 //! ```rust
 //! use poo::{run_source_checked, interpreter::Value};
 //!
-//! let source = "poo x << 10; return x;".to_string();
+//! let source = "poo x <: 10; return x;".to_string();
 //! let result = run_source_checked(source).unwrap();
-//! assert_eq!(result, Some(Value::Integer(10)));
+//! assert_eq!(result, Some(Value::Int(10)));
 //! ```
 
 pub mod ast;

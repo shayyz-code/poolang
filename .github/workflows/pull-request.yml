@@ -56,3 +56,5 @@ jobs:
         run: cargo fmt --all -- --check
       - name: Check compilation
         run: cargo check --all-targets
+      - name: Run tests
+        run: cargo test
