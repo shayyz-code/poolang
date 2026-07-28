@@ -144,7 +144,7 @@ impl Lexer {
             '0'..='9' => {
                 let mut num_str: String = self.input[self.pos..]
                     .chars()
-                    .take_while(|c| c.is_digit(10))
+                    .take_while(|c| c.is_ascii_digit())
                     .collect();
                 self.pos += num_str.len();
 
@@ -157,7 +157,7 @@ impl Lexer {
                         // It's a float
                         let num_str2: String = self.input[self.pos..]
                             .chars()
-                            .take_while(|c| c.is_digit(10))
+                            .take_while(|c| c.is_ascii_digit())
                             .collect();
                         self.pos += num_str2.len();
                         num_str.push('.');
