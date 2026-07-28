@@ -120,7 +120,7 @@ impl Value {
             (Value::Int(a), Value::Int(b)) => Value::Int(a + b),
             (Value::Float(a), Value::Float(b)) => Value::Float(a + b),
             (Value::String(a), Value::String(b)) => Value::String(a + &b),
-            (a, b) => panic!("Adding mismatched types {:?} and {:?}", &a, &b),
+            (a, b) => panic!("Adding mismatched types {:?} and {:?}", a, b),
         }
     }
 
@@ -128,7 +128,7 @@ impl Value {
         match (self, other) {
             (Value::Int(a), Value::Int(b)) => Value::Int(a - b),
             (Value::Float(a), Value::Float(b)) => Value::Float(a - b),
-            (a, b) => panic!("Subtracting mismatched types {:?} and {:?}", &a, &b),
+            (a, b) => panic!("Subtracting mismatched types {:?} and {:?}", a, b),
         }
     }
 
@@ -136,7 +136,7 @@ impl Value {
         match (self, other) {
             (Value::Int(a), Value::Int(b)) => Value::Int(a * b),
             (Value::Float(a), Value::Float(b)) => Value::Float(a * b),
-            (a, b) => panic!("Multiplying mismatched types {:?} and {:?}", &a, &b),
+            (a, b) => panic!("Multiplying mismatched types {:?} and {:?}", a, b),
         }
     }
 
@@ -165,7 +165,7 @@ impl Value {
             (Value::Float(a), Value::Float(b)) => Value::Boolean(a < b),
             (a, b) => panic!(
                 "Comparison operator < on mismatched types {:?} and {:?}",
-                &a, &b
+                a, b
             ),
         }
     }
@@ -176,7 +176,7 @@ impl Value {
             (Value::Float(a), Value::Float(b)) => Value::Boolean(a > b),
             (a, b) => panic!(
                 "Comparison operator > on mismatched types {:?} and {:?}",
-                &a, &b
+                a, b
             ),
         }
     }
@@ -191,7 +191,7 @@ impl Value {
 
             (a, b) => panic!(
                 "Comparison operator == on mismatched types {:?} and {:?}",
-                &a, &b
+                a, b
             ),
         }
     }
@@ -204,7 +204,7 @@ impl Value {
             (Value::String(a), Value::String(b)) => Value::Boolean(a != b),
             (a, b) => panic!(
                 "Comparison operator != on mismatched types {:?} and {:?}",
-                &a, &b
+                a, b
             ),
         }
     }
