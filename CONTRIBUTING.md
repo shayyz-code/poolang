@@ -1,6 +1,6 @@
 # Contributing to PooLang
 
-First off, thank you for considering contributing to PooLang! It's people like you that make PooLang such a fun project to build.
+Thank you for helping build PooLang. Keep contributions focused, reproducible, and aligned with the project's backend-language roadmap.
 
 ## Code of Conduct
 
@@ -16,14 +16,19 @@ By participating in this project, you agree to abide by the standard open-source
 ### Suggesting Features
 - Open an issue with the "feature request" tag.
 - Explain why this feature would be useful for PooLang.
-- Note that PooLang aims to stay "tiny" and "minimalist," so we prioritize features that align with that philosophy.
+- Explain how it supports the compiled, backend-focused language and tooling roadmap in `TODO.md`.
 
 ### Pull Requests
-1. **Fork the repo** and create your branch from `main`.
-2. **Follow the TDD approach**: If you're adding a feature or fixing a bug, add a test case to `tests/language_specs.rs` first.
-3. **Ensure tests pass**: Run `cargo test` to verify your changes.
-4. **Format your code**: Use `cargo fmt` to keep the codebase clean.
-5. **Write a good commit message**: We prefer [Conventional Commits](https://www.conventionalcommits.org/) (e.g., `feat: add support for modulo operator`).
+
+1. Open an issue before writing code. Agree on the problem and intended outcome there.
+2. Fork the repository and create a branch from `main`.
+3. Keep the PR small: address one issue and one independently reviewable concern.
+4. Follow TDD for features and fixes by adding a focused test first.
+5. Include exactly one closing reference in the PR body, such as `Closes #123`.
+6. Describe verification and note documentation, command-output, or screenshot impact.
+7. Use an imperative [Conventional Commit](https://www.conventionalcommits.org/) title, such as `feat: add modulo operator` or `fix(parser): report missing semicolon`.
+
+Pull requests are squash-merged only. Do not use merge commits or rebase merges.
 
 ## Development Setup
 
@@ -39,13 +44,15 @@ By participating in this project, you agree to abide by the standard open-source
    ```
 2. **Build and Run**:
    ```bash
-   cargo build
-   cargo run examples/app.poo
+   cargo check --all-targets
+   cargo run -- examples/app.poo
    ```
 3. **Run Specs**:
    ```bash
    cargo test
    ```
+
+Before review, also run `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features -- -D warnings`. Known legacy failures are recorded in `TODO.md`; do not add new failures while cleanup issues are open.
 
 ## Architectural Overview
 
