@@ -34,6 +34,16 @@ fn run_checked_with_temp_file(label: &str, source: &str) -> Result<Option<Value>
     result
 }
 
+#[test]
+fn spec_value_display_preserves_legacy_output() {
+    assert_eq!(Value::Int(10).to_string(), "10");
+    assert_eq!(format!("{}", Value::String("poo".to_string())), "poo");
+    assert_eq!(
+        Value::Vector(vec![Value::Int(1), Value::Boolean(true)]).to_string(),
+        r#"["1", "true"]"#
+    );
+}
+
 fn run_unchecked_with_temp_file_path(label: &str, source: &str) -> (String, Option<Value>) {
     let file_path = unique_temp_file_path(label);
     fs::write(&file_path, source).expect("failed to write temp source");

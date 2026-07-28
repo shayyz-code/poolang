@@ -10,13 +10,13 @@ Snapshot: 2026-07-28.
 
 - `cargo fmt --all -- --check` passes and is enforced for pull requests.
 - `cargo check --all-targets` passes.
-- `cargo test` passes and is enforced for pull requests, including all 47 integration specifications and the library doctest.
+- `cargo test` passes and is enforced for pull requests, including all 48 integration specifications and the library doctest.
 - The crate exposes checked file/source execution APIs and typed I/O, parse, and runtime error categories.
 - Lexer, parser, interpreter, type-inference, examples, mdBook documentation, and cargo-dist release assets exist.
 
 ### Quality gaps
 
-- Strict Clippy reports 36 errors across the interpreter, lexer, parser, type inference, and symbol table.
+- Strict Clippy reports 16 errors across the lexer, parser, type inference, and symbol table.
 - Panic recovery wraps rather than removes many panic, `unwrap`, and `expect` paths; the interpreter alone contains roughly 90.
 - `parser.rs` and `interpreter.rs` are approximately 975 and 1,217 lines and mix several responsibilities.
 - Checked and unchecked parsing/execution paths duplicate logic.
@@ -71,7 +71,9 @@ Snapshot: 2026-07-28.
 
 - [x] Open and complete an issue that applies rustfmt, adds `cargo fmt --all -- --check` to CI, and changes no behavior.
 - [x] Fix the library doctest against the v0.1 API, make `cargo test` green, and require it in CI.
-- [ ] Resolve strict Clippy findings without suppressing project-wide lints, then require `-D warnings` in CI.
+- [x] Resolve strict Clippy findings in the interpreter without lint suppressions or behavior changes.
+- [ ] Resolve the remaining strict Clippy findings in the lexer, parser, type inference, and symbol table.
+- [ ] Require `cargo clippy --all-targets --all-features -- -D warnings` in pull-request CI.
 - [ ] Separate generated mdBook output from sources and define one reproducible documentation build command.
 - [ ] Reconcile README commands, branch names, CI claims, supported features, and examples with executable behavior.
 - [ ] Add focused lexer/parser error tests for malformed strings, comments, UTF-8 input, and unexpected EOF.

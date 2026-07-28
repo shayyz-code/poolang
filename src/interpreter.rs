@@ -223,31 +223,29 @@ impl Value {
     // }
 }
 
-// Implement `to_string` for Value to handle printing
-impl ToString for Value {
-    fn to_string(&self) -> String {
+// Implement `Display` for Value to handle printing and string conversion.
+impl fmt::Display for Value {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Value::Null => "null".to_string(),
-            Value::Int(v) => v.to_string(),
-            Value::Float(v) => v.to_string(),
-            Value::Boolean(v) => v.to_string(),
-            Value::Char(v) => v.to_string(),
-            Value::String(v) => v.clone(),
+            Value::Null => f.write_str("null"),
+            Value::Int(v) => write!(f, "{v}"),
+            Value::Float(v) => write!(f, "{v}"),
+            Value::Boolean(v) => write!(f, "{v}"),
+            Value::Char(v) => write!(f, "{v}"),
+            Value::String(v) => f.write_str(v),
             Value::Vector(v) => {
                 let mut vec = Vec::new();
                 for i in v.iter() {
                     vec.push(i.to_string())
                 }
-                format!("{:?}", vec)
+                write!(f, "{vec:?}")
             }
-            Value::Map(m) => {
-                format!("{:?}", m)
-            }
+            Value::Map(m) => write!(f, "{m:?}"),
             Value::Function(params, body, return_type) => {
-                format!("{:?}", (params, body, return_type))
+                write!(f, "{:?}", (params, body, return_type))
             }
             Value::Struct(_, _, _, _) => panic!("Cannot be displayed"),
-            Value::BuiltinFunction(_) => "BuiltinFunction".to_string(),
+            Value::BuiltinFunction(_) => f.write_str("BuiltinFunction"),
         }
     }
 }
@@ -262,6 +260,12 @@ pub struct Variable {
 #[derive(Debug, Clone, PartialEq)]
 pub struct Scope {
     variables: HashMap<String, Variable>,
+}
+
+impl Default for Scope {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl Scope {
@@ -324,6 +328,12 @@ pub struct Interpreter {
     modules: HashMap<String, HashMap<String, Value>>,
 }
 
+impl Default for Interpreter {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Interpreter {
     pub fn new() -> Self {
         // Start with a global scope
@@ -372,7 +382,7 @@ impl Interpreter {
                     "pout".to_string(),
                     Value::BuiltinFunction(|args| {
                         for arg in args {
-                            print!("{}", arg.to_string());
+                            print!("{arg}");
                         }
                         Value::Null // Returning a dummy value
                     }),
@@ -380,9 +390,9 @@ impl Interpreter {
                 std.insert(
                     "poutln".to_string(),
                     Value::BuiltinFunction(|args| {
-                        if args.len() > 0 {
+                        if !args.is_empty() {
                             for arg in args {
-                                print!("{}", arg.to_string());
+                                print!("{arg}");
                             }
                         }
                         println!();
@@ -449,7 +459,7 @@ impl Interpreter {
                 ),
             },
             Value::String(s) => match method_name {
-                "chars" => Value::Vector(s.chars().map(|c| Value::Char(c)).collect()),
+                "chars" => Value::Vector(s.chars().map(Value::Char).collect()),
                 "len" => {
                     if !args.is_empty() {
                         panic!("Method 'len' does not take arguments");
@@ -494,7 +504,7 @@ impl Interpreter {
                         panic!("Method 'nth' requires exactly 1 arguments");
                     }
                     match args[0] {
-                        Value::Int(i) => v.iter().nth(i as usize).unwrap_or(&Value::Null).clone(),
+                        Value::Int(i) => v.get(i as usize).unwrap_or(&Value::Null).clone(),
                         _ => panic!("Method 'nth' needs type Int"),
                     }
                 }
@@ -503,84 +513,77 @@ impl Interpreter {
             },
             Value::Map(m) => {
                 let mut function_return_value = Value::Null; // Default dummy value
-                let get_prototypes = m.get(&"__prototypes__".to_string());
-                if get_prototypes.is_some() {
-                    let prototypes = get_prototypes.unwrap();
-                    if let Value::Map(prototype_vals) = prototypes {
-                        let get_method_from_prototype_vals =
-                            prototype_vals.get(&method_name.to_string());
-                        if let Some(Value::Function(params, body, return_type)) =
-                            get_method_from_prototype_vals
-                        {
-                            if params.len() != args.len() {
-                                panic!(
-                                    "Method {} expects {} arguments, but {} were provided",
-                                    method_name,
-                                    params.len(),
-                                    args.len()
-                                );
-                            }
-                            // Push a new scope and set the current function context
-                            self.scopes.push(Scope::new());
-
-                            self.current_scope().set_variable(
-                                "__current_function__".to_string(),
-                                Variable {
-                                    value: get_method_from_prototype_vals.unwrap().clone(),
-                                    is_mutable: false,
-                                    var_type: Type::Function(
-                                        params.iter().map(|j| j.1.clone()).collect(),
-                                        Box::new(return_type.clone()),
-                                    ),
-                                },
+                if let Some(Value::Map(prototype_vals)) = m.get("__prototypes__") {
+                    let method = prototype_vals.get(method_name);
+                    if let Some(method @ Value::Function(params, body, return_type)) = method {
+                        if params.len() != args.len() {
+                            panic!(
+                                "Method {} expects {} arguments, but {} were provided",
+                                method_name,
+                                params.len(),
+                                args.len()
                             );
-
-                            let mut m_types = HashMap::new();
-                            // Set function parameters && m_types for self
-                            for (param, arg_value) in params.iter().zip(args) {
-                                m_types.insert(param.0.clone(), param.1.clone());
-                                self.current_scope().set_variable(
-                                    param.0.clone(),
-                                    Variable {
-                                        value: arg_value,
-                                        is_mutable: true,
-                                        var_type: param.1.clone(),
-                                    },
-                                );
-                            }
-
-                            // Set self
-                            self.current_scope().set_variable(
-                                "self".to_string(),
-                                Variable {
-                                    value: Value::Map(m.clone()),
-                                    is_mutable: true,
-                                    var_type: Type::Map(m_types),
-                                },
-                            );
-
-                            for stmt in body {
-                                self.exec_stmt(&stmt);
-                                if let Some(return_val) = self.return_value.take() {
-                                    function_return_value = return_val;
-                                    break;
-                                }
-                            }
-
-                            // Pop the scope after execution
-                            self.scopes.pop();
-
-                            // Validate return type
-
-                            if !function_return_value.is_of_type(&return_type) {
-                                panic!(
-                                    "Function {} returned a value of mismatched type. Expected {:?}, got {:?}",
-                                    method_name, return_type, function_return_value
-                                );
-                            }
-                        } else {
-                            panic!("Method '{}' not supported for type {:?}", method_name, m);
                         }
+                        // Push a new scope and set the current function context
+                        self.scopes.push(Scope::new());
+
+                        self.current_scope().set_variable(
+                            "__current_function__".to_string(),
+                            Variable {
+                                value: method.clone(),
+                                is_mutable: false,
+                                var_type: Type::Function(
+                                    params.iter().map(|j| j.1.clone()).collect(),
+                                    Box::new(return_type.clone()),
+                                ),
+                            },
+                        );
+
+                        let mut m_types = HashMap::new();
+                        // Set function parameters && m_types for self
+                        for (param, arg_value) in params.iter().zip(args) {
+                            m_types.insert(param.0.clone(), param.1.clone());
+                            self.current_scope().set_variable(
+                                param.0.clone(),
+                                Variable {
+                                    value: arg_value,
+                                    is_mutable: true,
+                                    var_type: param.1.clone(),
+                                },
+                            );
+                        }
+
+                        // Set self
+                        self.current_scope().set_variable(
+                            "self".to_string(),
+                            Variable {
+                                value: Value::Map(m.clone()),
+                                is_mutable: true,
+                                var_type: Type::Map(m_types),
+                            },
+                        );
+
+                        for stmt in body {
+                            self.exec_stmt(stmt);
+                            if let Some(return_val) = self.return_value.take() {
+                                function_return_value = return_val;
+                                break;
+                            }
+                        }
+
+                        // Pop the scope after execution
+                        self.scopes.pop();
+
+                        // Validate return type
+
+                        if !function_return_value.is_of_type(return_type) {
+                            panic!(
+                                "Function {} returned a value of mismatched type. Expected {:?}, got {:?}",
+                                method_name, return_type, function_return_value
+                            );
+                        }
+                    } else {
+                        panic!("Method '{}' not supported for type {:?}", method_name, m);
                     }
                 }
                 function_return_value
@@ -604,14 +607,14 @@ impl Interpreter {
             Expr::Identifier(name) => {
                 let var = self
                     .find_variable(name)
-                    .expect(&format!("Undefined variable: {}", name));
+                    .unwrap_or_else(|| panic!("Undefined variable: {}", name));
                 var.value
             }
             Expr::Vector(elements, extensor) => {
                 let evaluated_elements: Vec<Value> =
                     elements.iter().map(|e| self.eval_expr(e)).collect();
                 if let Some(extensor_expr) = extensor {
-                    let evaluated_extensor = self.eval_expr(&extensor_expr);
+                    let evaluated_extensor = self.eval_expr(extensor_expr);
                     match evaluated_extensor {
                         Value::Int(i) => {
                             let vector = vec![evaluated_elements[0].clone(); i as usize];
@@ -727,27 +730,23 @@ impl Interpreter {
                     let val = self.eval_expr(prop_expr.1);
                     props.insert(prop_expr.0.clone(), val);
                 }
-                if struct_var.is_some() {
-                    let struct_val = struct_var.unwrap().value;
+                if let Some(struct_var) = struct_var {
+                    let struct_val = struct_var.value;
                     if let Value::Struct(prop_types, _, impl_stmts, _) = struct_val {
-                        for prop_type in prop_types.iter() {
-                            match prop_type {
-                                (p_name, p_type) => {
-                                    let a = props.get(p_name);
-                                    if a.is_none() {
-                                        panic!(
-                                            "Mismatched key '{}' on struct compound - '{}'",
-                                            p_name, struct_name
-                                        )
-                                    }
-                                    let b = a.unwrap().get_type();
-                                    if b != p_type.clone() {
-                                        panic!(
-                                            "Mismatched data type, expected '{:?}' but got '{:?}' during initializing '{}'",
-                                            p_type, b, struct_name
-                                        )
-                                    }
-                                }
+                        for (p_name, p_type) in prop_types.iter() {
+                            let a = props.get(p_name);
+                            if a.is_none() {
+                                panic!(
+                                    "Mismatched key '{}' on struct compound - '{}'",
+                                    p_name, struct_name
+                                )
+                            }
+                            let b = a.unwrap().get_type();
+                            if b != p_type.clone() {
+                                panic!(
+                                    "Mismatched data type, expected '{:?}' but got '{:?}' during initializing '{}'",
+                                    p_type, b, struct_name
+                                )
                             }
                         }
 
@@ -825,7 +824,7 @@ impl Interpreter {
 
                             let mut function_return_value = Value::Null; // Default dummy value
                             for stmt in body {
-                                self.exec_stmt(&stmt);
+                                self.exec_stmt(stmt);
                                 if let Some(return_val) = self.return_value.take() {
                                     function_return_value = return_val;
                                     break;
@@ -837,7 +836,7 @@ impl Interpreter {
 
                             // Validate return type
 
-                            if !function_return_value.is_of_type(&return_type) {
+                            if !function_return_value.is_of_type(return_type) {
                                 panic!(
                                     "Function {} returned a value of mismatched type. Expected {:?}, got {:?}",
                                     name, return_type, function_return_value
@@ -900,19 +899,12 @@ impl Interpreter {
                 let mut props = HashMap::new();
                 let mut impl_stmts = impl_stmts_map.clone();
                 for inherit_name in inherit_names.iter() {
-                    let inherit_struct = self.find_variable(&inherit_name);
-                    if inherit_struct.is_none() {
-                        panic!("Undefined Struct for inheritance");
-                    } else {
-                        let inherit_struct = inherit_struct.unwrap();
+                    let inherit_struct = self.find_variable(inherit_name);
+                    if let Some(inherit_struct) = inherit_struct {
                         match inherit_struct.value {
                             Value::Struct(inhe_props, _, inhe_impl_stmts_map, _) => {
                                 props.extend(inhe_props);
-                                for stmt in inhe_impl_stmts_map
-                                    .get(&"Self".to_string())
-                                    .unwrap()
-                                    .clone()
-                                {
+                                for stmt in inhe_impl_stmts_map.get("Self").unwrap().clone() {
                                     impl_stmts
                                         .entry(inherit_name.clone())
                                         .or_insert_with(Vec::new)
@@ -921,6 +913,8 @@ impl Interpreter {
                             }
                             _ => panic!("Inheritance from a Struct is only allowed"),
                         }
+                    } else {
+                        panic!("Undefined Struct for inheritance");
                     }
                 }
                 for property in properties.iter() {
@@ -1179,13 +1173,12 @@ impl Interpreter {
                     value: Value::Function(.., return_type),
                     ..
                 }) = current_function
+                    && !return_value.is_of_type(&return_type)
                 {
-                    if !return_value.is_of_type(&return_type) {
-                        panic!(
-                            "Return value type mismatch. Expected {:?}, got {:?}",
-                            return_type, return_value
-                        );
-                    }
+                    panic!(
+                        "Return value type mismatch. Expected {:?}, got {:?}",
+                        return_type, return_value
+                    );
                 }
 
                 self.return_value = Some(return_value);
