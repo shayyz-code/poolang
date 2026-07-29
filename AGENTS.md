@@ -15,6 +15,7 @@ Edit documentation sources under `docs/src/` and navigation in `docs/src/SUMMARY
 - `cargo fmt --all -- --check` checks formatting; `cargo fmt --all` applies it.
 - `cargo clippy --all-targets --all-features -- -D warnings` runs strict linting.
 - `mdbook build docs` is the canonical documentation build; `mdbook test docs` tests its Rust examples.
+- `dist generate --check` verifies that the generated release workflow matches its configuration.
 
 All established formatting, compilation, test, and lint checks must pass before review.
 
@@ -23,6 +24,10 @@ All established formatting, compilation, test, and lint checks must pass before 
 Use rustfmt defaults and idiomatic Rust names: `snake_case` for functions and modules, `PascalCase` for types and traits, and `SCREAMING_SNAKE_CASE` for constants. Keep subsystem boundaries clear and return actionable typed errors instead of adding panic-driven paths.
 
 Follow TDD for features and fixes. Add focused cases to `tests/language_specs.rs`, named `spec_<component>_<behavior>`, and cover success plus relevant failure paths.
+
+## Release Automation
+
+Treat `dist-workspace.toml` as the source of truth for releases. Never edit `.github/workflows/v-release.yml` directly; run `dist generate --mode=ci` after a configuration change and commit the result. Follow `RELEASING.md` for release checks, tag format, credential handling, and artifact verification. Do not create a release tag as part of an unrelated change.
 
 ## Issue, Commit & Pull Request Rules
 
