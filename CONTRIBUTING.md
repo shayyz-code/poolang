@@ -35,6 +35,7 @@ Pull requests are squash-merged only. Do not use merge commits or rebase merges.
 ### Prerequisites
 - [Rust](https://www.rust-lang.org/tools/install) (Edition 2024 or later)
 - [Cargo](https://doc.rust-lang.org/cargo/)
+- [mdBook 0.5.2](https://rust-lang.github.io/mdBook/guide/installation.html): `cargo install mdbook --locked --version 0.5.2`
 
 ### Workflow
 1. **Clone your fork**:
@@ -51,8 +52,13 @@ Pull requests are squash-merged only. Do not use merge commits or rebase merges.
    ```bash
    cargo test
    ```
+4. **Build and Test Documentation**:
+   ```bash
+   mdbook build docs
+   mdbook test docs
+   ```
 
-Before review, also run `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features -- -D warnings`. Known legacy failures are recorded in `TODO.md`; do not add new failures while cleanup issues are open.
+`mdbook build docs` is the canonical documentation build command. Before review, run all applicable commands above plus `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features -- -D warnings`; all established checks must pass.
 
 ## Architectural Overview
 
