@@ -41,7 +41,7 @@ The name **Poo (ပူး)** comes from the Burmese word for guinea pig.
 | v0.4 | Planned | Protobuf/gRPC, microservices, resilience, discovery, and OpenTelemetry |
 
 There is no compatibility promise between the legacy syntax below and v0.2.
-See [TODO.md](TODO.md) for the decision record, milestones, and implementation
+See [TODO.md](https://github.com/shayyz-code/poolang/blob/main/TODO.md) for the decision record, milestones, and implementation
 gates.
 
 ## Current v0.1.11 Features

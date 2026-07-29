@@ -44,7 +44,7 @@ syntax များကို အသုံးပြုသူထံ မဖော�
 
 အောက်တွင် ဖော်ပြထားသော legacy syntax နှင့် v0.2 အကြား compatibility
 အာမခံချက် မရှိပါ။ ဆုံးဖြတ်ချက်များ၊ milestone များနှင့် implementation gate
-များကို [TODO.md](TODO.md) တွင် ကြည့်နိုင်သည်။
+များကို [TODO.md](https://github.com/shayyz-code/poolang/blob/main/TODO.md) တွင် ကြည့်နိုင်သည်။
 
 ## လက်ရှိ v0.1.11 စွမ်းဆောင်ချက်များ
 
