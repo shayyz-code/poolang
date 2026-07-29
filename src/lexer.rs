@@ -96,13 +96,20 @@ impl Lexer {
     }
 
     pub fn advance(&mut self) {
-        self.pos += 1;
+        if self.pos < self.input.len() {
+            self.pos += self.at().len_utf8();
+        }
     }
 
     pub fn peek_next_token(&mut self) -> Token {
+        self.peek_next_token_checked()
+            .unwrap_or_else(|message| panic!("{message}"))
+    }
+
+    pub(crate) fn peek_next_token_checked(&mut self) -> Result<Token, String> {
         let current_pos = self.pos;
 
-        let next_token = self.next_token();
+        let next_token = self.next_token_checked();
         self.pos = current_pos;
 
         next_token
@@ -119,24 +126,33 @@ impl Lexer {
     }
 
     pub fn next_token(&mut self) -> Token {
+        self.next_token_checked()
+            .unwrap_or_else(|message| panic!("{message}"))
+    }
+
+    pub(crate) fn next_token_checked(&mut self) -> Result<Token, String> {
         if self.pos >= self.input.len() {
-            return Token::EOF;
+            return Ok(Token::EOF);
         }
 
         let current_char = self.at();
 
-        match current_char {
+        let token = match current_char {
             '/' => {
                 self.advance();
                 if self.at() == '/' {
                     self.advance();
-                    while self.at() != '/' && self.peek_next_char() != '/' {
+
+                    while self.at() != '\0' {
+                        if self.at() == '/' && self.peek_next_char() == '/' {
+                            self.advance();
+                            self.advance();
+                            return self.next_token_checked();
+                        }
                         self.advance();
                     }
-                    self.advance(); // above while miss 1 char
-                    self.advance(); // first /
-                    self.advance(); // second /
-                    self.next_token()
+
+                    return Err("Unterminated comment".to_string());
                 } else {
                     Token::Divide
                 }
@@ -172,44 +188,70 @@ impl Lexer {
             '\"' => {
                 self.advance();
                 let mut str_val = String::new();
-                while self.at() != '\"' && self.at() != '\0' {
+
+                loop {
+                    if self.at() == '\0' {
+                        return Err("Unterminated string literal".to_string());
+                    }
+
+                    if self.at() == '\"' {
+                        self.advance();
+                        break;
+                    }
+
                     if self.at() == '\\' {
                         self.advance();
-                        match self.at() {
+                        let escaped = self.at();
+                        if escaped == '\0' {
+                            return Err("Unterminated string literal".to_string());
+                        }
+                        match escaped {
                             'n' => str_val.push('\n'),
                             't' => str_val.push('\t'),
                             '\\' => str_val.push('\\'),
                             '\"' => str_val.push('\"'),
-                            _ => panic!("Unknown escape sequence"),
+                            _ => return Err(format!("Unknown escape sequence: \\{escaped}")),
                         }
                     } else {
                         str_val.push(self.at());
                     }
                     self.advance();
                 }
-                self.advance(); // Consume closing quote
                 Token::String(str_val)
             }
             '\'' => {
                 self.advance();
                 let mut char_val: char = ' ';
-                while self.at() != '\'' && self.at() != '\0' {
+
+                loop {
+                    if self.at() == '\0' {
+                        return Err("Unterminated character literal".to_string());
+                    }
+
+                    if self.at() == '\'' {
+                        self.advance();
+                        break;
+                    }
+
                     if self.at() == '\\' {
                         self.advance();
-                        match self.at() {
+                        let escaped = self.at();
+                        if escaped == '\0' {
+                            return Err("Unterminated character literal".to_string());
+                        }
+                        match escaped {
                             'n' => char_val = '\n',
                             't' => char_val = '\t',
                             '\\' => char_val = '\\',
                             '\"' => char_val = '\"',
                             '\'' => char_val = '\'',
-                            _ => panic!("Unknown escape sequence"),
+                            _ => return Err(format!("Unknown escape sequence: \\{escaped}")),
                         }
                     } else {
                         char_val = self.at();
                     }
                     self.advance();
                 }
-                self.advance(); // Consume closing quote
                 Token::Char(char_val)
             }
 
@@ -315,7 +357,7 @@ impl Lexer {
             'a'..='z' | 'A'..='Z' | '_' => {
                 let id_str: String = self.input[self.pos..]
                     .chars()
-                    .take_while(|c| c.is_alphanumeric() || *c == '_')
+                    .take_while(|c| c.is_ascii_alphanumeric() || *c == '_')
                     .collect();
                 self.pos += id_str.len();
 
@@ -363,9 +405,11 @@ impl Lexer {
 
             _ if current_char.is_whitespace() => {
                 self.advance();
-                self.next_token() // Skip whitespace and get the next token
+                return self.next_token_checked(); // Skip whitespace and get the next token
             }
-            _ => panic!("Unexpected character: {}", current_char),
-        }
+            _ => return Err(format!("Unexpected character: {current_char}")),
+        };
+
+        Ok(token)
     }
 }
