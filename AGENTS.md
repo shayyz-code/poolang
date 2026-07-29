@@ -14,8 +14,9 @@ Edit documentation sources under `docs/src/` and navigation in `docs/src/SUMMARY
 - `cargo test` runs unit, integration, and documentation tests.
 - `cargo fmt --all -- --check` checks formatting; `cargo fmt --all` applies it.
 - `cargo clippy --all-targets --all-features -- -D warnings` runs strict linting.
+- `mdbook build docs` is the canonical documentation build; `mdbook test docs` tests its Rust examples.
 
-Known legacy formatting, doctest, and Clippy failures are tracked in `TODO.md`. Do not introduce new failures; roadmap issues will establish clean required baselines.
+All established formatting, compilation, test, and lint checks must pass before review.
 
 ## Coding Style & Testing
 

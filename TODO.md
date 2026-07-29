@@ -4,7 +4,7 @@ This document is the issue source for PooLang's clean-break transition from the 
 
 ## Current Audit
 
-Snapshot: 2026-07-28.
+Snapshot: 2026-07-29.
 
 ### What works
 
@@ -12,6 +12,7 @@ Snapshot: 2026-07-28.
 - `cargo check --all-targets` passes.
 - `cargo test` passes and is enforced for pull requests, including all 48 integration specifications and the library doctest.
 - `cargo clippy --all-targets --all-features -- -D warnings` passes and is enforced for pull requests.
+- `mdbook build docs` reproducibly generates ignored documentation output from `docs/src/`.
 - The crate exposes checked file/source execution APIs and typed I/O, parse, and runtime error categories.
 - Lexer, parser, interpreter, type-inference, examples, mdBook documentation, and cargo-dist release assets exist.
 
@@ -30,7 +31,6 @@ Snapshot: 2026-07-28.
 - Function examples omit required parameter types or use return/type spelling that differs from the parser.
 - `trait` is tokenized but not supported as a complete tested language feature.
 - Examples contain multiple syntax generations and unverified standard-library methods.
-- `docs/book/` contains 42 tracked generated files and can drift from `docs/src/`.
 - README development/release claims do not fully match current checks and workflows.
 
 ### Missing platform capabilities
@@ -74,7 +74,7 @@ Snapshot: 2026-07-28.
 - [x] Resolve strict Clippy findings in the interpreter without lint suppressions or behavior changes.
 - [x] Resolve the remaining strict Clippy findings in the lexer, parser, type inference, and symbol table.
 - [x] Require `cargo clippy --all-targets --all-features -- -D warnings` in pull-request CI.
-- [ ] Separate generated mdBook output from sources and define one reproducible documentation build command.
+- [x] Separate generated mdBook output from sources and define one reproducible documentation build command.
 - [ ] Reconcile README commands, branch names, CI claims, supported features, and examples with executable behavior.
 - [ ] Add focused lexer/parser error tests for malformed strings, comments, UTF-8 input, and unexpected EOF.
 - [ ] Audit release workflow actions, permissions, secrets, installers, and generated cargo-dist configuration.
