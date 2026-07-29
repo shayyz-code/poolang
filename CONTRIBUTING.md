@@ -36,6 +36,7 @@ Pull requests are squash-merged only. Do not use merge commits or rebase merges.
 - [Rust](https://www.rust-lang.org/tools/install) (Edition 2024 or later)
 - [Cargo](https://doc.rust-lang.org/cargo/)
 - [mdBook 0.5.2](https://rust-lang.github.io/mdBook/guide/installation.html): `cargo install mdbook --locked --version 0.5.2`
+- [cargo-deny 0.20.2](https://embarkstudios.github.io/cargo-deny/): `cargo install --locked cargo-deny --version 0.20.2`
 
 ### Workflow
 1. **Clone your fork**:
@@ -57,8 +58,14 @@ Pull requests are squash-merged only. Do not use merge commits or rebase merges.
    mdbook build docs
    mdbook test docs
    ```
+5. **Check Dependencies**:
+   ```bash
+   cargo deny check
+   ```
 
 `mdbook build docs` is the canonical documentation build command. Before review, run all applicable commands above plus `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features -- -D warnings`; all established checks must pass.
+
+Dependency changes must follow `DEPENDENCY_POLICY.md`, update `Cargo.lock`, and pass the advisory, license, ban, and source checks without undocumented exceptions.
 
 ## Release Changes
 

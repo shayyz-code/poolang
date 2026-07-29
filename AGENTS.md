@@ -9,13 +9,13 @@ Edit documentation sources under `docs/src/` and navigation in `docs/src/SUMMARY
 ## Build, Test, and Development Commands
 
 - `cargo check --all-targets` performs the required baseline compile check.
-- `cargo build` compiles the debug binary and library.
 - `cargo run -- examples/app.poo` runs a sample program.
 - `cargo test` runs unit, integration, and documentation tests.
 - `cargo fmt --all -- --check` checks formatting; `cargo fmt --all` applies it.
 - `cargo clippy --all-targets --all-features -- -D warnings` runs strict linting.
 - `mdbook build docs` is the canonical documentation build; `mdbook test docs` tests its Rust examples.
 - `dist generate --check` verifies that the generated release workflow matches its configuration.
+- `cargo deny check` enforces `DEPENDENCY_POLICY.md` for every dependency change.
 
 All established formatting, compilation, test, and lint checks must pass before review.
 
