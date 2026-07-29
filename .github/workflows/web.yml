@@ -54,11 +54,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       # Setup
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: swatinem/rust-cache@v2
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+      - uses: swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae # v2
 
       # If you use any mdbook plugins, here's the place to install them!
 
@@ -76,7 +76,7 @@ jobs:
         run: mkdir -p /tmp/link-check/poolang && cp -R public/* /tmp/link-check/poolang/ && cp CONTRIBUTING.md /tmp/link-check/poolang/ && cp LICENSE /tmp/link-check/poolang/
 
       - name: Check HTML for broken internal links
-        uses: untitaker/hyperlink@0.1.29
+        uses: untitaker/hyperlink@273ec52f34b7cbf039908d52985010c7f3f35160 # 0.1.29
         with:
           args: /tmp/link-check/
 
@@ -88,7 +88,7 @@ jobs:
       # go into repo's settings > pages and set "deploy from branch: gh-pages".
       # The other defaults work fine.
       - name: Deploy to Github Pages
-        uses: JamesIves/github-pages-deploy-action@v4.4.1
+        uses: JamesIves/github-pages-deploy-action@ba1486788b0490a235422264426c45848eac35c6 # v4.4.1
         # ONLY if we're on main (so no PRs or feature branches allowed!)
         if: ${{ github.ref == 'refs/heads/main' }}
         with:

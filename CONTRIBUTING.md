@@ -60,6 +60,10 @@ Pull requests are squash-merged only. Do not use merge commits or rebase merges.
 
 `mdbook build docs` is the canonical documentation build command. Before review, run all applicable commands above plus `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features -- -D warnings`; all established checks must pass.
 
+## Release Changes
+
+Configure releases in `dist-workspace.toml`; `.github/workflows/v-release.yml` is generated and must not be edited by hand. Run `dist generate --mode=ci` after changing release configuration and `dist generate --check` before review. Maintainers must follow `RELEASING.md`; release tags are reserved for reviewed release commits on `main`.
+
 ## Architectural Overview
 
 - **Lexer (`src/lexer.rs`)**: Converts source text into a stream of tokens.

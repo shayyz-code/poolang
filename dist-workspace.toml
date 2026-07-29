@@ -7,6 +7,12 @@ members = ["cargo:."]
 cargo-dist-version = "0.31.0"
 # CI backends to support
 ci = "github"
+# Only v-prefixed semantic-version tags trigger release automation
+tag-namespace = "v"
+# Produce GitHub artifact attestations after all artifacts are assembled
+github-attestations = true
+github-attestations-phase = "host"
+github-release = "host"
 # The installers to generate for each app
 installers = ["shell", "powershell", "npm", "homebrew", "msi"]
 # A GitHub repo to push Homebrew formulas to
@@ -21,3 +27,12 @@ install-path = "CARGO_HOME"
 publish-jobs = ["homebrew", "npm"]
 # Whether to install an updater program
 install-updater = false
+
+# Pin generated GitHub Actions to immutable commits. Update these through a
+# reviewed cargo-dist configuration change, then regenerate the workflow.
+[dist.github-action-commits]
+"actions/checkout" = "d23441a48e516b6c34aea4fa41551a30e30af803"
+"actions/upload-artifact" = "b7c566a772e6b6bfb58ed0dc250532a479d7789f"
+"actions/download-artifact" = "37930b1c2abaa49bbe596cd826c3c89aef350131"
+"actions/setup-node" = "249970729cb0ef3589644e2896645e5dc5ba9c38"
+"actions/attest-build-provenance" = "977bb373ede98d70efdf65b84cb5f73e068dcc2a"

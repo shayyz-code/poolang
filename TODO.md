@@ -18,6 +18,8 @@ Snapshot: 2026-07-29.
 - The crate exposes checked file/source execution APIs and typed I/O, parse, and runtime error categories.
 - Checked parsing reports malformed literals, comments, non-ASCII identifiers, and unexpected EOF without panicking or hanging.
 - Lexer, parser, interpreter, type-inference, examples, mdBook documentation, and cargo-dist release assets exist.
+- cargo-dist 0.31.0 generates five platform targets and shell, PowerShell, npm, Homebrew, and MSI installers from reviewed configuration.
+- Release actions use immutable commit pins, version tags are protected, and future release artifacts receive GitHub provenance attestations.
 
 ### Quality gaps
 
@@ -78,8 +80,11 @@ Snapshot: 2026-07-29.
 - [x] Separate generated mdBook output from sources and define one reproducible documentation build command.
 - [x] Reconcile README commands, branch names, CI claims, supported features, and examples with executable behavior.
 - [x] Add focused lexer/parser error tests for malformed strings, comments, UTF-8 input, and unexpected EOF.
-- [ ] Audit release workflow actions, permissions, secrets, installers, and generated cargo-dist configuration.
+- [x] Audit release workflow actions, permissions, secrets, installers, and generated cargo-dist configuration.
 - [ ] Add dependency, license, and supply-chain checks appropriate to Rust and future native runtime dependencies.
+- [ ] Migrate npm publishing to trusted publishing for `v-release.yml`, then revoke and remove `NPM_TOKEN`.
+- [ ] Replace or rotate the Homebrew credential with a fine-grained, tap-only Contents-write token.
+- [ ] Add platform code signing before the production v0.2 release.
 
 ## Phase 2 — Normative v0.2 Language Specification
 
