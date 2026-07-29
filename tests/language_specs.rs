@@ -34,6 +34,17 @@ fn run_checked_with_temp_file(label: &str, source: &str) -> Result<Option<Value>
     result
 }
 
+fn assert_parse_error(source: &str, expected_message: &str) {
+    let error = run_source_checked(source.to_string()).expect_err("expected parse error");
+    assert_eq!(error.kind, LangErrorKind::Parse);
+    assert!(
+        error.message.contains(expected_message),
+        "expected error message {:?} to contain {:?}",
+        error.message,
+        expected_message
+    );
+}
+
 #[test]
 fn spec_value_display_preserves_legacy_output() {
     assert_eq!(Value::Int(10).to_string(), "10");
@@ -103,6 +114,89 @@ fn spec_lexer_skips_inline_comment_block() {
             Token::EOF,
         ]
     );
+}
+
+#[test]
+fn spec_lexer_reads_utf8_string_literal() {
+    let mut lexer = Lexer::new(r#""မင်္ဂလာပါ""#.to_string());
+
+    assert_eq!(lexer.next_token(), Token::String("မင်္ဂလာပါ".to_string()));
+    assert_eq!(lexer.next_token(), Token::EOF);
+}
+
+#[test]
+fn spec_lexer_reads_utf8_character_literal() {
+    let mut lexer = Lexer::new("'ပ'".to_string());
+
+    assert_eq!(lexer.next_token(), Token::Char('ပ'));
+    assert_eq!(lexer.next_token(), Token::EOF);
+}
+
+#[test]
+fn spec_lexer_skips_utf8_comment_containing_single_slash() {
+    let mut lexer = Lexer::new("poo x <: 1; // မှတ်ချက် / slash ပါသည် // return x;".to_string());
+
+    let mut tokens = Vec::new();
+    loop {
+        let token = lexer.next_token();
+        tokens.push(token.clone());
+        if token == Token::EOF {
+            break;
+        }
+    }
+
+    assert_eq!(
+        tokens,
+        vec![
+            Token::Poo,
+            Token::Identifier("x".to_string()),
+            Token::ShortAssignment,
+            Token::Int(1),
+            Token::SemiColon,
+            Token::Return,
+            Token::Identifier("x".to_string()),
+            Token::SemiColon,
+            Token::EOF,
+        ]
+    );
+}
+
+#[test]
+fn spec_checked_api_reports_parse_error_for_unterminated_string() {
+    assert_parse_error(r#"return "unfinished;"#, "Unterminated string literal");
+}
+
+#[test]
+fn spec_checked_api_reports_parse_error_for_unknown_string_escape() {
+    assert_parse_error(r#"return "\q";"#, "Unknown escape sequence: \\q");
+}
+
+#[test]
+fn spec_checked_api_reports_parse_error_for_unterminated_character_literal() {
+    assert_parse_error("return 'ပ;", "Unterminated character literal");
+}
+
+#[test]
+fn spec_checked_api_reports_parse_error_for_unterminated_comment() {
+    assert_parse_error(
+        "poo x <: 1; // comment never closes",
+        "Unterminated comment",
+    );
+}
+
+#[test]
+fn spec_checked_api_rejects_non_ascii_identifier() {
+    assert_parse_error("poo နာမည် <: 1;", "Unexpected character: န");
+}
+
+#[test]
+fn spec_checked_api_reports_unexpected_eof_in_parenthesized_expression() {
+    assert_parse_error("return (1 + 2", "Unexpected end of input");
+}
+
+#[test]
+fn spec_checked_api_reports_unexpected_eof_before_closing_block() {
+    assert_parse_error("if true { return 1;", "Unexpected end of input");
 }
 
 #[test]

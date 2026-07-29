@@ -10,12 +10,13 @@ Snapshot: 2026-07-29.
 
 - `cargo fmt --all -- --check` passes and is enforced for pull requests.
 - `cargo check --all-targets` passes.
-- `cargo test` passes and is enforced for pull requests, including all 48 integration specifications and the library doctest.
+- `cargo test` passes and is enforced for pull requests, including all 58 integration specifications and the library doctest.
 - `cargo clippy --all-targets --all-features -- -D warnings` passes and is enforced for pull requests.
 - `mdbook build docs` reproducibly generates ignored documentation output from `docs/src/`.
 - English and Burmese READMEs distinguish the available v0.1.11 interpreter from the planned compiled backend platform.
 - Both shipped examples execute against the v0.1.11 interpreter; the donut runs until interrupted.
 - The crate exposes checked file/source execution APIs and typed I/O, parse, and runtime error categories.
+- Checked parsing reports malformed literals, comments, non-ASCII identifiers, and unexpected EOF without panicking or hanging.
 - Lexer, parser, interpreter, type-inference, examples, mdBook documentation, and cargo-dist release assets exist.
 
 ### Quality gaps
@@ -76,7 +77,7 @@ Snapshot: 2026-07-29.
 - [x] Require `cargo clippy --all-targets --all-features -- -D warnings` in pull-request CI.
 - [x] Separate generated mdBook output from sources and define one reproducible documentation build command.
 - [x] Reconcile README commands, branch names, CI claims, supported features, and examples with executable behavior.
-- [ ] Add focused lexer/parser error tests for malformed strings, comments, UTF-8 input, and unexpected EOF.
+- [x] Add focused lexer/parser error tests for malformed strings, comments, UTF-8 input, and unexpected EOF.
 - [ ] Audit release workflow actions, permissions, secrets, installers, and generated cargo-dist configuration.
 - [ ] Add dependency, license, and supply-chain checks appropriate to Rust and future native runtime dependencies.
 

@@ -10,6 +10,7 @@ use crate::visitor::ScopedSymbolTable;
 pub struct Parser {
     lexer: Lexer,
     current_token: Token,
+    lexer_error: Option<LangError>,
     defined_types: HashMap<String, Type>,
     current_struct: Option<String>,
 }
@@ -19,6 +20,7 @@ impl Parser {
         let mut parser = Parser {
             lexer,
             current_token: Token::EOF,
+            lexer_error: None,
             defined_types: HashMap::new(),
             current_struct: None,
         };
@@ -28,11 +30,28 @@ impl Parser {
 
     // Advance the lexer and update the current token
     fn advance(&mut self) {
-        self.current_token = self.lexer.next_token();
+        if self.lexer_error.is_some() {
+            self.current_token = Token::EOF;
+            return;
+        }
+
+        match self.lexer.next_token_checked() {
+            Ok(token) => self.current_token = token,
+            Err(message) => {
+                self.current_token = Token::EOF;
+                self.lexer_error = Some(LangError::parse(message));
+            }
+        }
     }
 
     fn peek_token(&mut self) -> Token {
-        self.lexer.peek_next_token()
+        match self.lexer.peek_next_token_checked() {
+            Ok(token) => token,
+            Err(message) => {
+                self.lexer_error = Some(LangError::parse(message));
+                Token::EOF
+            }
+        }
     }
 
     // Check the current token and advance if it matches the expected one
@@ -52,6 +71,11 @@ impl Parser {
         if self.current_token == expected {
             self.advance();
             Ok(())
+        } else if self.current_token == Token::EOF {
+            Err(LangError::parse(format!(
+                "Unexpected end of input, expected: {:?}",
+                expected
+            )))
         } else {
             Err(LangError::parse(format!(
                 "Unexpected token: {:?}, expected: {:?}",
@@ -187,6 +211,9 @@ impl Parser {
                 Ok(Expr::UnaryOp(Token::Minus, Box::new(expr)))
             }
 
+            Token::EOF => Err(LangError::parse(
+                "Unexpected end of input while parsing expression".to_string(),
+            )),
             _ => Err(LangError::parse(format!(
                 "Unexpected token in primary expression: {:?}",
                 self.current_token
@@ -949,15 +976,28 @@ impl Parser {
         while self.current_token != Token::EOF {
             statements.push(self.parse_statement());
         }
+
+        if let Some(error) = self.lexer_error.take() {
+            panic!("{}", error.message);
+        }
+
         statements
     }
 
     pub fn parse_checked(&mut self) -> Result<Vec<Stmt>, LangError> {
-        let mut statements = Vec::new();
-        while self.current_token != Token::EOF {
-            let statement = self.parse_statement_checked()?;
-            statements.push(statement);
+        let parse_result = (|| {
+            let mut statements = Vec::new();
+            while self.current_token != Token::EOF {
+                let statement = self.parse_statement_checked()?;
+                statements.push(statement);
+            }
+            Ok(statements)
+        })();
+
+        if let Some(error) = self.lexer_error.take() {
+            Err(error)
+        } else {
+            parse_result
         }
-        Ok(statements)
     }
 }
