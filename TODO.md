@@ -20,6 +20,8 @@ Snapshot: 2026-07-29.
 - Lexer, parser, interpreter, type-inference, examples, mdBook documentation, and cargo-dist release assets exist.
 - cargo-dist 0.31.0 generates five platform targets and shell, PowerShell, npm, Homebrew, and MSI installers from reviewed configuration.
 - Release actions use immutable commit pins, version tags are protected, and future release artifacts receive GitHub provenance attestations.
+- Rust dependencies are gated by advisory, license, version, and source policy checks across all supported targets.
+- Dependabot vulnerability alerts and a weekly supply-chain check monitor the currently dependency-free crate graph.
 
 ### Quality gaps
 
@@ -81,7 +83,7 @@ Snapshot: 2026-07-29.
 - [x] Reconcile README commands, branch names, CI claims, supported features, and examples with executable behavior.
 - [x] Add focused lexer/parser error tests for malformed strings, comments, UTF-8 input, and unexpected EOF.
 - [x] Audit release workflow actions, permissions, secrets, installers, and generated cargo-dist configuration.
-- [ ] Add dependency, license, and supply-chain checks appropriate to Rust and future native runtime dependencies.
+- [x] Add dependency, license, and supply-chain checks appropriate to Rust and future native runtime dependencies.
 - [ ] Migrate npm publishing to trusted publishing for `v-release.yml`, then revoke and remove `NPM_TOKEN`.
 - [ ] Replace or rotate the Homebrew credential with a fine-grained, tap-only Contents-write token.
 - [ ] Add platform code signing before the production v0.2 release.
@@ -195,6 +197,7 @@ Snapshot: 2026-07-29.
 - [ ] Rewrite README and mdBook around the compiled backend language and remove interpreter-era promises/examples.
 - [ ] Publish the language specification, CLI reference, standard-library reference, deployment guide, and editor setup.
 - [ ] Build signed/checksummed Linux x86_64 toolchain, runtime, and analyzer artifacts.
+- [ ] Generate a release SBOM and third-party notices when external Rust or native dependencies first ship.
 - [ ] Verify installation, compilation, HTTP example, package locking, analyzer, VS Code, and Zed from clean machines.
 - [ ] Publish v0.2.0 only when compiler, async, HTTP/JSON, package tooling, analyzer, performance, and security gates pass.
 
