@@ -13,6 +13,8 @@ Snapshot: 2026-07-29.
 - `cargo test` passes and is enforced for pull requests, including all 48 integration specifications and the library doctest.
 - `cargo clippy --all-targets --all-features -- -D warnings` passes and is enforced for pull requests.
 - `mdbook build docs` reproducibly generates ignored documentation output from `docs/src/`.
+- English and Burmese READMEs distinguish the available v0.1.11 interpreter from the planned compiled backend platform.
+- Both shipped examples execute against the v0.1.11 interpreter; the donut runs until interrupted.
 - The crate exposes checked file/source execution APIs and typed I/O, parse, and runtime error categories.
 - Lexer, parser, interpreter, type-inference, examples, mdBook documentation, and cargo-dist release assets exist.
 
@@ -30,8 +32,6 @@ Snapshot: 2026-07-29.
 - Documentation uses `poo mut`, `string`, `&&`, `||`, `#` comments, `>=`, and `<=`; the lexer currently recognizes top-level `mut`, `str`, `and`, `or`, unusual `// ... //` comments, and no inclusive comparisons.
 - Function examples omit required parameter types or use return/type spelling that differs from the parser.
 - `trait` is tokenized but not supported as a complete tested language feature.
-- Examples contain multiple syntax generations and unverified standard-library methods.
-- README development/release claims do not fully match current checks and workflows.
 
 ### Missing platform capabilities
 
@@ -75,7 +75,7 @@ Snapshot: 2026-07-29.
 - [x] Resolve the remaining strict Clippy findings in the lexer, parser, type inference, and symbol table.
 - [x] Require `cargo clippy --all-targets --all-features -- -D warnings` in pull-request CI.
 - [x] Separate generated mdBook output from sources and define one reproducible documentation build command.
-- [ ] Reconcile README commands, branch names, CI claims, supported features, and examples with executable behavior.
+- [x] Reconcile README commands, branch names, CI claims, supported features, and examples with executable behavior.
 - [ ] Add focused lexer/parser error tests for malformed strings, comments, UTF-8 input, and unexpected EOF.
 - [ ] Audit release workflow actions, permissions, secrets, installers, and generated cargo-dist configuration.
 - [ ] Add dependency, license, and supply-chain checks appropriate to Rust and future native runtime dependencies.

@@ -1,290 +1,222 @@
 <p align="center">
-  <img width="500" height="281" alt="poo-banner-transparent" src="https://github.com/user-attachments/assets/70181432-f458-4949-beb2-51e6e9eb8549" />
+  <img width="500" height="281" alt="PooLang banner" src="https://github.com/user-attachments/assets/70181432-f458-4949-beb2-51e6e9eb8549" />
 </p>
 
 <h1 align="center">PooLang</h1>
 
 <p align="center">
   <a href="https://www.rust-lang.org">
-    <img src="https://img.shields.io/badge/rust-1.75%2B-orange.svg?style=for-the-badge&logo=rust" alt="Rust" />
+    <img src="https://img.shields.io/badge/Rust-stable-orange.svg?style=for-the-badge&logo=rust" alt="Rust stable" />
   </a>
-  <a href="CONTRIBUTING.md">
-    <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge" alt="PRs Welcome" />
+  <a href="https://github.com/shayyz-code/poolang/releases/tag/v0.1.11">
+    <img src="https://img.shields.io/badge/release-v0.1.11-blue.svg?style=for-the-badge" alt="Release v0.1.11" />
   </a>
   <a href="LICENSE">
-    <img src="https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge" alt="License MIT" />
+    <img src="https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge" alt="MIT License" />
   </a>
-</p>
-
-<p align="center" class="oranda-hide">
-  <b><a href="#features">Features</a></b> •
-  <b><a href="#get-started">Get Started</a></b> •
-  <b><a href="#installation">Installation</a></b> •
-  <b><a href="#usage">Usage</a></b> •
-  <b><a href="#syntax-overview">Syntax</a></b> •
-  <b><a href="#example-code">Example</a></b> •
-  <b><a href="#development">Dev</a></b>
 </p>
 
 <p align="center">
-A Tiny Interpreted language written in Rust, featuring variable declarations, arithmetic operations, conditional statements, and control flow. The name <code>Poo</code> originates from Guinea Pig translated from <code>Burmese</code>.
+  <a href="https://github.com/shayyz-code/poolang#readme">English</a> |
+  <a href="https://github.com/shayyz-code/poolang/blob/main/README.mm.md">မြန်မာ</a>
 </p>
 
-## Features
+PooLang is being designed as a simple, compiled language for web backends and
+infrastructure. Its direction combines Go-like deployment, approachable syntax,
+and Rust-inspired explicitness without exposing ownership or lifetime syntax.
+The name **Poo (ပူး)** comes from the Burmese word for guinea pig.
 
-- **Arithmetic Expressions**: Supports addition, subtraction, multiplication, and division with correct operator precedence.
-- **Variable Declarations**: Uses `poo` keyword for variable declarations.
-- **Mutable Variables**: Like in Rust, all variables are immutable by default. Uses `mut` for mutable variables.
-- **Conditional Statements**: Includes `if`, `else`, and `elif` for branching.
-- **Control Flow**: Supports `while` and `for in` loops and `return` statements.
-- **Custom Operators**:
-  - Assignment operator: `<<`
-  - Arrow operator: `>>`
-- **Lexer, Parser, and Interpreter**: A full pipeline from tokenizing source code to executing it.
+> [!IMPORTANT]
+> The current release, **v0.1.11**, is a legacy tree-walking interpreter.
+> The compiled backend platform described in the roadmap is planned for v0.2
+> and is not implemented yet.
 
-## Get Started
+## Project Status
 
-For instructions on installing PooLang on your platform, visit our project site via [https://shayyz-code.github.io/poolang](https://shayyz-code.github.io/poolang/). We provide automated installers for all platforms.
+| Track | Availability | Purpose |
+| --- | --- | --- |
+| v0.1.11 | Available | Legacy Rust interpreter, executable examples, and checked library APIs |
+| v0.2 | Planned | Clean-break LLVM compiler, native runtime, package tooling, async HTTP/JSON, analyzer, and editor support |
+| v0.3 | Planned | Opinionated web application platform with data, auth, cache, queues, and framework tooling |
+| v0.4 | Planned | Protobuf/gRPC, microservices, resilience, discovery, and OpenTelemetry |
 
-### Quick Install
+There is no compatibility promise between the legacy syntax below and v0.2.
+See [TODO.md](TODO.md) for the decision record, milestones, and implementation
+gates.
 
-Recommended:
+## Current v0.1.11 Features
+
+- Integer, float, Boolean, character, string, vector, and map values.
+- Immutable inferred or typed declarations and mutable bindings.
+- Arithmetic, comparison, `and`, `or`, `not`, and `otherwise` expressions.
+- `if`/`elif`/`else`, `while`, range/vector `for`, `step`, and `return`.
+- Typed functions, structs, instance methods, and legacy struct inheritance.
+- Built-in `std`, `math`, and `time` modules.
+- Checked source/file APIs with `Io`, `Parse`, and `Runtime` errors.
+- A Rust lexer, parser, type-inference pass, and AST-walking interpreter.
+
+Traits are tokenized but are not a complete supported feature. PooLang does not
+currently provide native compilation, HTTP, JSON, databases, packages, gRPC, or
+an editor analyzer.
+
+## Installation
+
+Current v0.1.11 packages and installers are published for macOS, Linux, and
+Windows.
+
+### Homebrew
 
 ```bash
 brew install shayyz-code/tap/poo
 ```
 
-or
+### npm
 
 ```bash
-npm install @shayyz-code/poo@latest
+npm install --global @shayyz-code/poo@latest
 ```
 
-**Linux / macOS**
+### Linux or macOS installer
 
 ```bash
 curl --proto '=https' --tlsv1.2 -LsSf https://github.com/shayyz-code/poolang/releases/latest/download/poo-installer.sh | sh
 ```
 
-**Windows**
+### Windows PowerShell installer
 
 ```powershell
 powershell -ExecutionPolicy Bypass -c "irm https://github.com/shayyz-code/poolang/releases/latest/download/poo-installer.ps1 | iex"
 ```
 
-### Verify Installation
+### Build from source
+
+Install a stable Rust toolchain, then run:
 
 ```bash
-poo --help
+git clone https://github.com/shayyz-code/poolang.git
+cd poolang
+cargo install --path .
 ```
 
-## Build from Source
+## Running Programs
 
-### Prerequisites
-
-- Rust and Cargo installed. If you don't have them installed, follow the [Rust installation guide](https://www.rust-lang.org/tools/install).
-
-### Steps
-
-1. Clone the repository:
-
-   ```bash
-   git clone https://github.com/shayyz-code/poolang.git
-   cd poolang
-   ```
-
-2. Install with cargo:
-
-   ```bash
-   cargo install --path .
-   ```
-
-## Usage
-
-You can use the interpreter to run files containing your custom language code.
-
-### Running the Interpreter
-
-To run the interpreter on a source file:
+The v0.1 CLI accepts a Poo source file path:
 
 ```bash
-cargo run <path_to_your_source_file>
+poo path/to/program.poo
 ```
 
-Example:
+From a repository checkout:
 
 ```bash
-cargo run app.poo
+cargo run -- examples/app.poo
 ```
 
-The CLI uses typed checked execution (`run_file_checked`) and prints structured error kinds (`Io`, `Parse`, `Runtime`) with a non-zero exit code on failure.
+Append `--speed` after the source path to print interpreter timing:
 
-## Release
-
-Releases are automated with GitHub Actions + [cargo-dist](https://opensource.axo.dev/cargo-dist/) and publish:
-
-- Multi-platform binaries (Linux, macOS, Windows)
-- Optimized installers (Shell, PowerShell)
-- Homebrew formula updates to `shayyz-code/tap` (`shayyz-code/homebrew-tap`)
-- Scoop manifest updates to `shayyz-code/scoop-bucket`
-
-Release flow:
-
-1. Update version in `Cargo.toml`.
-2. Create and push a version tag (example: `v0.1.5`).
-3. The `Release` workflow builds all artifacts, creates a GitHub Release, and handles downstream publishing.
-
-CI checks:
-
-- Pull requests and pushes to `main` run build + tests on Linux, macOS, and Windows.
-- Unix runners also validate installer script syntax (`sh -n install.sh`).
-
-## Syntax Overview
-
-The language features basic syntax for arithmetic, variable declarations, and control flow:
-
-### **Variable Declarations**
-
-```poo
-poo x << 10;
-poo mut y << 5 + 2 * 3;
+```bash
+poo path/to/program.poo --speed
 ```
 
-### **Arithmetic Operations**
+Successful top-level returns are printed as `Result: <Value>`. File, parse, and
+runtime failures are written to stderr with a non-zero exit status. The legacy
+CLI does not currently implement `--help` or `--version`.
+
+## Legacy v0.1.11 Syntax
+
+This example is executable with the current interpreter:
 
 ```poo
-poo result << x + y * 2 - 10 / 2;
-```
+use std::poutln;
 
-### **Conditional Statements**
+poo message str = "ready";
+mut total <: 0;
 
-```poo
-if x > y {
-    return x;
-} else {
-    return y;
-}
-```
-
-### **Loops**
-
-```poo
-use std::pout;
-
-poo mut count << 0;
-
-while count < 10 {
-    count << count + 1;
+for i in 0..5 {
+    total = total + i;
 }
 
-for i in 0..3 {
-    pout("Hello, World ", i);
-}
-```
-
-### **Functions**
-
-```poo
-use std::pout;
-
-poof getName () >> string {
-    poo name << "Shayy";
-    return name;
+poof double(value int) >> int {
+    return value * 2;
 }
 
-pout(getName());
-```
-
-## Example Code
-
-Here is a sample program in my PooLang:
-
-```poo
-use std::pout;
-
-poo a << 5.0 * 1.0 - 1.0 * 3.0;
-poo b << 2 / 2;
-poo mut d << true;
-d << false;
-
-poof getHelloWorld () >> string {
-    return "Hello, World!";
+if (not false and total > 5) or message == "never" {
+    poutln(double(total));
 }
 
-for i in 0..2 {
-    pout("Hello, Poo!", i);
-}
-
-pout(getHelloWorld());
+return total;
 ```
 
-Expected Output:
+Expected output:
 
-```poo
-Hello, Poo!0
-Hello, Poo!1
-Hello, World!
+```text
+20
+Result: Int(10)
 ```
+
+Legacy declarations use `<:` for inferred types or `name type = value` for
+explicit types. Mutable declarations begin with `mut`; reassignment uses
+standard `=`. Functions use `poof`, typed parameters such as `value int`,
+and `>>` for return types.
+
+## Examples
+
+`examples/app.poo` exercises collections, control flow, functions, structs,
+methods, modules, and inheritance:
+
+```bash
+cargo run -- examples/app.poo
+```
+
+`examples/donut.poo` renders a continuously animated terminal donut. Run it
+in a terminal and stop it with <kbd>Ctrl</kbd>+<kbd>C</kbd>:
+
+```bash
+cargo run --release -- examples/donut.poo
+```
+
+Both examples target the legacy v0.1.11 interpreter.
+
+## Releases and CI
+
+SemVer tags drive the cargo-dist `Release` workflow. The current configuration
+produces checksummed archives for Apple Silicon and Intel macOS, ARM64 and
+x86-64 Linux, and x86-64 Windows, plus shell, PowerShell, npm, Homebrew, and MSI
+installers. Stable releases publish npm packages and Homebrew formula updates.
+
+Pull requests currently run:
+
+- The issue-link policy check.
+- Rustfmt, Cargo check, strict Clippy, and the complete Cargo test suite on Ubuntu.
+- The Oranda/mdBook site build and internal-link check.
+- A cargo-dist release-plan validation.
+
+Pushes to `main` rebuild and deploy the project site. Platform release builds
+run for version tags, not for every pull request.
 
 ## Development
 
-### TDD Specs
-
-Current executable specs live in `tests/language_specs.rs`:
-
-- `spec_lexer_skips_inline_comment_block`
-- `spec_parser_respects_multiplication_precedence`
-- `spec_interpreter_executes_program_to_return_value`
-- `spec_checked_api_returns_typed_error_on_parse_failure`
-- `spec_checked_api_returns_typed_error_on_runtime_failure`
-- `spec_checked_file_api_returns_io_error_for_missing_file`
-- `spec_checked_file_api_executes_valid_file`
-- loop coverage (`for` range, `for` range with `step`, `for` vector, `while`)
-- control-flow coverage (`if` / `elif` / `else`)
-- struct coverage (instance methods, inheritance method lookup)
-
-Run them with:
-
 ```bash
+cargo build
+cargo fmt --all -- --check
+cargo check --all-targets
+cargo clippy --all-targets --all-features -- -D warnings
 cargo test
+mdbook build docs
+mdbook test docs
 ```
 
-### Refactor TODOs
+Core Rust code lives in `src/`, executable language specifications in
+`tests/language_specs.rs`, sample programs in `examples/`, and documentation
+sources in `docs/src/`. Generated `docs/book/` and `public/` output is not
+tracked.
 
-- [x] Expose core modules as a reusable library API (`src/lib.rs`).
-- [x] Keep CLI thin by delegating execution to library entrypoints.
-- [x] Upgrade crate to Rust Edition 2024.
-- [x] Introduce checked execution APIs with typed error kinds (`Io`, `Parse`, `Runtime`).
-- [ ] Replace panic-driven parser/interpreter internals with native `Result` propagation.
-- [ ] Split large parser and interpreter files into focused submodules.
-- [x] Add integration specs for structs, methods, inheritance, and loops.
-
-### Project Structure
-
-```
-.
-├── src
-│   ├── lib.rs           # Reusable library API
-│   ├── lexer.rs         # Lexical analysis (tokenizer)
-│   ├── parser.rs        # Parsing logic
-│   ├── interpreter.rs   # Interpreter for executing code
-│   ├── ast.rs           # Abstract Syntax Tree (AST) definitions
-│   ├── errors.rs        # Typed error definitions
-│   └── main.rs          # Entry point
-├── examples             # Sample code
-│   ├── donut.poo
-│   └── app.poo
-├── tests
-│   └── language_specs.rs # TDD integration specs
-└── Cargo.toml           # Project configuration
-```
-
-## Contributing
-
-Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+Every change starts with a GitHub issue and a branch from `main`. Pull requests
+must remain small, contain exactly one closing issue reference, use Conventional
+Commits, and are squash-merged only. See [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 
-PooLang is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+PooLang is licensed under the [MIT License](LICENSE).
 
-<p align="center">Hand-Crafted by <em><b><a href="https://github.com/shayyz-code">Shayy</a></b></em></p>
+<p align="center">Hand-crafted by <a href="https://github.com/shayyz-code"><b>Shayy</b></a></p>
