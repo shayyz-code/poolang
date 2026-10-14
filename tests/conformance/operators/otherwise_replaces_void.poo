@@ -1,0 +1,4 @@
+use std::poutln;
+
+poof nothing() { }
+poutln(nothing() otherwise "fallback");

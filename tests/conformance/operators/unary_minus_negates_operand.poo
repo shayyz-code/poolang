@@ -1,0 +1,6 @@
+use std::poutln;
+
+poutln(-5 + 3);
+poutln(3 - -2);
+poutln(-(2 + 3));
+poutln(-2.5 * 3.0);

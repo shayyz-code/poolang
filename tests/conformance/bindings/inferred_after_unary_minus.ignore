@@ -1,0 +1,1 @@
+#50 fix(runtime): stop rejecting valid programs in type inference; inference reports "Unsupported binary operation: Identifier("x") Plus Int(1)".

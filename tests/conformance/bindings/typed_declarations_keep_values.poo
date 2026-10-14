@@ -1,0 +1,12 @@
+use std::poutln;
+
+poo i int = 42;
+poo f float = 2.5;
+poo s str = "poo";
+poo b bool = true;
+poo c char = 'z';
+poutln(i);
+poutln(f);
+poutln(s);
+poutln(b);
+poutln(c);

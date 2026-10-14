@@ -1,0 +1,2 @@
+poo s <: "a" + "b";
+return s;
