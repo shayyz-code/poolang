@@ -1,0 +1,52 @@
+#!/bin/sh
+# Validate the commit message header against the PooLang commit policy.
+#
+# Enable for this clone with:
+#   git config core.hooksPath .githooks
+#
+# The pull request CI job applies the same rules. fixup!/squash!/amend!
+# commits are allowed locally so they can be folded in with
+# `git rebase -i --autosquash`, but CI rejects them.
+
+set -eu
+
+message_file=${1:?usage: commit-msg <message-file>}
+max_length=72
+types='feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert'
+pattern="^($types)(\\([a-z0-9-]+\\))?!?: [^[:space:]].*\$"
+
+# First non-blank, non-comment line; git strips both when committing.
+header=$(grep -v '^#' "$message_file" | sed '/^[[:space:]]*$/d' | head -n 1 || true)
+
+case $header in
+  'fixup! '* | 'squash! '* | 'amend! '*) exit 0 ;;
+esac
+
+fail() {
+  {
+    echo "commit-msg: $1"
+    echo
+    echo "  header: $header"
+    echo
+    echo "Commit headers must be Conventional Commits of at most $max_length characters:"
+    echo "  <type>(<optional-scope>)!?: <description>"
+    echo "Allowed types: $(echo "$types" | sed 's/|/, /g')"
+    echo "Example: fix(parser): report missing delimiter"
+  } >&2
+  exit 1
+}
+
+if ! printf '%s\n' "$header" | grep -Eq "$pattern"; then
+  fail "header does not follow the Conventional Commit format"
+fi
+
+if printf '%s\n' "$header" | grep -Eq '(^|[^[:alnum:]_])WIP([^[:alnum:]_]|$)'; then
+  fail "work-in-progress commit; finish or squash it before pushing"
+fi
+
+# Count characters, not bytes, without depending on an installed UTF-8
+# locale: drop UTF-8 continuation bytes (0x80-0xBF) and count the rest.
+length=$(printf '%s' "$header" | LC_ALL=C tr -d '\200-\277' | wc -c | tr -d ' ')
+if [ "$length" -gt "$max_length" ]; then
+  fail "header is $length characters; the limit is $max_length"
+fi
