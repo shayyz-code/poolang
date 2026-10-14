@@ -1,0 +1,61 @@
+name: Bug report
+description: Report incorrect behaviour in PooLang.
+title: "fix: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Every change starts with an issue, and one pull request addresses one issue.
+        Keep this report to a single bug and include the smallest program that shows it.
+  - type: input
+    id: version
+    attributes:
+      label: PooLang version or commit
+      description: The release you installed, or the commit SHA you built from.
+      placeholder: "v0.1.11 or f7f4919"
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Minimal reproduction
+      description: The smallest `.poo` program that triggers the bug, and the command you ran.
+      placeholder: |
+        // repro.poo
+        ...
+
+        $ poo repro.poo
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+      description: What should have happened.
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: What happened instead. Include the full error output and the exit code.
+      placeholder: |
+        error: ...
+        exit code: 1
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - lexer
+        - parser
+        - runtime
+        - sandbox
+        - cli
+        - docs
+        - ci
+    validations:
+      required: true

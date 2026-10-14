@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: PooLang documentation
+    url: https://shayyz-code.github.io/poolang/
+    about: Read the language guide before opening an issue.

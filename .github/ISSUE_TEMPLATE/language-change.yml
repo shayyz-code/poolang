@@ -1,0 +1,66 @@
+name: Language change
+description: Propose a change to PooLang syntax or semantics.
+title: "feat(lang): "
+labels: [language-change]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Every change starts with an issue, and one pull request addresses one issue.
+        Language changes need agreement on this issue before implementation starts.
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: What can't be expressed today, or what is error-prone?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed syntax and semantics
+      description: Describe the change precisely, with example programs and their error cases.
+      placeholder: |
+        // before
+        ...
+
+        // after
+        ...
+    validations:
+      required: true
+  - type: textarea
+    id: llm-writability
+    attributes:
+      label: LLM writability
+      description: Is the syntax regular and unambiguous enough for agents to write correctly? Could it be confused with another construct?
+    validations:
+      required: true
+  - type: textarea
+    id: sandbox-safety
+    attributes:
+      label: Sandbox safety
+      description: Could this let a script escape the sandbox or bypass resource limits? How is that prevented?
+    validations:
+      required: true
+  - type: dropdown
+    id: breaking
+    attributes:
+      label: Breaking change?
+      description: Would existing valid programs change meaning or stop parsing?
+      options:
+        - "No"
+        - "Yes"
+        - Unsure
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      description: Include the specs and documentation the change needs.
+      value: |
+        - [ ] Success and failure specs in `tests/language_specs.rs`
+        - [ ] Documentation updated under `docs/src/`
+        - [ ] ...
+    validations:
+      required: true
