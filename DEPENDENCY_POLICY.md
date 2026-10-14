@@ -1,6 +1,6 @@
 # Dependency Policy
 
-PooLang keeps its dependency surface small, reproducible, and suitable for a compiled backend platform. Every dependency change follows the normal issue-first, focused pull-request workflow and must pass `cargo deny check`.
+PooLang keeps its dependency surface small and reproducible so that the sandbox stays easy to audit. The core `poo` crate stays free of external dependencies. Binding and integration crates, such as future Python, WASM, or MCP server crates, may add vetted dependencies that meet this policy. Every dependency change follows the normal issue-first, focused pull-request workflow and must pass `cargo deny check`.
 
 ## Rust Dependencies
 
@@ -16,7 +16,7 @@ Install the CI-pinned policy tool with `cargo install --locked cargo-deny --vers
 
 No native libraries are currently linked or shipped.
 
-Before adding LLVM, Boehm GC, or another native component, record its upstream source, pinned version or commit, archive checksum or verified signature, SPDX license, static or dynamic linkage, supported targets, vulnerability advisory source, and update owner in this section. Preserve required license and notice files in source and release artifacts. The adoption issue must also explain how clean and reproducible builds obtain the dependency.
+Before adding a native component, record its upstream source, pinned version or commit, archive checksum or verified signature, SPDX license, static or dynamic linkage, supported targets, vulnerability advisory source, and update owner in this section. Preserve required license and notice files in source and release artifacts. The adoption issue must also explain how clean and reproducible builds obtain the dependency.
 
 ## Vulnerability Response
 
