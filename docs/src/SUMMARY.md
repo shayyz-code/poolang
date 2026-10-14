@@ -16,6 +16,9 @@
 
 - [Standard Library](std.md)
 
+- [Reference]()
+    - [v0.2 Language (draft)](reference/language.md)
+
 - [Internal Architecture]()
     - [Lexer](internals/lexer.md)
     - [Parser](internals/parser.md)
