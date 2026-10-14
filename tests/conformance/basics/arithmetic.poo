@@ -1,0 +1,5 @@
+use std::poutln;
+
+poutln(1 + 2 * 3);
+poutln(10 / 4, " ", 10 - 4, " ", 2.5 * 2.0);
+return 4 * 5;
