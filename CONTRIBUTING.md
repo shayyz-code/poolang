@@ -1,6 +1,6 @@
 # Contributing to PooLang
 
-Thank you for helping build PooLang. Keep contributions focused, reproducible, and aligned with the project's backend-language roadmap.
+Thank you for helping build PooLang. PooLang is becoming a sandboxed scripting language for AI agents: LLM agents write it, and a host program runs it with only the capabilities it grants, under resource budgets, with deterministic results and readable diagnostics. Keep contributions focused, reproducible, and aligned with the roadmap in `TODO.md`.
 
 ## Code of Conduct
 
@@ -16,7 +16,7 @@ By participating in this project, you agree to abide by the standard open-source
 ### Suggesting Features
 - Open an issue with the **Feature request** [issue form](https://github.com/shayyz-code/poolang/issues/new/choose), which applies the `enhancement` label. Use the **Language change** form for syntax or semantics proposals.
 - Explain why this feature would be useful for PooLang.
-- Explain how it supports the compiled, backend-focused language and tooling roadmap in `TODO.md`.
+- Explain how it supports the sandboxed agent-scripting roadmap in `TODO.md`.
 
 ### Pull Requests
 
