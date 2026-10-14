@@ -1,0 +1,1 @@
+#47 return v[0] panics in type inference ("Unexpected expression: VectorIndex").

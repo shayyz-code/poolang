@@ -1,0 +1,10 @@
+use std::poutln;
+
+poo x int = 1;
+
+poof shadow(x int) >> int {
+    return x;
+}
+
+poutln(shadow(99));
+poutln(x);

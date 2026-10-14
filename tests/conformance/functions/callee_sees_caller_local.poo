@@ -1,0 +1,12 @@
+use std::poutln;
+
+poof show() {
+    poutln(y);
+}
+
+poof caller() {
+    poo y int = 42;
+    show();
+}
+
+caller();

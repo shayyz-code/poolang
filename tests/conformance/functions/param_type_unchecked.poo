@@ -1,0 +1,7 @@
+use std::poutln;
+
+poof show(x int) {
+    poutln(x);
+}
+
+show("poo");

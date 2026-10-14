@@ -1,0 +1,7 @@
+use std::poutln;
+
+poof add(a int, b int) >> int {
+    return a + b;
+}
+
+poutln(add(2, 3));

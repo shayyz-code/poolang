@@ -1,0 +1,11 @@
+use std::poutln;
+
+poof outer() {
+    inner();
+}
+
+poof inner() {
+    poutln("inner");
+}
+
+outer();

@@ -1,0 +1,8 @@
+use std::poutln;
+
+poof greet() {
+    poutln("hi");
+}
+
+greet();
+greet();

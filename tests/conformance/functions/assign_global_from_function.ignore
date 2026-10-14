@@ -1,0 +1,1 @@
+#55 assigning a global inside a function is rejected with "Variable count used before declaration".

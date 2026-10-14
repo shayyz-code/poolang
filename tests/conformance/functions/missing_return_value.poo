@@ -1,0 +1,5 @@
+poof answer() >> int {
+    poo x int = 1;
+}
+
+return answer();

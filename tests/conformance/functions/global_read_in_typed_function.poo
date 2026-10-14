@@ -1,0 +1,7 @@
+poo base int = 10;
+
+poof add_base(n int) >> int {
+    return n + base;
+}
+
+return add_base(5);
