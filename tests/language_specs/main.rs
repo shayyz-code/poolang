@@ -19,6 +19,8 @@
 //!   `spec_function_*`), plus `spec_checked_api_reports_runtime_error_*`.
 //! - `structs`: `spec_struct_*`.
 //! - `modules`: `use` module imports (`std`, `math`, `time`). No specs yet.
+//! - `cli`: `spec_cli_*`, which run the `poo` binary and pin down its exit
+//!   codes, stdout, and stderr.
 //! - `api`: embedding entrypoints `spec_checked_api_returns_typed_error_*`,
 //!   `spec_unchecked_api_*`, `spec_checked_file_api_*`, and
 //!   `spec_unchecked_file_api_*`.
@@ -26,6 +28,7 @@
 mod support;
 
 mod api;
+mod cli;
 mod lexer;
 mod modules;
 mod parser;
