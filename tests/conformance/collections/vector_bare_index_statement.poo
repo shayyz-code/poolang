@@ -1,0 +1,5 @@
+use std::poutln;
+
+poo v <: [1];
+v[0];
+poutln("ok");

@@ -1,0 +1,5 @@
+use std::poutln;
+
+poo s str = "abc";
+poutln(s.nth_char_otherwise_(1, 'z'));
+poutln(s.nth_char_otherwise_(9, 'z'));

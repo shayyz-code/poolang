@@ -1,0 +1,2 @@
+poo g vec:vec:int = [[1, 2], [3, 4]];
+return g[1][0];

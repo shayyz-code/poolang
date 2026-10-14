@@ -1,0 +1,3 @@
+poo v vec:int = [1, 2];
+v.push(3);
+return v;

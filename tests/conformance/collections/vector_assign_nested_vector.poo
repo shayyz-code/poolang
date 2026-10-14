@@ -1,0 +1,3 @@
+mut g vec:vec:int = [[1], [3]];
+g[0] = [2];
+return g;

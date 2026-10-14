@@ -1,0 +1,1 @@
+#62 an inferred empty vector literal fails in Value::get_type

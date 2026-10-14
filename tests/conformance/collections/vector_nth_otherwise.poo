@@ -1,0 +1,5 @@
+use std::poutln;
+
+poo v vec:int = [1, 2, 3];
+poutln(v.nth(1) otherwise 0);
+poutln(v.nth(9) otherwise 0);
