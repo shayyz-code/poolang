@@ -1,5 +1,9 @@
 # Standard Library
 
+> **Legacy page.** This page predates the v0.2 redesign and may show syntax
+> the v0.1.11 interpreter does not accept. It will be rewritten in
+> [P7 Docs truth](https://github.com/shayyz-code/poolang/milestone/8).
+
 PooLang includes a small built-in standard library to handle common tasks like output.
 
 ## Printing to Console
@@ -15,7 +19,7 @@ pout("The result is: ", 42);
 
 ### Import Syntax
 
-Note the `use std::pout;` line. While `pout` is often available by default in many contexts, using the explicit `use` statement ensures it is imported into your current namespace.
+Note the `use std::pout;` line. `pout` is not available by default: calling it without importing it first fails with the runtime error `Undefined function: pout`.
 
 ## Future Plans
 

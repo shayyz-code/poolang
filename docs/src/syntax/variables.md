@@ -1,5 +1,9 @@
 # Variables & Types
 
+> **Legacy page.** This page predates the v0.2 redesign and may show syntax
+> the v0.1.11 interpreter does not accept. It will be rewritten in
+> [P7 Docs truth](https://github.com/shayyz-code/poolang/milestone/8).
+
 ## Variable Declarations
 
 PooLang uses the `poo` keyword to declare variables. By default, variables are **immutable**, meaning their value cannot be changed after assignment.

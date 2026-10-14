@@ -1,5 +1,9 @@
 # Functions
 
+> **Legacy page.** This page predates the v0.2 redesign and may show syntax
+> the v0.1.11 interpreter does not accept. It will be rewritten in
+> [P7 Docs truth](https://github.com/shayyz-code/poolang/milestone/8).
+
 Functions in PooLang allow you to encapsulate logic into reusable blocks. They are defined using the `poof` keyword.
 
 ## Defining a Function
