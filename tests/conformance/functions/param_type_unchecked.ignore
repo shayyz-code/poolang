@@ -1,1 +1,1 @@
-#59 parameter types are not checked, so the string argument is printed.
+#59 parameter types are not checked, so the string argument is printed. The expected error wording is provisional.
