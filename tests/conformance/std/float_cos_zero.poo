@@ -1,0 +1,2 @@
+poo z <: 0.0;
+return z.cos();
