@@ -1,9 +1,25 @@
 //! # PooLang
 //!
-//! A tiny interpreted language written in Rust.
+//! PooLang is becoming a sandboxed scripting language for AI agents: LLM agents
+//! write PooLang programs, and a host application runs them with only the
+//! capabilities and tools it grants, under resource budgets, deterministically,
+//! and with diagnostics an LLM can read and act on. The core crate stays free of
+//! external dependencies.
 //!
-//! This crate provides the core pipeline for PooLang, including lexical analysis,
-//! parsing, and execution through an AST-walking interpreter.
+//! Today this crate is the v0.1 tree-walking interpreter that the sandbox will be
+//! built on: a lexer ([`lexer`]), a parser that builds the AST ([`ast`],
+//! [`parser`]), and an interpreter ([`interpreter`]). Host capabilities, budgets
+//! and structured diagnostics are not implemented yet, and some inputs can still
+//! crash the interpreter instead of returning an error.
+//!
+//! ## Embedding API
+//!
+//! - [`run_source_checked`] runs source text and returns the program's result.
+//! - [`run_file_checked`] reads a file and runs it.
+//! - Both return `Result<Option<Value>, LangError>`; the error's
+//!   [`LangErrorKind`] is `Io`, `Parse` or `Runtime`.
+//! - [`run_source`] and [`run_file`] are convenience wrappers that panic on error;
+//!   prefer the checked variants when embedding.
 //!
 //! ## Example
 //!
