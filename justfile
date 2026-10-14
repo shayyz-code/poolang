@@ -4,6 +4,7 @@
 # the external tools the checks were verified with; `just tools` compares them
 # against what is installed.
 
+just_version := "1.58.0"
 mdbook_version := "0.5.2"
 cargo_deny_version := "0.20.2"
 dist_version := "0.31.0"
@@ -71,6 +72,7 @@ tools:
         printf '%-12s pinned %-10s installed %s\n' "$name" "$pinned" "${installed:-not found}"
     }
     show rustc "$(sed -n 's/^channel = "\(.*\)"/\1/p' rust-toolchain.toml)" rustc --version
+    show just "{{ just_version }}" just --version
     show mdbook "{{ mdbook_version }}" mdbook --version
     show cargo-deny "{{ cargo_deny_version }}" cargo deny --version
     show dist "{{ dist_version }}" dist --version
