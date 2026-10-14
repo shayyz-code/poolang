@@ -1,0 +1,6 @@
+use std::poutln;
+
+mut i int = 0;
+while i < 3 {
+    break;
+}

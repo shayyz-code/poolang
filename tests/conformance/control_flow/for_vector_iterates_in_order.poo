@@ -1,0 +1,6 @@
+use std::poutln;
+
+poo items vec:int = [10, 20, 30];
+for item in items {
+    poutln(item);
+}

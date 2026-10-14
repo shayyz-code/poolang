@@ -1,0 +1,6 @@
+use std::poutln;
+
+if true {
+    poo temp int = 1;
+}
+poutln(temp);

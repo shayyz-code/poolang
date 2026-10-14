@@ -1,0 +1,12 @@
+use std::poutln;
+
+poo x int = 50;
+if x > 100 {
+    poutln("huge");
+} elif x > 10 {
+    poutln("large");
+} elif x > 1 {
+    poutln("medium");
+} else {
+    poutln("small");
+}

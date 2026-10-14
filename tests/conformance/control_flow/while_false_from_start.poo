@@ -1,0 +1,8 @@
+use std::poutln;
+
+mut i int = 5;
+while i < 3 {
+    poutln(i);
+    i = i + 1;
+}
+poutln("done");

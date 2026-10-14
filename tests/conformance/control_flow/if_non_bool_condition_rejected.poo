@@ -1,0 +1,5 @@
+use std::poutln;
+
+if 1 {
+    poutln("ran");
+}

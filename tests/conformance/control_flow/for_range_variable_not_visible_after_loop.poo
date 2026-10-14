@@ -1,0 +1,5 @@
+use std::poutln;
+
+for i in 0..2 {
+}
+poutln(i);
