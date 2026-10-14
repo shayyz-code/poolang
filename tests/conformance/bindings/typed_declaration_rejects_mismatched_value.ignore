@@ -1,0 +1,1 @@
+#59 fix(runtime): enforce declared types on bindings and parameters; the int binding currently holds String("five").

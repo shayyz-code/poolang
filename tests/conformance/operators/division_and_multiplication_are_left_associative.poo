@@ -1,0 +1,4 @@
+use std::poutln;
+
+poutln(100 / 10 / 2);
+poutln(8 / 2 * 4);

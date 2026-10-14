@@ -1,0 +1,3 @@
+poo x <: -5;
+poo y <: x + 1;
+return y;

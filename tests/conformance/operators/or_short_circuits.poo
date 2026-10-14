@@ -1,0 +1,5 @@
+poof boom() >> bool {
+    poo z <: 1 / 0;
+    return true;
+}
+return true or boom();

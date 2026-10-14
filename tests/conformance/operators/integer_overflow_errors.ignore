@@ -1,0 +1,1 @@
+#61 fix(runtime): report integer overflow; debug builds report Rust's "attempt to add with overflow" and release builds wrap. The exact message is up to the fix.
