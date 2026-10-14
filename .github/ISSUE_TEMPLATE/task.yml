@@ -1,0 +1,25 @@
+name: Task
+description: Maintenance, tooling, CI or other work that is not a bug or feature.
+title: "chore: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Every change starts with an issue, and one pull request addresses one issue.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What needs doing and why.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      description: Observable outcomes that mark this issue as done.
+      placeholder: |
+        - [ ] ...
+    validations:
+      required: true

@@ -1,0 +1,47 @@
+name: Feature request
+description: Propose new functionality for PooLang or its tooling.
+title: "feat: "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Every change starts with an issue, and one pull request addresses one issue.
+        For changes to PooLang syntax or semantics, use the language change form instead.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or motivation
+      description: What problem does this solve, and who runs into it?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: The change you want to see.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance criteria
+      description: Observable outcomes that mark this issue as done.
+      placeholder: |
+        - [ ] ...
+        - [ ] Specs added to `tests/language_specs.rs`
+    validations:
+      required: true
+  - type: textarea
+    id: sandbox-impact
+    attributes:
+      label: Sandbox and safety impact
+      description: Does this add capabilities (files, network, processes, time, memory)? How are they limited?
+    validations:
+      required: false
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
