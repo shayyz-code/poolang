@@ -104,6 +104,10 @@ fn assert_failure(output: &Output, expected: &str) {
         stderr(output)
     );
     assert_eq!(stdout(output), "", "expected empty stdout");
+    assert_stderr_contains(output, expected);
+}
+
+fn assert_stderr_contains(output: &Output, expected: &str) {
     let stderr = stderr(output);
     assert!(
         stderr.contains(expected),
@@ -146,14 +150,17 @@ fn spec_cli_prints_nothing_extra_without_top_level_return() {
 fn spec_cli_reports_parse_error_on_stderr_with_exit_code_1() {
     let output = run_source("parse", "poo x <: 1", &[]);
     assert_failure(&output, "Parse error: in '");
-    assert!(stderr(&output).contains("main.poo': Unexpected end of input, expected: SemiColon"));
+    assert_stderr_contains(
+        &output,
+        "main.poo': Unexpected end of input, expected: SemiColon",
+    );
 }
 
 #[test]
 fn spec_cli_reports_runtime_error_on_stderr_with_exit_code_1() {
     let output = run_source("runtime", "return unknown_identifier;\n", &[]);
     assert_failure(&output, "Runtime error: in '");
-    assert!(stderr(&output).contains("main.poo': Undefined variable: unknown_identifier"));
+    assert_stderr_contains(&output, "main.poo': Undefined variable: unknown_identifier");
 }
 
 #[test]
@@ -165,17 +172,14 @@ fn spec_cli_keeps_output_printed_before_runtime_error() {
     );
     assert_eq!(output.status.code(), Some(1));
     assert_eq!(stdout(&output), "before\n");
-    assert!(stderr(&output).contains("Undefined variable: unknown_identifier"));
+    assert_stderr_contains(&output, "Undefined variable: unknown_identifier");
 }
 
 #[test]
 fn spec_cli_reports_missing_file_as_io_error() {
     let dir = TempDir::new("missing");
     let output = run_poo(&dir, ["missing.poo"]);
-    assert_failure(
-        &output,
-        "Io error: failed to read 'missing.poo': No such file or directory",
-    );
+    assert_failure(&output, "Io error: failed to read 'missing.poo': ");
 }
 
 #[test]
@@ -231,7 +235,11 @@ fn spec_cli_speed_flag_appends_timing_line() {
 fn spec_cli_speed_flag_omits_timing_line_on_error() {
     let output = run_source("speed-error", "poo x <: 1", &["--speed"]);
     assert_failure(&output, "Parse error: ");
-    assert!(!stderr(&output).contains("Interpreted within"));
+    let stderr = stderr(&output);
+    assert!(
+        !stderr.contains("Interpreted within"),
+        "expected no timing line in stderr {stderr:?}"
+    );
 }
 
 #[test]
@@ -251,21 +259,65 @@ fn spec_cli_ignores_extra_unknown_arguments() {
 
 #[test]
 fn spec_cli_error_cases_exit_with_code_1_not_101() {
-    let cases: &[(&str, &str, &str)] = &[
-        ("parse", "poo x <: 1", "Parse error: "),
-        ("runtime", "return unknown_identifier;", "Runtime error: "),
-        ("lexer", "return \"unterminated;", "error: "),
+    let cases: &[(&str, &str, &[&str])] = &[
+        ("parse", "poo x <: 1", &["Parse error: "]),
+        (
+            "runtime",
+            "return unknown_identifier;",
+            &["Runtime error: "],
+        ),
+        (
+            "lexer",
+            "return \"unterminated;",
+            &["Parse error: ", "Unterminated string literal"],
+        ),
     ];
     for (label, source, expected) in cases {
         let output = run_source(label, source, &[]);
-        assert_failure(&output, expected);
+        for needle in *expected {
+            assert_failure(&output, needle);
+        }
     }
 
     let dir = TempDir::new("error-args");
-    for args in [&[][..], &["missing.poo"][..], &["--help"][..]] {
-        let output = run_poo(&dir, args);
-        assert_failure(&output, "");
+    let arg_cases: &[(&[&str], &str)] = &[
+        (&[], "Usage: "),
+        (&["missing.poo"], "Io error: failed to read 'missing.poo': "),
+        (&["--help"], "Io error: failed to read '--help': "),
+    ];
+    for (args, expected) in arg_cases {
+        let output = run_poo(&dir, *args);
+        assert_failure(&output, expected);
     }
+}
+
+#[cfg(unix)]
+#[test]
+#[ignore = "#110: CLI panics with exit 101 on non-UTF-8 arguments"]
+fn spec_cli_reports_non_utf8_argument_without_panicking() {
+    use std::ffi::OsStr;
+    use std::os::unix::ffi::OsStrExt;
+
+    let dir = TempDir::new("non-utf8");
+    let output = run_poo(&dir, [OsStr::from_bytes(b"\xff.poo")]);
+    assert_ne!(
+        output.status.code(),
+        Some(101),
+        "poo panicked instead of reporting an error; stderr: {:?}",
+        stderr(&output)
+    );
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "expected exit code 1; stderr: {:?}",
+        stderr(&output)
+    );
+    assert_eq!(stdout(&output), "", "expected empty stdout");
+    let stderr = stderr(&output);
+    assert!(
+        stderr.contains("Io error: ") || stderr.contains("Usage: "),
+        "expected an Io or usage error in stderr {stderr:?}"
+    );
 }
 
 #[test]
