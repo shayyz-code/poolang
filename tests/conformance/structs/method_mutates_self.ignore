@@ -1,1 +1,1 @@
-#65 fix(runtime): let methods mutate self; today self.count = 0 does not even parse ("Unexpected token: Assignment").
+#65 fix(runtime): let methods mutate self; blocked on #106 too: self.count = 0 does not parse yet ("Unexpected token: Assignment").

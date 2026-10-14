@@ -1,6 +1,5 @@
 use std::poutln;
 
-// Assigning to a field does not parse; there is no field assignment syntax yet. //
 struct Counter {
     count int
 }
