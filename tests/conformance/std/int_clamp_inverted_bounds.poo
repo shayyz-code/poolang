@@ -1,0 +1,2 @@
+poo n <: 5;
+return n.clamp(3, 1);

@@ -1,0 +1,5 @@
+use std::(cls, pout);
+
+pout("before");
+cls();
+pout("after");

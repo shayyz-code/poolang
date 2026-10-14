@@ -1,0 +1,4 @@
+use std::poutln;
+
+poutln("first");
+poutln("second");

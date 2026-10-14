@@ -1,0 +1,1 @@
+#70 fix(lexer): reject malformed char literals and member calls on ints; `1._f()` lexes as Float(1.) followed by `_f`.

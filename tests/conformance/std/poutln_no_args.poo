@@ -1,0 +1,6 @@
+use std::(pout, poutln);
+
+pout("a");
+poutln();
+poutln();
+pout("b");
