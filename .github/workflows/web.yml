@@ -2,9 +2,10 @@
 # and deploy them to Github Pages
 name: Web
 
-# We're going to push to the gh-pages branch, so we need that permission
+# Read-only by default. Only the deploy job, which pushes to the gh-pages
+# branch, is granted write access.
 permissions:
-  contents: write
+  contents: read
 
 # What situations do we want to build docs in?
 # All of these work independently and can be removed / commented out
@@ -50,13 +51,14 @@ on:
 # Alright, let's do it!
 jobs:
   web:
-    name: Build and deploy site and docs
+    name: Build site and docs
     runs-on: ubuntu-latest
     steps:
       # Setup
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
+          persist-credentials: false
       - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
       - uses: swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae # v2
 
@@ -96,17 +98,41 @@ jobs:
         with:
           args: /tmp/link-check/
 
-      # Deploy to our gh-pages branch (creating it if it doesn't exist).
-      # The "public" dir that oranda made above will become the root dir
-      # of this branch.
-      #
-      # Note that once the gh-pages branch exists, you must
-      # go into repo's settings > pages and set "deploy from branch: gh-pages".
-      # The other defaults work fine.
+      - name: Upload site
+        # Only the deploy job consumes this, and it only runs on main.
+        if: ${{ github.ref == 'refs/heads/main' }}
+        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
+        with:
+          name: site
+          path: public
+          include-hidden-files: true
+          if-no-files-found: error
+
+  # Deploy to our gh-pages branch (creating it if it doesn't exist).
+  # The "public" dir that oranda made above will become the root dir
+  # of this branch.
+  #
+  # Note that once the gh-pages branch exists, you must
+  # go into repo's settings > pages and set "deploy from branch: gh-pages".
+  # The other defaults work fine.
+  deploy:
+    name: Deploy site and docs
+    needs: web
+    # ONLY if we're on main (so no PRs or feature branches allowed!)
+    if: ${{ github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    permissions:
+      # Required to push the built site to the gh-pages branch.
+      contents: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Download site
+        uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
+        with:
+          name: site
+          path: public
       - name: Deploy to Github Pages
         uses: JamesIves/github-pages-deploy-action@ba1486788b0490a235422264426c45848eac35c6 # v4.4.1
-        # ONLY if we're on main (so no PRs or feature branches allowed!)
-        if: ${{ github.ref == 'refs/heads/main' }}
         with:
           branch: gh-pages
           # Gotta tell the action where to find oranda's output
