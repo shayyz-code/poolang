@@ -72,3 +72,63 @@ jobs:
             }
 
             core.info(`All ${commits.length} commit(s) follow the commit policy.`);
+
+  commit-builds:
+    name: Commit builds
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      MAX_COMMITS: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: dtolnay/rust-toolchain@4cda84d5c5c54efe2404f9d843567869ab1699d4 # stable
+      - uses: swatinem/rust-cache@42dc69e1aa15d09112580998cf2ef0119e2e91ae # v2
+      - name: Check and test each commit
+        run: |
+          set -u
+          commits=$(git rev-list --reverse "$BASE_SHA..$HEAD_SHA")
+          total=$(printf '%s\n' "$commits" | grep -c . || true)
+
+          if [ "$total" -eq 0 ]; then
+            echo "No commits to build."
+            exit 0
+          fi
+
+          if [ "$total" -gt "$MAX_COMMITS" ]; then
+            echo "::notice::PR has $total commits; building only the $MAX_COMMITS most recent."
+            commits=$(printf '%s\n' "$commits" | tail -n "$MAX_COMMITS")
+          fi
+
+          failed=""
+          for sha in $commits; do
+            short=$(git rev-parse --short "$sha")
+            echo "::group::$short $(git log -1 --format=%s "$sha")"
+            git checkout --force --quiet --detach "$sha" || {
+              echo "::endgroup::"
+              echo "::error::Cannot check out commit $short"
+              failed="$failed $short"
+              continue
+            }
+            if cargo check --all-targets && cargo test --quiet; then
+              echo "::endgroup::"
+            else
+              echo "::endgroup::"
+              echo "::error::Commit $short does not build or pass tests"
+              failed="$failed $short"
+            fi
+          done
+
+          git checkout --force --quiet --detach "$HEAD_SHA"
+
+          if [ -n "$failed" ]; then
+            echo "Commits that failed cargo check or cargo test:$failed"
+            exit 1
+          fi
+
+          echo "All checked commits build and pass tests."
