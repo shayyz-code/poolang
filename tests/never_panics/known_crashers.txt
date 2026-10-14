@@ -1,0 +1,33 @@
+# Known crashers for tests/never_panics.rs.
+#
+# One entry per line: kind | key | issue | description
+#
+#   generator | <name>      Skip every input from that generator. Use this for
+#                           stack overflows: they abort the whole test process
+#                           and cannot be caught.
+#   panic     | <substring> Report a caught panic whose message contains
+#                           <substring> as known instead of failing the test.
+#
+# The issue is a GitHub issue number such as #48, or #TBD until one is filed.
+# Remove the entry in the PR that fixes the issue. To check a fix, run
+#   POO_FUZZ_INCLUDE_KNOWN=1 POO_FUZZ_ONLY=<generator> cargo test --test never_panics
+# (a remaining stack overflow still aborts the run).
+
+# Stack overflows. The recursive-descent parser overflows an 8 MiB stack in a
+# debug build at between 1,000 and 2,000 levels of nesting.
+generator | deep_paren_unclosed   | #TBD | 10,000 nested `(` overflow the parser stack
+generator | deep_paren_balanced   | #TBD | 10,000 nested `( ... )` overflow the parser stack
+generator | deep_bracket_unclosed | #TBD | 10,000 nested `[` overflow the parser stack
+generator | deep_bracket_balanced | #TBD | 10,000 nested `[ ... ]` overflow the parser stack
+generator | deep_if_blocks        | #TBD | 10,000 nested `if true {` overflow the parser stack
+generator | deep_unary_not        | #TBD | 10,000 chained `not` overflow the parser stack
+generator | deep_unary_minus      | #TBD | 10,000 chained `-` overflow the parser stack
+generator | huge_whitespace       | #49  | the lexer recurses once per whitespace character
+generator | huge_comments         | #TBD | the lexer recurses once per `// ... //` comment, as in #49
+
+# Caught panics.
+panic | ParseIntError { kind: PosOverflow } | #48 | integer literals above i64::MAX unwrap a parse error in the lexer
+panic | Undefined variable:                 | #46 | parse-time type inference panics on an unknown name in a function body
+panic | Undefined function:                 | #45 | parse-time type inference panics on an unknown callee in a function body
+panic | Unsupported binary operation:       | #50 | parse-time type inference panics on mixed-type operators in a function body
+panic | Unexpected expression:              | #47 | parse-time type inference panics on unsupported expressions in a function body
