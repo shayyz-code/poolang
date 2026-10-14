@@ -1,1 +1,2 @@
 #67 an unknown map method returns Null instead of failing
+The expected error wording is provisional; adjust it to the final message when fixing.
