@@ -1,0 +1,1 @@
+#64 fix(runtime): validate struct-typed fields; a Point value is rejected with "expected Map({...}) but got Map({})".

@@ -1,0 +1,9 @@
+use std::poutln;
+
+struct Bag {
+    items vec:int
+    count int
+}
+
+poo b <: Bag::{ items: [1, 2], count: 2 };
+poutln(b.items[1], " ", b.count);

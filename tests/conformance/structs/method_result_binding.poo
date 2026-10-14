@@ -1,0 +1,15 @@
+use std::poutln;
+
+struct Person {
+    name str
+
+    impl {
+        poof get_name() >> str {
+            return self.name;
+        }
+    }
+}
+
+poo p <: Person::{ name: "Ada" };
+poo n <: p.get_name();
+poutln(n);

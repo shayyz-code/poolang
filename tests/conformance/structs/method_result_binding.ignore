@@ -1,0 +1,1 @@
+#50 fix(runtime): stop rejecting valid programs in type inference; binding a method result fails with "Undefined method 'get_name' for object of type Map(...)".

@@ -1,0 +1,1 @@
+#57 fix(runtime): handle parents without impl blocks; fails with "called Option::unwrap() on a None value".

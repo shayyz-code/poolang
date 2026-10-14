@@ -1,0 +1,6 @@
+struct Point {
+    x int
+    y int
+}
+
+poo p <: Point::{ x: "three", y: 4 };

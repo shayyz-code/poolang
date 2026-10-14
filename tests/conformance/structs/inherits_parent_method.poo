@@ -1,0 +1,19 @@
+use std::poutln;
+
+struct Person {
+    name str
+
+    impl {
+        poof get_name() >> str {
+            return self.name;
+        }
+    }
+}
+
+struct Student inherits Person {
+    name str
+    id int
+}
+
+poo s <: Student::{ name: "Ada", id: 7 };
+poutln(s.get_name(), " ", s.id);

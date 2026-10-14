@@ -1,0 +1,9 @@
+use std::poutln;
+
+struct Point {
+    x int
+    y int
+}
+
+poo p <: Point::{ x: 3 };
+poutln(p.x);

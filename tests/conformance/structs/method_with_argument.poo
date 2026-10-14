@@ -1,0 +1,14 @@
+use std::poutln;
+
+struct Greeter {
+    name str
+
+    impl {
+        poof greet(greeting str) >> void {
+            poutln(greeting, ", ", self.name, "!");
+        }
+    }
+}
+
+poo g <: Greeter::{ name: "Ada" };
+g.greet("Hello");

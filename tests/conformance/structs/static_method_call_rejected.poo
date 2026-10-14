@@ -1,0 +1,16 @@
+use std::poutln;
+
+// Methods are only reachable through an instance; `Point::origin()` does not parse. //
+struct Point {
+    x int
+    y int
+
+    impl {
+        poof origin() >> Self {
+            return Point::{ x: 0, y: 0 };
+        }
+    }
+}
+
+poo p <: Point::origin();
+poutln(p.x);

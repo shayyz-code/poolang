@@ -1,0 +1,4 @@
+use std::poutln;
+
+poo p <: Nowhere::{ x: 1 };
+poutln("unreachable");

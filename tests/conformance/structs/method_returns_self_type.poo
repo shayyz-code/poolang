@@ -1,0 +1,15 @@
+use std::poutln;
+
+struct Point {
+    x int
+    y int
+
+    impl {
+        poof origin() >> Self {
+            return Point::{ x: 0, y: 9 };
+        }
+    }
+}
+
+poo p <: Point::{ x: 5, y: 6 };
+poutln(p.origin().x, " ", p.origin().y);

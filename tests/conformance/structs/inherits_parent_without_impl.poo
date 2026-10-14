@@ -1,0 +1,12 @@
+use std::poutln;
+
+struct Base {
+    x int
+}
+
+struct Derived inherits Base {
+    y int
+}
+
+poo d <: Derived::{ x: 1, y: 2 };
+poutln(d.x, " ", d.y);

@@ -1,0 +1,1 @@
+#64 fix(runtime): validate struct-typed fields; unknown fields are accepted silently today. The error wording is provisional.
