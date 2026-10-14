@@ -1,1 +1,2 @@
 #68 a negative repeat count fails with 'capacity overflow'
+The expected error wording is provisional; adjust it to the final message when fixing.
