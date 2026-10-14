@@ -1,0 +1,5 @@
+use std::poutln;
+
+poo m map = {name: "amk", age: 1};
+poutln(m.name);
+poutln(m.age);

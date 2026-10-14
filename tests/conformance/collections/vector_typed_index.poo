@@ -1,0 +1,5 @@
+use std::poutln;
+
+poo v vec:int = [10, 20, 30];
+poutln(v[0]);
+poutln(v[2]);

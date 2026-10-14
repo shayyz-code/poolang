@@ -1,0 +1,2 @@
+poo v vec:int = [1, 2, 3];
+return v.nth(9);
