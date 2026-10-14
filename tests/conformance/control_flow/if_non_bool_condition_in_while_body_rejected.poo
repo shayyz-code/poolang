@@ -1,0 +1,9 @@
+use std::poutln;
+
+mut i int = 0;
+while i < 1 {
+    if 1 {
+        poutln("ran");
+    }
+    i = i + 1;
+}

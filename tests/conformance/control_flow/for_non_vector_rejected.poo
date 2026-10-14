@@ -1,0 +1,6 @@
+use std::poutln;
+
+poo n int = 3;
+for x in n {
+    poutln(x);
+}

@@ -1,0 +1,7 @@
+use std::poutln;
+
+poo x int = 3;
+if x > 1 {
+    poutln("big");
+}
+poutln("done");

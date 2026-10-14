@@ -1,0 +1,5 @@
+use std::poutln;
+
+while 0 {
+    poutln("ran");
+}

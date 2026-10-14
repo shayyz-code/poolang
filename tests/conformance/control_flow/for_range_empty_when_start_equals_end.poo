@@ -1,0 +1,6 @@
+use std::poutln;
+
+for i in 3..3 {
+    poutln(i);
+}
+poutln("done");

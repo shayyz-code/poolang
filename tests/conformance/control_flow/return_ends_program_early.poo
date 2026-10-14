@@ -1,0 +1,5 @@
+use std::poutln;
+
+poutln("before");
+return 1;
+poutln("after");

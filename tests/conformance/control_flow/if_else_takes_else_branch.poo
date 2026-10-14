@@ -1,0 +1,8 @@
+use std::poutln;
+
+poo x int = 0;
+if x > 1 {
+    poutln("big");
+} else {
+    poutln("small");
+}

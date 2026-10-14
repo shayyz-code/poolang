@@ -1,0 +1,9 @@
+use std::poutln;
+
+for i in 0..5 {
+    poutln(i);
+    if i == 1 {
+        return i;
+    }
+}
+poutln("after");

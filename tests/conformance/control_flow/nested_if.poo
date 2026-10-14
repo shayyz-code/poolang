@@ -1,0 +1,11 @@
+use std::poutln;
+
+poo x int = 5;
+poo y int = 2;
+if x > 1 {
+    if y > 3 {
+        poutln("both");
+    } else {
+        poutln("x only");
+    }
+}

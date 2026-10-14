@@ -1,0 +1,1 @@
+#51 fix(runtime): apply the same checks inside for-loop bodies; type inference skips for-loop bodies, so `if 1` runs and prints "ran".
