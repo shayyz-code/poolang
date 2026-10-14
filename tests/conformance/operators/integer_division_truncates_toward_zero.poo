@@ -1,4 +1,5 @@
 use std::poutln;
 
 poutln(7 / 2);
-poutln(-7 / 2);
+poutln((-7) / 2);
+poutln(7 / -2);
