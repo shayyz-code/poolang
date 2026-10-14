@@ -1,0 +1,14 @@
+use std::poutln;
+
+poof f() {
+    poo y int = 1;
+    poutln(y);
+}
+
+poof g() {
+    poo y int = 2;
+    f();
+    poutln(y);
+}
+
+g();

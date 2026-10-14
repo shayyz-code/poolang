@@ -1,0 +1,15 @@
+use std::poutln;
+
+poof bump() {
+    for i in 0..1 {
+        count = count + 1;
+    }
+}
+
+poof caller() {
+    mut count int = 1;
+    bump();
+    poutln(count);
+}
+
+caller();

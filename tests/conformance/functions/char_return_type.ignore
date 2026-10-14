@@ -1,0 +1,1 @@
+#52 char return values fail the return type check ("Expected Char, got Char('p')").

@@ -1,0 +1,1 @@
+#59 parameter types are not checked, so the string argument is printed.

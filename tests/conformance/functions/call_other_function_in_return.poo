@@ -1,0 +1,9 @@
+poof square(n int) >> int {
+    return n * n;
+}
+
+poof sum_of_squares(a int, b int) >> int {
+    return square(a) + square(b);
+}
+
+return sum_of_squares(3, 4);

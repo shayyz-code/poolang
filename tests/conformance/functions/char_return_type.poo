@@ -1,0 +1,5 @@
+poof initial() >> char {
+    return 'p';
+}
+
+return initial();

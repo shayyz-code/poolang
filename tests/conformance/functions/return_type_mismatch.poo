@@ -1,0 +1,5 @@
+poof name() >> int {
+    return "poo";
+}
+
+return name();

@@ -1,0 +1,11 @@
+use std::poutln;
+
+mut count int = 0;
+
+poof inc() {
+    count = count + 1;
+}
+
+inc();
+inc();
+poutln(count);

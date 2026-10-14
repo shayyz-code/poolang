@@ -1,0 +1,9 @@
+use std::poutln;
+
+poof f() {
+    poutln(1);
+    return;
+    poutln(2);
+}
+
+f();

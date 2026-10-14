@@ -1,0 +1,1 @@
+#46 reading a global inside a typed function body panics in type inference ("Undefined variable: base").

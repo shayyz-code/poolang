@@ -1,0 +1,9 @@
+poof double(n int) >> int {
+    return n * 2;
+}
+
+poof inc(n int) >> int {
+    return n + 1;
+}
+
+return double(inc(double(3)));

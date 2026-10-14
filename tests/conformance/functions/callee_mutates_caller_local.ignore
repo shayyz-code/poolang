@@ -1,0 +1,1 @@
+#54 dynamic scoping: the callee assigns the caller local count and 2 is printed (the for loop skips parse-time checks, see #51).

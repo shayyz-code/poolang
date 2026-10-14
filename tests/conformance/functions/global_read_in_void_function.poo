@@ -1,0 +1,9 @@
+use std::poutln;
+
+poo g int = 5;
+
+poof show() {
+    poutln(g);
+}
+
+show();
