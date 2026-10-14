@@ -8,7 +8,7 @@ resource-budgeted, deterministic, never panics, LLM-readable diagnostics.
 ### Workflow
 
 - Branch from a fresh `origin/main` as `<type>/<issue#>-<slug>`. For parallel work use
-  one git worktree per issue at `.claude/worktrees/<issue#>-<slug>`.
+  one git worktree per issue at `.claude/worktrees/<issue#>-<slug>` (ignored by git).
 - Issues labelled `language-change` alter syntax or semantics: use plan mode and get
   the plan approved before editing code.
 - Write the failing spec first: `spec_<component>_<behavior>` in
@@ -25,3 +25,12 @@ resource-budgeted, deterministic, never panics, LLM-readable diagnostics.
 - Merge PRs, create or push tags, run releases, or publish crates.
 - Push to `main` or force-push. Update your own pushed branch with
   `git push --force-with-lease`.
+
+### Permissions and hooks
+
+- `.claude/settings.json` allows routine checks and denies pushes to `main`,
+  force-pushes, tags, releases, publishing, and edits to generated files. Every
+  `gh pr merge` (or merge through `gh api`) asks first, so a human confirms each merge.
+- GitHub branch and tag protection is the real control. These rules are a guardrail
+  and can be bypassed (for example `git push -uf` or `git -C <dir> push`).
+- A PostToolUse hook runs `cargo fmt` after every Rust edit.
