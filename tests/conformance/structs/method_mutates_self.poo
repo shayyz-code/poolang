@@ -1,0 +1,15 @@
+use std::poutln;
+
+struct Counter {
+    count int
+
+    impl {
+        poof reset() >> void {
+            self.count = 0;
+        }
+    }
+}
+
+mut c <: Counter::{ count: 5 };
+c.reset();
+poutln(c.count);

@@ -1,0 +1,14 @@
+use std::poutln;
+
+struct Dog {
+    name str
+
+    impl Dog {
+        poof describe() >> str {
+            return self.name;
+        }
+    }
+}
+
+poo d <: Dog::{ name: "Rex" };
+poutln(d.describe());

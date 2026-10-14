@@ -1,0 +1,9 @@
+use std::poutln;
+
+struct Counter {
+    count int
+}
+
+mut c <: Counter::{ count: 1 };
+c.count = 2;
+poutln(c.count);

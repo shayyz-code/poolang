@@ -1,0 +1,1 @@
+#63 fix(parser): parse vector-typed struct fields; fails with "Unexpected token: TInt, expected: RightCurly".

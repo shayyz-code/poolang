@@ -1,0 +1,1 @@
+#106 feat(parser): support struct field assignment; c.count = 2 fails with "Unexpected token: Assignment, expected: SemiColon".

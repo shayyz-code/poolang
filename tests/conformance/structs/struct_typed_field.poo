@@ -1,0 +1,14 @@
+use std::poutln;
+
+struct Point {
+    x int
+    y int
+}
+
+struct Line {
+    start Point
+    end Point
+}
+
+poo l <: Line::{ start: Point::{ x: 1, y: 2 }, end: Point::{ x: 3, y: 4 } };
+poutln(l.start.x, " ", l.end.y);

@@ -1,0 +1,1 @@
+#50 fix(runtime): stop rejecting valid programs in type inference; self.x is typed String, so "Return type mismatch: expected Int, but found String".

@@ -1,0 +1,10 @@
+use std::poutln;
+
+// `pub` is parsed, but fields without it are still readable from outside. //
+struct Account {
+    owner str
+    pub balance int
+}
+
+poo a <: Account::{ owner: "Ada", balance: 10 };
+poutln(a.owner, " ", a.balance);
