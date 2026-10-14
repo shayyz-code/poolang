@@ -6,4 +6,5 @@ struct Bag {
 }
 
 poo b <: Bag::{ items: [1, 2], count: 2 };
-poutln(b.items[1], " ", b.count);
+poutln(b.count);
+return b.items;
