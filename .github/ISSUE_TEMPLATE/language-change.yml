@@ -59,7 +59,7 @@ body:
       label: Acceptance criteria
       description: Include the specs and documentation the change needs.
       value: |
-        - [ ] Success and failure specs in `tests/language_specs.rs`
+        - [ ] Success and failure specs in `tests/language_specs/`
         - [ ] Documentation updated under `docs/src/`
         - [ ] ...
     validations:

@@ -6,7 +6,7 @@ argument-hint: <behaviour description>
 Scaffold PooLang language specs for this behaviour: $ARGUMENTS
 
 1. Read the relevant code in `src/` and the existing specs and helpers in
-   `tests/language_specs.rs` to learn current behaviour and conventions.
+   `tests/language_specs/` to learn current behaviour and conventions.
 2. Choose names of the form `spec_<component>_<behavior>`, reusing the existing
    component prefixes (for example `spec_for_range_loop_honors_step_value` or
    `spec_checked_api_reports_parse_error_for_missing_semicolon`). Check that no existing

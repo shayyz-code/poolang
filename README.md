@@ -259,7 +259,7 @@ generated release workflow, and runs `cargo deny check`. Required tools and
 versions are listed in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Core Rust code lives in `src/`, executable language specifications in
-`tests/language_specs.rs`, sample programs in `examples/`, and documentation
+`tests/language_specs/`, sample programs in `examples/`, and documentation
 sources in `docs/src/`. Generated `docs/book/` and `public/` output is not
 tracked.
 

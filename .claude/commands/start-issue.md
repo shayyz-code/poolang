@@ -20,7 +20,7 @@ Start work on PooLang issue #$ARGUMENTS.
 5. If the issue is labelled `language-change`, enter plan mode and get the plan approved
    before editing anything.
 6. Plan the tests first: list the `spec_<component>_<behavior>` specs (success and
-   failure paths) you will add to `tests/language_specs.rs`, then the implementation
+   failure paths) you will add to `tests/language_specs/`, then the implementation
    steps, the docs to update, and the intended commits.
 
 Do not write code yet; finish by presenting the plan.

@@ -8,8 +8,10 @@ You write executable language specs for PooLang. You do not implement the behavi
 
 ## Where and how
 
-- Specs live in `tests/language_specs.rs`. Reuse its helpers (`run_source_checked`,
-  `run_checked_with_temp_file`, `assert_parse_error`, and friends) before adding new ones.
+- Specs live in `tests/language_specs/`, one module per component; `main.rs` documents
+  which prefixes go in which module. Reuse `run_source_checked` and the helpers in
+  `support.rs` (`run_checked_with_temp_file`, `assert_parse_error`, and friends) before
+  adding new ones.
 - Name each test `spec_<component>_<behavior>`, reusing the existing component
   prefixes: a pipeline stage (`lexer`, `parser`, `interpreter`, `value`), a public API
   (`checked_api`, `checked_file_api`, `unchecked_api`, `unchecked_file_api`), or a

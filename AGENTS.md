@@ -2,7 +2,7 @@
 
 ## Project Structure & Module Organization
 
-PooLang is currently a Rust 2024 interpreter. Core code lives in `src/`: the lexer tokenizes source, the parser builds the AST, and the interpreter executes it. `lib.rs` exposes library entrypoints and `main.rs` provides the CLI. Executable language specifications are in `tests/language_specs.rs`; sample `.poo` programs belong in `examples/`.
+PooLang is currently a Rust 2024 interpreter. Core code lives in `src/`: the lexer tokenizes source, the parser builds the AST, and the interpreter executes it. `lib.rs` exposes library entrypoints and `main.rs` provides the CLI. Executable language specifications are in `tests/language_specs/`, one module per component with the mapping documented in `main.rs`; sample `.poo` programs belong in `examples/`.
 
 Edit documentation sources under `docs/src/` and navigation in `docs/src/SUMMARY.md`; treat `docs/book/` as generated output. Release and site configuration lives in `dist-workspace.toml`, `oranda.json`, `wix/`, and `.github/workflows/`.
 
@@ -25,7 +25,7 @@ All checks in `just check` must pass before review.
 
 Use rustfmt defaults and idiomatic Rust names: `snake_case` for functions and modules, `PascalCase` for types and traits, and `SCREAMING_SNAKE_CASE` for constants. Keep subsystem boundaries clear and return actionable typed errors instead of adding panic-driven paths.
 
-Follow TDD for features and fixes. Add focused cases to `tests/language_specs.rs`, named `spec_<component>_<behavior>`, and cover success plus relevant failure paths.
+Follow TDD for features and fixes. Add focused cases to the matching module in `tests/language_specs/`, named `spec_<component>_<behavior>`, and cover success plus relevant failure paths.
 
 ## Release Automation
 

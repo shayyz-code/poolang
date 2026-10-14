@@ -12,7 +12,7 @@ resource-budgeted, deterministic, never panics, LLM-readable diagnostics.
 - Issues labelled `language-change` alter syntax or semantics: use plan mode and get
   the plan approved before editing code.
 - Write the failing spec first: `spec_<component>_<behavior>` in
-  `tests/language_specs.rs`, covering success and failure paths.
+  the matching module of `tests/language_specs/`, covering success and failure paths.
 - Run `just check-fast` while iterating and `just check` before pushing.
 - PRs are rebase-merged, so every commit lands on `main` as-is: each must be a
   self-contained Conventional Commit (header of 72 characters or fewer) that builds
