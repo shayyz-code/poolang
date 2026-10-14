@@ -1,0 +1,2 @@
+poo x <: 1; // this comment never closes
+return x;

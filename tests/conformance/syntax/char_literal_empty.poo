@@ -1,0 +1,2 @@
+poo c <: '';
+return c;

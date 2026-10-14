@@ -1,0 +1,1 @@
+#48 fix(lexer): report out-of-range integer literals; the lexer panics on parse().unwrap() (exit 101).

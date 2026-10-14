@@ -1,0 +1,3 @@
+use std::poutln;
+
+poutln("never closed);

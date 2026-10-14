@@ -1,0 +1,2 @@
+poof answer() >> int {
+    return 42;

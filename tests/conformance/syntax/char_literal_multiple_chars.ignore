@@ -1,0 +1,1 @@
+#70 fix(lexer): reject malformed char literals; 'ab' is accepted as 'b'.
