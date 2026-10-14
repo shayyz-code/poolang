@@ -34,3 +34,9 @@ resource-budgeted, deterministic, never panics, LLM-readable diagnostics.
 - GitHub branch and tag protection is the real control. These rules are a guardrail
   and can be bypassed (for example `git push -uf` or `git -C <dir> push`).
 - A PostToolUse hook runs `cargo fmt` after every Rust edit.
+
+### Project agents and commands
+
+- Subagents in `.claude/agents/`: `implementer`, `spec-writer`, `reviewer`, `docs-sync`.
+- Slash commands in `.claude/commands/`: `/start-issue <n>`, `/new-case <behaviour>`,
+  `/ship <n>`.
