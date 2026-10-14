@@ -273,7 +273,7 @@ generate လုပ်ထားသော release workflow ကို စစ်ဆ�
 [CONTRIBUTING.md](CONTRIBUTING.md) တွင် ကြည့်ပါ။
 
 အဓိက Rust code များသည် `src/` တွင်၊ executable language specification
-များသည် `tests/language_specs.rs` တွင်၊ sample program များသည်
+များသည် `tests/language_specs/` တွင်၊ sample program များသည်
 `examples/` တွင်၊ documentation source များသည် `docs/src/` တွင်
 ရှိသည်။ Generate လုပ်ထားသော `docs/book/` နှင့် `public/` output များကို
 Git တွင် မထည့်ထားပါ။

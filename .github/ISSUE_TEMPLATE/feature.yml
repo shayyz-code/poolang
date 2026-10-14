@@ -29,7 +29,7 @@ body:
       description: Observable outcomes that mark this issue as done.
       placeholder: |
         - [ ] ...
-        - [ ] Specs added to `tests/language_specs.rs`
+        - [ ] Specs added to `tests/language_specs/`
     validations:
       required: true
   - type: textarea

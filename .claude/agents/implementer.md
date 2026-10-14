@@ -17,7 +17,7 @@ deterministic, panic-free, capability-bounded, and its diagnostics readable by a
    worktree at `.claude/worktrees/<n>-<slug>` (from the main checkout:
    `git worktree add .claude/worktrees/<n>-<slug> -b <branch> origin/main`) unless you
    are already isolated.
-3. Write failing specs first in `tests/language_specs.rs` (`spec_<component>_<behavior>`),
+3. Write failing specs first in `tests/language_specs/` (`spec_<component>_<behavior>`),
    covering the success path and each relevant failure path. Run them and confirm they
    fail for the expected reason.
 4. Make the smallest change that turns them green. Return typed `LangError`s; never add
