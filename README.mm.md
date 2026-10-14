@@ -205,14 +205,15 @@ version tag များအတွက်သာ run သည်။
 ## Development
 
 ```bash
-cargo build
-cargo fmt --all -- --check
-cargo check --all-targets
-cargo clippy --all-targets --all-features -- -D warnings
-cargo test
-mdbook build docs
-mdbook test docs
+just setup       # enable the commit-msg hook (once per clone)
+just check-fast  # formatting, compilation, Clippy, and tests
+just check       # every check required before review
 ```
+
+`just check` သည် mdBook documentation ကို build နှင့် test လုပ်ခြင်း၊
+generate လုပ်ထားသော release workflow ကို စစ်ဆေးခြင်းနှင့် `cargo deny check`
+ကို run ခြင်းတို့ကိုပါ ပြုလုပ်သည်။ လိုအပ်သော tool များနှင့် version များကို
+[CONTRIBUTING.md](CONTRIBUTING.md) တွင် ကြည့်ပါ။
 
 အဓိက Rust code များသည် `src/` တွင်၊ executable language specification
 များသည် `tests/language_specs.rs` တွင်၊ sample program များသည်
@@ -222,8 +223,10 @@ Git တွင် မထည့်ထားပါ။
 
 Change တိုင်းအတွက် GitHub issue ကို အရင်ဖွင့်ပြီး `main` မှ branch ခွဲရသည်။
 Pull request များကို သေးငယ်စွာ ထားရမည်၊ closing issue reference တစ်ခုတည်း
-ပါရမည်၊ Conventional Commits ကို အသုံးပြုရမည်၊ squash merge ဖြင့်သာ
-ပေါင်းရမည်။ အသေးစိတ်ကို [CONTRIBUTING.md](CONTRIBUTING.md) တွင် ကြည့်ပါ။
+ပါရမည်၊ rebase merge ဖြင့်သာ ပေါင်းရမည်။ Commit တိုင်းသည် `main` ပေါ်သို့
+ရေးထားသည့်အတိုင်း ရောက်သွားသောကြောင့် commit တစ်ခုစီသည် `just check` ကို
+pass ဖြစ်သော self-contained Conventional Commit ဖြစ်ရမည်။ အသေးစိတ်ကို
+[CONTRIBUTING.md](CONTRIBUTING.md) တွင် ကြည့်ပါ။
 
 ## လိုင်စင်
 

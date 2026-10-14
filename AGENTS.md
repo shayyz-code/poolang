@@ -8,6 +8,8 @@ Edit documentation sources under `docs/src/` and navigation in `docs/src/SUMMARY
 
 ## Build, Test, and Development Commands
 
+Run `just check` for every check required before review, or `just check-fast` for formatting, compilation, linting, and tests only. Run `just setup` once per clone to enable the commit-msg hook. The underlying commands are:
+
 - `cargo check --all-targets` performs the required baseline compile check.
 - `cargo run -- examples/app.poo` runs a sample program.
 - `cargo test` runs unit, integration, and documentation tests.
@@ -17,7 +19,7 @@ Edit documentation sources under `docs/src/` and navigation in `docs/src/SUMMARY
 - `dist generate --check` verifies that the generated release workflow matches its configuration.
 - `cargo deny check` enforces `DEPENDENCY_POLICY.md` for every dependency change.
 
-All established formatting, compilation, test, and lint checks must pass before review.
+All checks in `just check` must pass before review.
 
 ## Coding Style & Testing
 
@@ -33,4 +35,6 @@ Treat `dist-workspace.toml` as the source of truth for releases. Never edit `.gi
 
 Every change starts with an existing GitHub issue. Create a branch from `main` and keep the PR limited to one issue and one reviewable concern. The PR body must contain exactly one closing reference such as `Closes #123`, describe verification, and note documentation or screenshot impact.
 
-Use imperative Conventional Commits such as `feat: add route groups`, `fix(parser): report missing delimiter`, or `docs: clarify variables`. Do not merge directly, create merge commits, or rebase-merge PRs. Repository changes land through squash merge only. Agents must respect the same issue-first and small-PR workflow.
+Pull requests land through rebase merge only, so every branch commit reaches `main` as written. Do not push to `main`, squash-merge, or create merge commits; branches must be up to date with `main` before merging. Agents must respect the same issue-first and small-PR workflow.
+
+Every commit must be a self-contained, imperative Conventional Commit, such as `feat: add route groups`, `fix(parser): report missing delimiter`, or `docs: clarify variables`, with a header of at most 72 characters. Each commit must pass `just check` on its own; CI lints each commit message and builds and tests each commit (`cargo check` and `cargo test`). Before review, fold follow-up changes into the commits they correct with `git commit --fixup <sha>` and `GIT_SEQUENCE_EDITOR=: git rebase -i --autosquash origin/main`, then update only your own branch with `git push --force-with-lease`.
