@@ -1,0 +1,115 @@
+use std::(
+    pout,
+    poutln
+);
+use math::PI;
+
+poo my_vec vec:str = ["world", "hello"];
+poo a float = 5.0 * 1.0 - 1.0 * 3.0;
+poo b int = 2 / 2;
+mut d bool = true; 
+d = false;
+poo e map = { name: "amk", age: 1 };
+// pout(e) omitted: map display order is nondeterministic until #69 //
+pout(e.name);
+
+if not d {
+    pout("d is not true");
+}
+
+poof getHelloWorld (a vec:char) >> vec:char {
+    return a;
+}
+
+poutln(getHelloWorld(['k']) otherwise "this is a no");
+
+poof sayHello () {
+    poo hello str = "Hello,";
+    poo space char = 'y';
+    poo world str = "World!";
+    poo author str = "Shayy";
+    if hello == "Hello," and space == 'h' or world == "World!" {
+        //hi//
+        pout(hello);
+    } elif author != "Shayy" {
+        pout(author);
+    } else {
+        pout("nth");
+    }
+    
+}
+
+// Hello World this is a comment //
+
+
+for item in my_vec {
+    pout("Hello, Poo!", item);
+}
+
+my_vec.pop();
+my_vec.push("Alan");
+sayHello();
+pout(a.sin(), a.cos());
+pout("a");
+pout("b");
+
+poutln(getHelloWorld(['h']) otherwise "Otherwise does not work");
+
+ struct Person {
+    name str
+    age int
+
+    impl {
+        poof hi() >> void {
+            poutln("Hi, I'm ", self.name, "!");
+        }
+    }
+} 
+//
+trait canEat {
+    eat(what Food) >> void
+} //
+
+struct Student inherits Person {
+    name str
+    age int
+    pub student_id int
+    pub rate float
+
+    impl {
+        poof new () >> Self {
+            return Student::{
+                name: "amk",
+                age: 20,
+                rate: 180.5,
+                student_id: 123
+            };
+        }
+
+        poof get_name() >> str {
+            return self.name;
+        }
+
+        poof go_to_sch() >> void {
+            poutln(self.name, " is going to School!");
+        }
+    }
+
+    impl Person {
+        poof eat(what float) >> void {
+            poutln(self.name, " is eating at Canteen.");
+        }
+    }
+}
+poo id <: 123;
+poo student vec:Student = Student::{
+    name: "amk",
+    age: 20,
+    rate: 180.5,
+    student_id: id
+};
+
+// poo student2 <: Student::new(); // 
+
+poutln(student.get_name());
+student.go_to_sch();

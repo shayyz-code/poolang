@@ -1,0 +1,1 @@
+#45 fix(parser): accept recursive function calls; the interpreter panics with "Undefined function: fact".
