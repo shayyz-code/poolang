@@ -62,12 +62,28 @@ jobs:
 
       # If you use any mdbook plugins, here's the place to install them!
 
-      # Install and run oranda (and mdbook)!
+      # Install a pinned oranda release, verified against its checksum.
+      - name: Install oranda
+        env:
+          # To upgrade, update both values from the release's
+          # oranda-x86_64-unknown-linux-gnu.tar.gz.sha256 asset.
+          ORANDA_VERSION: v0.6.5
+          ORANDA_SHA256: 2db065e8b06253526a81595b9312b8c4468ff42f3f9fbe50a6ff21a42d3516d1
+        run: |
+          archive="oranda-x86_64-unknown-linux-gnu.tar.gz"
+          curl --proto '=https' --tlsv1.2 -fLsS -o "$RUNNER_TEMP/$archive" \
+            "https://github.com/axodotdev/oranda/releases/download/${ORANDA_VERSION}/${archive}"
+          echo "${ORANDA_SHA256}  $RUNNER_TEMP/$archive" | sha256sum --check --strict
+          mkdir -p "$RUNNER_TEMP/oranda"
+          tar -xzf "$RUNNER_TEMP/$archive" -C "$RUNNER_TEMP/oranda" --strip-components=1
+          echo "$RUNNER_TEMP/oranda" >> "$GITHUB_PATH"
+
+      # Run oranda (and mdbook)!
       #
       # This will write all output to ./public/ (including copying mdbook's output to there).
-      - name: Install and run oranda
+      - name: Run oranda
         run: |
-          curl --proto '=https' --tlsv1.2 -LsSf https://github.com/axodotdev/oranda/releases/latest/download/oranda-installer.sh | sh
+          oranda --version
           oranda build
 
       - name: Prepare HTML for link checking
