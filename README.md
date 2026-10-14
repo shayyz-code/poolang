@@ -197,14 +197,14 @@ run for version tags, not for every pull request.
 ## Development
 
 ```bash
-cargo build
-cargo fmt --all -- --check
-cargo check --all-targets
-cargo clippy --all-targets --all-features -- -D warnings
-cargo test
-mdbook build docs
-mdbook test docs
+just setup       # enable the commit-msg hook (once per clone)
+just check-fast  # formatting, compilation, Clippy, and tests
+just check       # every check required before review
 ```
+
+`just check` also builds and tests the mdBook documentation, verifies the
+generated release workflow, and runs `cargo deny check`. Required tools and
+versions are listed in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 Core Rust code lives in `src/`, executable language specifications in
 `tests/language_specs.rs`, sample programs in `examples/`, and documentation
@@ -212,8 +212,10 @@ sources in `docs/src/`. Generated `docs/book/` and `public/` output is not
 tracked.
 
 Every change starts with a GitHub issue and a branch from `main`. Pull requests
-must remain small, contain exactly one closing issue reference, use Conventional
-Commits, and are squash-merged only. See [CONTRIBUTING.md](CONTRIBUTING.md).
+must remain small, contain exactly one closing issue reference, and are
+rebase-merged only. Every commit lands on `main` as written, so each one must be
+a self-contained Conventional Commit that passes `just check`. See
+[CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## License
 

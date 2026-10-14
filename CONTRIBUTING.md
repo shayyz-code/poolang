@@ -14,7 +14,7 @@ By participating in this project, you agree to abide by the standard open-source
 - Provide a minimal reproduction script (a `.poo` file) if possible.
 
 ### Suggesting Features
-- Open an issue with the "feature request" tag.
+- Open an issue with the **Feature request** [issue form](https://github.com/shayyz-code/poolang/issues/new/choose), which applies the `enhancement` label. Use the **Language change** form for syntax or semantics proposals.
 - Explain why this feature would be useful for PooLang.
 - Explain how it supports the compiled, backend-focused language and tooling roadmap in `TODO.md`.
 
@@ -26,44 +26,52 @@ By participating in this project, you agree to abide by the standard open-source
 4. Follow TDD for features and fixes by adding a focused test first.
 5. Include exactly one closing reference in the PR body, such as `Closes #123`.
 6. Describe verification and note documentation, command-output, or screenshot impact.
-7. Use an imperative [Conventional Commit](https://www.conventionalcommits.org/) title, such as `feat: add modulo operator` or `fix(parser): report missing semicolon`.
+7. Write every commit, not just the PR title, as an imperative [Conventional Commit](https://www.conventionalcommits.org/) with a header of at most 72 characters, such as `feat: add modulo operator` or `fix(parser): report missing semicolon`.
 
-Pull requests are squash-merged only. Do not use merge commits or rebase merges.
+Pull requests are rebase-merged only, so each commit on your branch lands on `main` as written. Squash merges and merge commits are disabled, and a branch must be up to date with `main` before it merges.
+
+Every commit must be self-contained and pass `just check` on its own; CI lints each commit message and builds and tests each commit (`cargo check` and `cargo test`). Before requesting review, sync your fork's branch with upstream `main` and fold follow-up fixes into the commits they correct:
+
+```bash
+git remote add upstream https://github.com/shayyz-code/poolang.git  # once
+git fetch upstream
+git commit --fixup <sha>
+git rebase -i --autosquash upstream/main
+git push --force-with-lease
+```
+
+Force-push only your own branch.
 
 ## Development Setup
 
 ### Prerequisites
-- [Rust](https://www.rust-lang.org/tools/install) (Edition 2024 or later)
-- [Cargo](https://doc.rust-lang.org/cargo/)
+- [Rust](https://www.rust-lang.org/tools/install) via rustup. The crate uses the 2024 edition, and `rust-toolchain.toml` pins Rust 1.97.1 with rustfmt and Clippy, so rustup installs the right toolchain automatically.
+- [just 1.58.0](https://just.systems/): `cargo install --locked just --version 1.58.0`
 - [mdBook 0.5.2](https://rust-lang.github.io/mdBook/guide/installation.html): `cargo install mdbook --locked --version 0.5.2`
 - [cargo-deny 0.20.2](https://embarkstudios.github.io/cargo-deny/): `cargo install --locked cargo-deny --version 0.20.2`
+- [cargo-dist 0.31.0](https://axodotdev.github.io/cargo-dist/) (the `dist` command): see its [installation guide](https://axodotdev.github.io/cargo-dist/book/install.html)
+- [oranda 0.6.5](https://axodotdev.github.io/oranda/) for project site builds only (pinned in `.github/workflows/web.yml`)
+
+Run `just tools` to compare installed versions against the pinned ones.
 
 ### Workflow
-1. **Clone your fork**:
+1. **Clone your fork and enable the commit-msg hook**:
    ```bash
    git clone https://github.com/YOUR_USERNAME/poolang.git
    cd poolang
+   just setup
    ```
-2. **Build and Run**:
+2. **Run a sample program**:
    ```bash
-   cargo check --all-targets
    cargo run -- examples/app.poo
    ```
-3. **Run Specs**:
+3. **Run the checks**:
    ```bash
-   cargo test
-   ```
-4. **Build and Test Documentation**:
-   ```bash
-   mdbook build docs
-   mdbook test docs
-   ```
-5. **Check Dependencies**:
-   ```bash
-   cargo deny check
+   just check-fast  # formatting, compilation, Clippy, and tests
+   just check       # everything required before review
    ```
 
-`mdbook build docs` is the canonical documentation build command. Before review, run all applicable commands above plus `cargo fmt --all -- --check` and `cargo clippy --all-targets --all-features -- -D warnings`; all established checks must pass.
+`just check` adds the mdBook build and tests, the release workflow check, and `cargo deny check` to `just check-fast`; all of it must pass before review. Run `just` to list the individual recipes. `mdbook build docs` is the canonical documentation build command.
 
 Dependency changes must follow `DEPENDENCY_POLICY.md`, update `Cargo.lock`, and pass the advisory, license, ban, and source checks without undocumented exceptions.
 
