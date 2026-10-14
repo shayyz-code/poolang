@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(just)",
+      "Bash(just --list)",
+      "Bash(just check)",
+      "Bash(just check-fast)",
+      "Bash(just fmt)",
+      "Bash(just fmt-check)",
+      "Bash(just build-check)",
+      "Bash(just lint)",
+      "Bash(just test)",
+      "Bash(just docs)",
+      "Bash(just dist-check)",
+      "Bash(just deny)",
+      "Bash(just tools)",
+      "Bash(just setup)",
+      "Bash(cargo fmt:*)",
+      "Bash(cargo check:*)",
+      "Bash(cargo clippy:*)",
+      "Bash(cargo test:*)",
+      "Bash(cargo run:*)",
+      "Bash(cargo build:*)",
+      "Bash(cargo deny check:*)",
+      "Bash(mdbook build:*)",
+      "Bash(mdbook test:*)",
+      "Bash(dist generate --check)",
+      "Bash(dist plan:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(git switch:*)",
+      "Bash(git worktree:*)",
+      "Bash(git fetch origin)",
+      "Bash(git fetch origin main)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git rebase origin/main)",
+      "Bash(gh issue view:*)",
+      "Bash(gh issue list:*)",
+      "Bash(gh pr view:*)",
+      "Bash(gh pr list:*)",
+      "Bash(gh pr checks:*)",
+      "Bash(gh pr diff:*)",
+      "Bash(gh pr create:*)"
+    ],
+    "ask": [
+      "Bash(gh pr merge:*)",
+      "Bash(gh api *merge*)"
+    ],
+    "deny": [
+      "Bash(git push origin main:*)",
+      "Bash(git push * main)",
+      "Bash(git push * main *)",
+      "Bash(git push *:main)",
+      "Bash(git push *:main *)",
+      "Bash(git push *refs/heads/main)",
+      "Bash(git push *refs/heads/main *)",
+      "Bash(git push --force:*)",
+      "Bash(git push *--force)",
+      "Bash(git push *--force *)",
+      "Bash(git push -f)",
+      "Bash(git push -f:*)",
+      "Bash(git push * -f)",
+      "Bash(git push * -f *)",
+      "Bash(git push *+*)",
+      "Bash(git push *--tags*)",
+      "Bash(git push *--mirror*)",
+      "Bash(git tag:*)",
+      "Bash(gh release:*)",
+      "Bash(cargo publish)",
+      "Bash(cargo publish:*)",
+      "Bash(git rebase *--exec*)",
+      "Bash(git rebase *-x *)",
+      "Bash(git fetch *--upload-pack*)",
+      "Edit(**/.github/workflows/v-release.yml)",
+      "Write(**/.github/workflows/v-release.yml)",
+      "Edit(**/docs/book/**)",
+      "Write(**/docs/book/**)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/.claude/hooks/fmt-rust.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
