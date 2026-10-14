@@ -1,0 +1,4 @@
+use math::PI;
+
+poo r <: PI * 2.0;
+return r;

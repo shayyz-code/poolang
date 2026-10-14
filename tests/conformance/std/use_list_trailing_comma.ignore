@@ -1,0 +1,1 @@
+#74 fix(parser): reject malformed use lists and map keys; a trailing comma fails with "Unexpected token: RightParen".

@@ -1,0 +1,2 @@
+poo n <: 3;
+return n._f();

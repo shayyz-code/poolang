@@ -1,0 +1,6 @@
+use std::poutln;
+
+poo n <: 5;
+poutln(n.clamp(1, 3));
+poutln(n.clamp(7, 9));
+poutln(n.clamp(1, 9));

@@ -1,0 +1,6 @@
+use std::poutln;
+use time::sleep;
+
+poutln("before");
+sleep(1);
+poutln("after");

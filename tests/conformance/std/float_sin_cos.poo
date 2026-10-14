@@ -1,0 +1,5 @@
+use std::poutln;
+
+poo z <: 0.0;
+poutln(z.sin());
+poutln(z.cos());

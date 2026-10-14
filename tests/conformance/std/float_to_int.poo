@@ -1,0 +1,6 @@
+use std::poutln;
+
+poo a <: 2.7;
+poo b <: 0.0 - 2.7;
+poutln(a._i());
+poutln(b._i());

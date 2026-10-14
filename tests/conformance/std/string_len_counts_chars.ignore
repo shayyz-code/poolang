@@ -1,0 +1,1 @@
+#71 fix(runtime): count string length in characters; len() returns the UTF-8 byte count (6).
