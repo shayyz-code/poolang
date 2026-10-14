@@ -11,6 +11,8 @@ Closes #
 
 <!-- List commands and manual checks performed. -->
 
+- [ ] Each commit is a self-contained Conventional Commit and passes `just check`
+
 ## Documentation and Visual Impact
 
 <!-- Note documentation changes and include output/screenshots when useful, or write "None". -->
