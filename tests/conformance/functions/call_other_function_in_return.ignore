@@ -1,1 +1,1 @@
-#96 calling another function in a typed return expression panics in type inference ("Undefined function: square").
+#105 a typed function calling another function panics in type inference ("Undefined function: square").
