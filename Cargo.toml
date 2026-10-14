@@ -3,10 +3,12 @@ name = "poo"
 version = "0.1.11"
 edition = "2024"
 authors = ["Shayy <aungminkhant.shay@gmail.com>"]
-description = "Tiny interpreted language written in Rust"
+description = "Sandboxed scripting language for AI agents (v0.1 interpreter)"
 repository = "https://github.com/shayyz-code/poolang"
 homepage = "https://github.com/shayyz-code/poolang"
 license = "MIT"
+keywords = ["scripting", "sandbox", "interpreter", "language", "ai-agents"]
+categories = ["compilers", "development-tools"]
 
 [package.metadata.wix]
 upgrade-guid = "E5BAFDF3-D829-4C38-B58D-49491C5C6445"

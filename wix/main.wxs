@@ -69,7 +69,7 @@
 
         <Package Id='*'
             Keywords='Installer'
-            Description='Tiny interpreted language written in Rust'
+            Description='Sandboxed scripting language for AI agents (v0.1 interpreter)'
             Manufacturer='Shayy'
             InstallerVersion='450'
             Languages='1033'
