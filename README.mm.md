@@ -21,30 +21,78 @@
   <a href="https://github.com/shayyz-code/poolang/blob/main/README.mm.md">မြန်မာ</a>
 </p>
 
-PooLang ကို web backend နှင့် infrastructure များအတွက် ရိုးရှင်းသော compiled
-language တစ်ခုအဖြစ် တည်ဆောက်ရန် ရည်ရွယ်ထားသည်။ ၎င်း၏ ဦးတည်ချက်သည် Go ကဲ့သို့
-ဖြန့်ချိရလွယ်ကူမှု၊ နားလည်ရလွယ်သော syntax နှင့် ownership သို့မဟုတ် lifetime
-syntax များကို အသုံးပြုသူထံ မဖော်ပြဘဲ Rust မှ အတုယူထားသော ရှင်းလင်းတိကျမှုတို့ကို
-ပေါင်းစပ်ထားသည်။ **Poo (ပူး)** ဟူသောအမည်သည် မြန်မာဘာသာရှိ guinea pig ၏
-အမည်မှ ဆင်းသက်လာသည်။
+PooLang ကို AI agent များအတွက် sandbox အတွင်း run သော scripting language
+တစ်ခုအဖြစ် ပြောင်းလဲတည်ဆောက်နေသည်။ LLM agent က PooLang script ကို ရေးပြီး
+host program က ၎င်းကို ဘေးကင်းစွာ run ပေးသည်။ v0.2 မှစ၍ script သည် host က
+ခွင့်ပြုထားသော capability နှင့် tool များကိုသာ ခေါ်နိုင်မည်၊ host သတ်မှတ်ထားသော
+budget အတွင်းသာ run မည်ဖြစ်ပြီး error များကို agent က ဖတ်ပြီး ပြင်ဆင်နိုင်သော
+diagnostic အဖြစ် ပြန်ပေးမည်။ **Poo (ပူး)** ဟူသောအမည်သည် မြန်မာဘာသာရှိ guinea
+pig ၏ အမည်မှ ဆင်းသက်လာသည်။
 
 > [!IMPORTANT]
-> လက်ရှိ release ဖြစ်သော **v0.1.11** သည် ယခင် tree-walking interpreter
-> ဖြစ်သည်။ Roadmap တွင် ဖော်ပြထားသော compiled backend platform ကို v0.2
-> အတွက် စီစဉ်ထားပြီး လက်ရှိတွင် မတည်ဆောက်ရသေးပါ။
+> **အခြေအနေ:** v0.1.11 သည် tree-walking interpreter အသေးတစ်ခုသာ ဖြစ်သည်။
+> v0.2 agent sandbox ကို တည်ဆောက်နေဆဲ ဖြစ်သည် —
+> [roadmap (TODO.md)](https://github.com/shayyz-code/poolang/blob/main/TODO.md)
+> နှင့် [milestones](https://github.com/shayyz-code/poolang/milestones) ကို ကြည့်ပါ။
+
+## PooLang ကို ဘာကြောင့် ဖန်တီးသလဲ
+
+Agent များသည် task များကို code ရေး၍ ဖြေရှင်းလာကြပြီး host သည် ကိုယ်တိုင်
+မရေးထားသော၊ အပြည့်အဝ မယုံကြည်နိုင်သော code ကို run ပေးရသည်။ General-purpose
+language များသည် file၊ network နှင့် clock တို့ကို အစကတည်းက အသုံးပြုခွင့်ရှိပြီး
+နောက်မှ ပိတ်ဆို့ကန့်သတ်ရသည်။ PooLang v0.2 ကိုမူ ဆန့်ကျင်ဘက် ချဉ်းကပ်ပုံဖြင့်
+တည်ဆောက်နေသည်။ ဤအရာများ v0.1.11 တွင် မရှိသေးပါ။ v0.2 ၏ ရည်မှန်းချက်များ:
+
+- **Zero ambient authority။** Script သည် host က ခွင့်ပြုထားသော capability
+  နှင့် tool များကိုသာ ခေါ်နိုင်မည်။ အခြားမည်သည့်အရာကိုမျှ ထိတွေ့၍ ရမည် မဟုတ်ပါ။
+- **Budget များ။** Host သည် step၊ call depth၊ memory နှင့် wall-clock time
+  တို့ကို ကန့်သတ်နိုင်မည်ဖြစ်သောကြောင့် ထိန်းမရသော loop သည် agent ကို
+  ရပ်တန့်စေမည့်အစား error ဖြင့် အဆုံးသတ်မည်။
+- **Determinism။** Script၊ input နှင့် tool result တူလျှင် output လည်း
+  တူမည်ဖြစ်သောကြောင့် run များကို ပြန်လည် replay လုပ်နိုင်ပြီး test လုပ်နိုင်မည်။
+- **Panic လုံးဝ မဖြစ်ခြင်း။** Input တိုင်းသည် value တစ်ခု သို့မဟုတ် typed
+  error တစ်ခုဖြင့် အဆုံးသတ်မည်ဖြစ်ပြီး host ကို crash မဖြစ်စေပါ။
+- **LLM က အသုံးချနိုင်သော diagnostic များ။** Error တိုင်းတွင် stable code၊
+  source span နှင့် fix hint ပါဝင်မည်ဖြစ်ပြီး JSON အဖြစ်လည်း ရယူနိုင်မည်ဖြစ်သောကြောင့်
+  agent သည် မိမိ script ကို ကိုယ်တိုင် ပြင်ဆင်နိုင်မည်။
+
+ပထမဆုံး host interface သည် Rust embedding API ဖြစ်မည်။ Python နှင့် WASM
+binding များနှင့် MCP server တို့ကို နောက်ပိုင်းတွင် ထပ်မံ ထည့်သွင်းမည်။
 
 ## ပရောဂျက်အခြေအနေ
 
 | လမ်းကြောင်း | ရရှိနိုင်မှု | ရည်ရွယ်ချက် |
 | --- | --- | --- |
-| v0.1.11 | အသုံးပြုနိုင် | ယခင် Rust interpreter၊ အလုပ်လုပ်သော examples နှင့် checked library APIs |
-| v0.2 | စီစဉ်ထား | Compatibility မယူသော LLVM compiler၊ native runtime၊ package tooling၊ async HTTP/JSON၊ analyzer နှင့် editor support |
-| v0.3 | စီစဉ်ထား | Data၊ auth၊ cache၊ queue နှင့် framework tooling ပါဝင်သော opinionated web application platform |
-| v0.4 | စီစဉ်ထား | Protobuf/gRPC၊ microservices၊ resilience၊ discovery နှင့် OpenTelemetry |
+| v0.1.11 | အသုံးပြုနိုင် | Legacy syntax၊ အလုပ်လုပ်သော examples နှင့် checked library APIs ပါသော Rust tree-walking interpreter အသေး၊ sandbox control မပါ |
+| v0.2 | တည်ဆောက်ဆဲ | Agent sandbox: conventional syntax၊ host က ခွင့်ပြုသော capability နှင့် tool များ၊ budget များ၊ deterministic execution၊ JSON diagnostic များ၊ Rust embedding API နှင့် `poo run`/`poo check` |
+| နောက်ပိုင်း | အချိန်မသတ်မှတ်ရသေး | Static checker၊ Python နှင့် WASM binding များ၊ MCP server နှင့် editor support |
 
 အောက်တွင် ဖော်ပြထားသော legacy syntax နှင့် v0.2 အကြား compatibility
-အာမခံချက် မရှိပါ။ ဆုံးဖြတ်ချက်များ၊ milestone များနှင့် implementation gate
-များကို [TODO.md](https://github.com/shayyz-code/poolang/blob/main/TODO.md) တွင် ကြည့်နိုင်သည်။
+အာမခံချက် မရှိဘဲ v0.2 တွင် legacy mode လည်း ပါဝင်မည် မဟုတ်ပါ။ အတည်ပြုပြီးသော
+ဆုံးဖြတ်ချက်များနှင့် phase များကို
+[TODO.md](https://github.com/shayyz-code/poolang/blob/main/TODO.md) တွင်၊
+တိုးတက်မှုကို [milestones](https://github.com/shayyz-code/poolang/milestones)
+တွင် ကြည့်နိုင်သည်။
+
+## v0.2 Preview
+
+> [!NOTE]
+> ဤ syntax ကို **စီစဉ်ထားဆဲဖြစ်ပြီး မတည်ဆောက်ရသေးပါ**။ v0.1.11 က ၎င်းကို
+> လက်မခံပါ။
+
+```text
+use tools::search;            // host-granted tool
+poo limit = 10;
+poo mut hits: vec[str] = [];
+for doc in search("rust sandbox", limit) {
+    if doc["score"] >= 0.5 && doc["title"] != "" { hits.push(doc["title"]); }
+}
+println(hits.len());
+```
+
+v0.2 တွင် host က `search` ကို tool အဖြစ် register လုပ်မှသာ ၎င်းကို
+အသုံးပြုနိုင်မည်။ ထိုခွင့်ပြုချက် မရှိလျှင် script ကို run မလုပ်မီကပင်
+capability (E06) diagnostic ဖြင့် ငြင်းပယ်သည်။
 
 ## လက်ရှိ v0.1.11 စွမ်းဆောင်ချက်များ
 
@@ -58,8 +106,12 @@ syntax များကို အသုံးပြုသူထံ မဖော�
 - Rust ဖြင့် ရေးသားထားသော lexer၊ parser၊ type-inference pass နှင့် AST-walking interpreter။
 
 `trait` ကို token အဖြစ် သိရှိသော်လည်း ပြည့်စုံသော supported feature
-မဟုတ်သေးပါ။ လက်ရှိ PooLang တွင် native compilation၊ HTTP၊ JSON၊ database၊
-package၊ gRPC သို့မဟုတ် editor analyzer မပါဝင်သေးပါ။
+မဟုတ်သေးပါ။ v0.1.11 တွင် အထက်တွင် ဖော်ပြခဲ့သော capability gating၊ budget
+နှင့် JSON diagnostic ကဲ့သို့သော sandbox control များ မပါဝင်သေးပါ။ Input
+အချို့က interpreter ကို crash ဖြစ်စေနိုင်သေးသောကြောင့် ယုံကြည်စိတ်ချ၍ မရသော
+code ကို run ရန် မသုံးပါနှင့်။ သိရှိထားသော ချို့ယွင်းချက်များကို roadmap ၏
+[current audit](https://github.com/shayyz-code/poolang/blob/main/TODO.md#current-audit)
+တွင် ဖော်ပြထားသည်။
 
 ## ထည့်သွင်းခြင်း
 
@@ -194,9 +246,14 @@ release များသည် npm package နှင့် Homebrew formula updat
 Pull request များတွင် လက်ရှိ အောက်ပါ check များကို run သည်။
 
 - Issue-link policy check။
+- Commit policy check: Conventional Commit header များနှင့် commit တစ်ခုစီတွင်
+  Cargo check နှင့် test။
 - Ubuntu ပေါ်ရှိ Rustfmt၊ Cargo check၊ strict Clippy နှင့် Cargo test suite အပြည့်အစုံ။
-- Oranda/mdBook site build နှင့် internal-link check။
-- cargo-dist release-plan validation။
+- mdBook build နှင့် test များ၊ Oranda/mdBook site build နှင့် internal-link check။
+- Generate လုပ်ထားသော release workflow သည် `dist-workspace.toml` နှင့်
+  ကိုက်ညီမှု ရှိမရှိ စစ်ဆေးခြင်း။
+- Dependency policy အတွက် `cargo deny check`။
+- cargo-dist release-plan run (`dist plan`)။
 
 `main` သို့ push လုပ်သောအခါ project site ကို ပြန်လည် build လုပ်ပြီး deploy
 လုပ်သည်။ Platform release build များသည် pull request တိုင်းအတွက် မဟုတ်ဘဲ

@@ -21,28 +21,74 @@
   <a href="https://github.com/shayyz-code/poolang/blob/main/README.mm.md">မြန်မာ</a>
 </p>
 
-PooLang is being designed as a simple, compiled language for web backends and
-infrastructure. Its direction combines Go-like deployment, approachable syntax,
-and Rust-inspired explicitness without exposing ownership or lifetime syntax.
+PooLang is becoming a sandboxed scripting language for AI agents: an LLM agent
+writes a PooLang script, and a host program runs it safely. From v0.2, a script
+will be able to call only the capabilities and tools the host grants, will run
+within budgets the host sets, and will report errors as diagnostics the agent
+can read and fix.
 The name **Poo (ပူး)** comes from the Burmese word for guinea pig.
 
 > [!IMPORTANT]
-> The current release, **v0.1.11**, is a legacy tree-walking interpreter.
-> The compiled backend platform described in the roadmap is planned for v0.2
-> and is not implemented yet.
+> **Status:** v0.1.11 is a small tree-walking interpreter; the v0.2 agent
+> sandbox is in progress — see the
+> [roadmap (TODO.md)](https://github.com/shayyz-code/poolang/blob/main/TODO.md)
+> and [milestones](https://github.com/shayyz-code/poolang/milestones).
+
+## Why PooLang
+
+Agents increasingly solve tasks by writing code, and a host has to run code it
+did not write and cannot fully trust. General-purpose languages start with
+access to files, the network, and the clock, and then have to be locked down.
+PooLang v0.2 is being built the other way around. None of this exists in
+v0.1.11 yet. Goals for v0.2:
+
+- **Zero ambient authority.** A script will be able to call only the
+  capabilities and tools the host grants it. Nothing else will be reachable.
+- **Budgets.** The host will limit steps, call depth, memory, and wall-clock
+  time, so a runaway loop will end with an error instead of stalling the agent.
+- **Determinism.** The same script with the same inputs and tool results will
+  give the same output, so runs can be replayed and tested.
+- **Never panics.** Every input will end in a value or a typed error, never a
+  crash of the host.
+- **Diagnostics an LLM can act on.** Each error will carry a stable code, a
+  source span, and a fix hint, and will be available as JSON, so the agent can
+  repair its own script.
+
+The first host interface will be a Rust embedding API. Python and WASM bindings
+and an MCP server will follow later.
 
 ## Project Status
 
 | Track | Availability | Purpose |
 | --- | --- | --- |
-| v0.1.11 | Available | Legacy Rust interpreter, executable examples, and checked library APIs |
-| v0.2 | Planned | Clean-break LLVM compiler, native runtime, package tooling, async HTTP/JSON, analyzer, and editor support |
-| v0.3 | Planned | Opinionated web application platform with data, auth, cache, queues, and framework tooling |
-| v0.4 | Planned | Protobuf/gRPC, microservices, resilience, discovery, and OpenTelemetry |
+| v0.1.11 | Available | Small Rust tree-walking interpreter with legacy syntax, executable examples, and checked library APIs; no sandbox controls |
+| v0.2 | In progress | Agent sandbox: conventional syntax, host-granted capabilities and tools, budgets, deterministic execution, JSON diagnostics, Rust embedding API, and `poo run`/`poo check` |
+| Later | Not scheduled | Static checker, Python and WASM bindings, MCP server, and editor support |
 
-There is no compatibility promise between the legacy syntax below and v0.2.
-See [TODO.md](https://github.com/shayyz-code/poolang/blob/main/TODO.md) for the decision record, milestones, and implementation
-gates.
+There is no compatibility promise between the legacy syntax below and v0.2,
+and v0.2 will not include a legacy mode. See
+[TODO.md](https://github.com/shayyz-code/poolang/blob/main/TODO.md) for the
+locked decisions and phases, and the
+[milestones](https://github.com/shayyz-code/poolang/milestones) for progress.
+
+## v0.2 Preview
+
+> [!NOTE]
+> This syntax is **planned, not yet implemented**. v0.1.11 rejects it.
+
+```text
+use tools::search;            // host-granted tool
+poo limit = 10;
+poo mut hits: vec[str] = [];
+for doc in search("rust sandbox", limit) {
+    if doc["score"] >= 0.5 && doc["title"] != "" { hits.push(doc["title"]); }
+}
+println(hits.len());
+```
+
+In v0.2, `search` will exist only if the host registers it as a tool. Without
+that grant, the script is rejected before it runs with a capability (E06)
+diagnostic.
 
 ## Current v0.1.11 Features
 
@@ -55,9 +101,11 @@ gates.
 - Checked source/file APIs with `Io`, `Parse`, and `Runtime` errors.
 - A Rust lexer, parser, type-inference pass, and AST-walking interpreter.
 
-Traits are tokenized but are not a complete supported feature. PooLang does not
-currently provide native compilation, HTTP, JSON, databases, packages, gRPC, or
-an editor analyzer.
+Traits are tokenized but are not a complete supported feature. v0.1.11 has none
+of the sandbox controls described above: no capability gating, budgets, or JSON
+diagnostics. Some inputs still crash the interpreter, so do not use it to run
+untrusted code. Known defects are listed in the roadmap's
+[current audit](https://github.com/shayyz-code/poolang/blob/main/TODO.md#current-audit).
 
 ## Installation
 
@@ -187,9 +235,13 @@ installers. Stable releases publish npm packages and Homebrew formula updates.
 Pull requests currently run:
 
 - The issue-link policy check.
+- A commit policy check: Conventional Commit headers, plus Cargo check and
+  tests on each commit.
 - Rustfmt, Cargo check, strict Clippy, and the complete Cargo test suite on Ubuntu.
-- The Oranda/mdBook site build and internal-link check.
-- A cargo-dist release-plan validation.
+- The mdBook build and tests, and the Oranda/mdBook site build and internal-link check.
+- A check that the generated release workflow matches `dist-workspace.toml`.
+- `cargo deny check` for the dependency policy.
+- A cargo-dist release-plan run (`dist plan`).
 
 Pushes to `main` rebuild and deploy the project site. Platform release builds
 run for version tags, not for every pull request.
