@@ -1,0 +1,2 @@
+# Keep the CRLF line endings this case exists to test.
+syntax/crlf_line_endings.poo -text

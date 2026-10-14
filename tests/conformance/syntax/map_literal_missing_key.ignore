@@ -1,0 +1,1 @@
+#74 fix(parser): reject malformed map keys; {: 1} is accepted with the key "".

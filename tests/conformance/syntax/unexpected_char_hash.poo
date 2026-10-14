@@ -1,0 +1,2 @@
+poo x <: 1; # not a comment
+return x;

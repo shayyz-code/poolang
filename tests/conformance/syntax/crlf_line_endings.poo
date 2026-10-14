@@ -1,0 +1,5 @@
+use std::poutln;
+
+poo x <: 1;
+// comment //
+poutln(x + 1);
